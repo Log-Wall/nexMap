@@ -41,7 +41,7 @@ var nexMap.findRoom = function(roomNum) {
     return true;
 };
 
-nexMap.changeRoom = function(id) {
+var nexMap.changeRoom = function(id) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeRoom(${id})`)};
     if (!nexMap.findRoom(id)) {return;}
     let room = cy.$id(id);
