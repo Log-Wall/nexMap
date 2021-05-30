@@ -1,6 +1,6 @@
 'use strict';
-var cy = {};
-var nexMap = {
+cy = {};
+nexMap = {
     logging: true,
     mudmap: {},
 	cytoscapeLoaded: false,
@@ -360,7 +360,7 @@ nexMap.startUp = function() {
             run_function('nexMap.walker', {}, 'nexmap');
             nexMap.styles.style();
             nexMap.display.notice('Mapper loaded and ready for use.');
-            send_command('ql');
+            client.send_direct('ql');
         });
     });
 };
@@ -658,7 +658,7 @@ nexMap.walker.step = function() {
         nmw.stepCommand = nmw.pathCommands[index];
     }
 
-    send_command(`path stop${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
+    send_direct(`path stop${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
         
 }
 
@@ -847,7 +847,7 @@ nexMap.display.configDialog = function() {
     $('<div></div>').appendTo(main);
 
     let tab = $("<table></table>", {
-        class:"mono", 
+        class:"mono nexInput", 
         style:"max-width:100%;border-spacing:4x;vertical-align:center"
     });
 
@@ -869,19 +869,80 @@ nexMap.display.configDialog = function() {
         $("<td></td>", {style:'color:grey'}).text(configs[i].name).appendTo(row);
         $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(lab).appendTo(row);
     }
-    let tin = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexCommandSep', maxlength:1,width:24});
-    let row  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
-        $("<td></td>", {style:'color:grey'}).text('Command Separator').appendTo(row);
-        $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(tin).appendTo(row);
+    let tin = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexCommandSep', maxlength:1,width:24,value:nexMap.settings.userPreferences.commandSeparator});
+    let tinRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+        $("<td></td>", {style:'color:grey'}).text('Command Separator').appendTo(tinRow);
+        $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(tin).appendTo(tinRow);
+    
+    let duanathar = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:100,value:nexMap.settings.userPreferences.duanatharCommand});
+    let duanatharRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+    $("<td></td>", {style:'color:grey'}).text('Clouds Command(s)').appendTo(duanatharRow);
+    $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanathar).appendTo(duanatharRow);
+    
+    let nodeShape = $('<select></select>', {'class':'nexInput', id:'nexNodeShape'})
+    	.on('change',function(){
+            nexMap.styles.userPreferences.nodeShape=$(this)[0].value;
+        	cy.style()
+        		.selector('node')
+            		.style({
+        				'shape':$(this)[0].value})
+                .selector('.currentRoom')
+            		.style({
+        				'shape':nexMap.styles.userPreferences.currentRoomShape}).update();
+        });
+    $('<option></option>',{value:'rectangle',text:'Rectangle'})
+        .prop('selected', nexMap.styles.userPreferences.nodeShape=='rectangle'?true:false).appendTo(nodeShape);
+    $('<option></option>',{value:'ellipse',text:'Circle'})
+        .prop('selected', nexMap.styles.userPreferences.nodeShape=='ellipse'?true:false).appendTo(nodeShape);
+    let nodeShapeRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+    $("<td></td>", {style:'color:grey'}).text('Node shape').appendTo(nodeShapeRow);
+    $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(nodeShape).appendTo(nodeShapeRow);
+    
+    let playerShape = $('<select></select>', {'class':'nexInput', id:'nexPlayerShape'})
+    	.on('change',function(){
+            nexMap.styles.userPreferences.currentRoomShape=$(this)[0].value;
+        	cy.style()
+        		.selector('.currentRoom')
+            		.style({
+        				'shape':$(this)[0].value}).update();
+        });
+    $('<option></option>',{value:'rectangle',text:'Rectangle'})
+        .prop('selected', nexMap.styles.userPreferences.currentRoomShape=='rectangle'?true:false).appendTo(playerShape);
+    $('<option></option>',{value:'ellipse',text:'Circle'})
+        .prop('selected', nexMap.styles.userPreferences.currentRoomShape=='ellipse'?true:false).appendTo(playerShape);
+    $('<option></option>',{value:'diamond',text:'Diamond'})
+        .prop('selected', nexMap.styles.userPreferences.currentRoomShape=='diamond'?true:false).appendTo(playerShape);
+    $('<option></option>',{value:'star',text:'Star'})
+        .prop('selected', nexMap.styles.userPreferences.currentRoomShape=='star'?true:false).appendTo(playerShape);
+    $('<option></option>',{value:'vee',text:'Vee'})
+        .prop('selected', nexMap.styles.userPreferences.currentRoomShape=='vee'?true:false).appendTo(playerShape);
+    let playerShapeRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+    $("<td></td>", {style:'color:grey'}).text('Current room shape').appendTo(playerShapeRow);
+    $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(playerShape).appendTo(playerShapeRow);
+    
+    let curColor = $('<input></input>', {type:'color', 'class':'nexInput', id: 'nexPlayerColor',width:100})
+    	.on('change',function(){
+            nexMap.styles.userPreferences.currentRoomColor=$(this)[0].value;
+        	cy.style()
+        		.selector('.currentRoom')
+            		.style({
+        				'border-color':$(this)[0].value}).update();
+        });
+    let curColorRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+        $("<td></td>", {style:'color:grey'}).text('Current Room Color').appendTo(curColorRow);
+        $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(curColor).appendTo(curColorRow);
+    
+
 
 
     tab.appendTo(main);
 
     main.dialog({
         title:'nexMap Configuration',
-        width: 250,
+        width: 300,
         close:function(){
             nexMap.settings.userPreferences.commandSeparator = $('#nexCommandSep')[0].value.toString();
+            nexMap.settings.userPreferences.duanatharCommand = $('#nexDuanathar')[0].value.toString();
             nexMap.settings.save();
             $('.nexInput').remove();
             $('.nexMapDialog').parent().remove();       
