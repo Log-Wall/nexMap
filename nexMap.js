@@ -25,3 +25,34 @@ var nexMap = {
     },
     wormWarpExits: {},
 };
+
+var nexMap.findRoom = function(roomNum) {
+    if (nexMap.logging) {console.log(`nexMap: nexMap.findRoom(${roomNum})`)};
+
+    let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2.id==roomNum))
+    
+    if (typeof area === 'undefined') {
+        console.log(`Room ${roomNum} not mapped`);
+        return false;
+    }
+    
+    let rm = area.rooms.find(e3=>e3.id==roomNum);
+    if (nexMap.logging) {console.log(rm);}
+    return true;
+};
+
+nexMap.changeRoom = function(id) {
+    if (nexMap.logging) {console.log(`nexMap: nexMap.changeRoom(${id})`)};
+    if (!nexMap.findRoom(id)) {return;}
+    let room = cy.$id(id);
+    cy.startBatch();
+	cy.$('.currentRoom').removeClass('currentRoom');
+    room.addClass('currentRoom');
+    cy.endBatch()
+    nexMap.currentRoom = id;
+    $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
+    $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
+    
+    nexMap.changeArea(cy.$id(id).data().area, cy.$id(id).position().z);
+    cy.center('.currentRoom');
+};
