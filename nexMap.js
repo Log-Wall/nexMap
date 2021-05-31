@@ -1,6 +1,6 @@
 'use strict';
-var cy = {};
-var nexMap = {
+cy = {};
+nexMap = {
     logging: true,
     mudmap: {},
 	cytoscapeLoaded: false,
@@ -371,7 +371,9 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     version: '0.4',
     commandSeparator: '\\',
     useDuanathar: false,
+    useDuanatharan: false,
     duanatharCommand: 'say duanathar',
+    duanatharanCommand: 'say duanatharan',
     useWormholes: false,
     vibratingStick: false,
 }
@@ -607,7 +609,7 @@ nexMap.styles.style = function() {
         };
         inject('.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}'+
             '.nexswitch input {opacity: 0;width: 0;height: 0;}'+
-            '.nexslider {position: absolute;cursor: pointer;top: 0;left: 0;right: 0;bottom: 0;background-color: #ccc;-webkit-transition: .4s;transition: .4s;border-radius: 24px;}'+
+            '.nexslider {position: absolute;cursor: pointer;top: 0;left: 0;right: 0;bottom: 0;background-color: #555555;-webkit-transition: .4s;transition: .4s;border-radius: 24px;}'+
             '.nexslider:before {position: absolute;content: "";height: 16px;width: 16px;left: 3px;bottom: 3px;background-color: white;-webkit-transition: .4s;transition: .4s;border-radius: 50%;}'+
             'input:checked + .nexslider {background-color: #2196F3;}'+
             'input:focus + .nexslider {box-shadow: 0 0 1px #2196F3;}'+
@@ -691,22 +693,35 @@ nexMap.walker.determinePath = function(s, t) {
 
 nexMap.walker.checkClouds = function(astar, target) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkClouds()`)};
-    if (!nexMap.settings.userPreferences.useDuanathar) {return;}
-    
+    if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan) {return;}
+
     let nmw = nexMap.walker;
+    let highCloudPath;
     let firstWingRoom = astar.path.nodes().find(e=>e.data().userData.indoors!='y' && !nmw.antiWingAreas.includes(e.data('area')));
     let wingRoomId = firstWingRoom?firstWingRoom.data('id'):0;
     let cloudPath = cy.elements().aStar({ root: `#${cy.$id(3885).data('id')}`, goal: `#${cy.$id(target).data('id')}`, directed: true});
 
+    if (nexMap.settings.userPreferences.useDuanatharan) {
+        highCloudPath = cy.elements().aStar({ root: `#${cy.$id(4882).data('id')}`, goal: `#${cy.$id(target).data('id')}`, directed: true});
+    }
+
+    let cloudType = function(cloud, cmd) {
+        if (astar.distance > nmw.pathRooms.indexOf(wingRoomId)+cloud.distance) {
+            nmw.pathRooms.splice(nmw.pathRooms.indexOf(wingRoomId)+1);
+            nmw.pathCommands.splice(nmw.pathRooms.indexOf(wingRoomId));
+            nmw.pathCommands.push(cmd);
+            
+            cloud.path.nodes().forEach(e=>nmw.pathRooms.push(e.data('id')));
+            cloud.path.edges().forEach(e=>nmw.pathCommands.push(e.data('command')));
+        }
+    }
     
-    if (astar.distance > nmw.pathRooms.indexOf(wingRoomId)+cloudPath.distance) {
-        nmw.pathRooms.splice(nmw.pathRooms.indexOf(wingRoomId)+1);
-        nmw.pathCommands.splice(nmw.pathRooms.indexOf(wingRoomId));
-        nmw.pathCommands.push(nexMap.settings.userPreferences.duanatharCommand);
-        
-        cloudPath.path.nodes().forEach(e=>nmw.pathRooms.push(e.data('id')));
-        cloudPath.path.edges().forEach(e=>nmw.pathCommands.push(e.data('command')));
-    }  
+    if (highCloudPath && cloudPath.distance > highCloudPath.distance) {
+        cloudType(highCloudPath, nexMap.settings.userPreferences.duanatharanCommand);
+    }
+    else {
+        cloudType(cloudPath, nexMap.settings.userPreferences.duanatharCommand);
+    }     
 }
 
 nexMap.walker.hybridPath = function() {
@@ -855,7 +870,11 @@ nexMap.display.configDialog = function() {
     $("<th></th>", {style:'width:auto'}).text('Option').appendTo(header);
     $("<th></th>", {style:'width:auto'}).text('Setting').appendTo(header);
 
-    let configs = [{name:'Wormholes',setting:'useWormholes'},{name:'Duanathar',setting:'useDuanathar'},{name:'Vibrating Stick',setting:'vibratingStick'}];
+    let configs = [
+        {name:'Wormholes',setting:'useWormholes'},
+        {name:'Vibrating Stick',setting:'vibratingStick'},
+        {name:'Low Clouds',setting:'useDuanathar'},
+        {name:'High Clouds',setting:'useDuanatharan'}];
     for(let i = 0;i < configs.length;i++) {
 
         let lab = $('<label></label>', {'class':'nexswitch nexInput'});
@@ -876,10 +895,15 @@ nexMap.display.configDialog = function() {
     
     let duanathar = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:100,value:nexMap.settings.userPreferences.duanatharCommand});
     let duanatharRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
-    $("<td></td>", {style:'color:grey'}).text('Clouds Command(s)').appendTo(duanatharRow);
+    $("<td></td>", {style:'color:grey'}).text('Low Clouds Command(s)').appendTo(duanatharRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanathar).appendTo(duanatharRow);
-    
-    let nodeShape = $('<select></select>', {'class':'nexInput', id:'nexNodeShape'})
+
+    let duanatharan = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:100,value:nexMap.settings.userPreferences.duanatharCommand});
+    let duanatharanRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+    $("<td></td>", {style:'color:grey'}).text('High Clouds Command(s)').appendTo(duanatharanRow);
+    $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanatharan).appendTo(duanatharanRow);
+    /*
+    let nodeShape = $('<select></select>', {'class':'nexInput', id:'nexNodeShape',height:'auto',width:'auto'})
     	.on('change',function(){
             nexMap.styles.userPreferences.nodeShape=$(this)[0].value;
         	cy.style()
@@ -897,8 +921,8 @@ nexMap.display.configDialog = function() {
     let nodeShapeRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
     $("<td></td>", {style:'color:grey'}).text('Node shape').appendTo(nodeShapeRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(nodeShape).appendTo(nodeShapeRow);
-    
-    let playerShape = $('<select></select>', {'class':'nexInput', id:'nexPlayerShape'})
+    */
+    let playerShape = $('<select></select>', {'class':'nexInput', id:'nexPlayerShape',height:'auto',width:'auto'})
     	.on('change',function(){
             nexMap.styles.userPreferences.currentRoomShape=$(this)[0].value;
         	cy.style()
@@ -920,7 +944,7 @@ nexMap.display.configDialog = function() {
     $("<td></td>", {style:'color:grey'}).text('Current room shape').appendTo(playerShapeRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(playerShape).appendTo(playerShapeRow);
     
-    let curColor = $('<input></input>', {type:'color', 'class':'nexInput', id: 'nexPlayerColor',width:100})
+    let curColor = $('<input></input>', {type:'color', 'class':'nexInput', id: 'nexPlayerColor',width:100,defaultValue:nexMap.styles.userPreferences.currentRoomColor,value:nexMap.styles.userPreferences.currentRoomColor})
     	.on('change',function(){
             nexMap.styles.userPreferences.currentRoomColor=$(this)[0].value;
         	cy.style()
@@ -939,10 +963,11 @@ nexMap.display.configDialog = function() {
 
     main.dialog({
         title:'nexMap Configuration',
-        width: 300,
+        width: 400,
         close:function(){
             nexMap.settings.userPreferences.commandSeparator = $('#nexCommandSep')[0].value.toString();
             nexMap.settings.userPreferences.duanatharCommand = $('#nexDuanathar')[0].value.toString();
+            nexMap.settings.userPreferences.duanatharanCommand = $('#nexDuanatharan')[0].value.toString();
             nexMap.settings.save();
             $('.nexInput').remove();
             $('.nexMapDialog').parent().remove();       
