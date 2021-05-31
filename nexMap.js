@@ -1,7 +1,9 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    logging: true,
+    version: 0.8,
+    logging: false,
+    loggingTime: '',
     mudmap: {},
 	cytoscapeLoaded: false,
     mudletMapLoaded: false,
@@ -348,17 +350,29 @@ nexMap.initializeGraph = function() {
 };
 
 nexMap.startUp = function() {
-    if (nexMap.logging) {console.log('nexMap: nexMap.startUp()')};
+    if (nexMap.logging) {
+        console.log('nexMap: nexMap.startUp()')
+        nexMap.loggingTime = new Date();
+    };
 	
     run_function('nexMap.settings', {}, 'nexmap');
+    if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
 	run_function('nexMap.display', {}, 'nexmap');
+    if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
 	nexMap.display.notice('Loading mapper modules');
+    if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
     nexMap.loadDependencies().then(()=>{
+        if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
         nexMap.initializeGraph();
+        if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
         nexMap.generateGraph().then(()=> {
+            if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             run_function('nexMap.styles', {}, 'nexmap');
+            if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             run_function('nexMap.walker', {}, 'nexmap');
+            if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             nexMap.styles.style();
+            if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             nexMap.display.notice('Mapper loaded and ready for use.');
             client.send_direct('ql');
         });
@@ -368,7 +382,6 @@ nexMap.startUp = function() {
 nexMap.settings = {};
 
 nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
-    version: '0.8',
     commandSeparator: '\\',
     useDuanathar: false,
     useDuanatharan: false,
@@ -864,6 +877,44 @@ nexMap.display.displayTable = function() {
     }
         
     print(pagination[0].outerHTML);                                                                                               
+}
+
+nexMap.display.userCommands = function() {
+    let cmds = {
+        'nm load':'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
+        'nm config':'Display all user configuration options.',
+        'nm save':'Saves the current user configuration settings.',
+        'nm find (phrase)':'replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
+        'nm goto (id)':'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.',
+        'nm stop':'Cancels the current pathing.',
+        'nm zoom':'Manual zoom control of the map. Accepts values between 0.2 - 3.0',
+        'nm refresh':'Refresh the graphical display of the map. Fail safe for problems.',
+        'nm update':'Attempt to load the latest version of nexMap without regenerating the entire map.',
+        '(gui)':'Selecting any room on the map via mouse click will speedwalk to the selected room',
+        '(gui)':'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.',
+    }
+
+    let tab = $("<table></table>", {
+        class:"mono", 
+        style:"max-width:100%;border:1px solid white;border-spacing:5px"});
+
+        let cap = $("<caption></caption>", {style:"text-align:left"}).appendTo(tab);
+        $('<span></span>',{style:'color:DodgerBlue'}).text('[-').appendTo(cap);
+        $('<span></span>',{style:'color:OrangeRed'}).text('nexMap').appendTo(cap);
+        $('<span></span>',{style:'color:DodgerBlue'}).text('-] ').appendTo(cap);
+        $('<span></span>',{style:'color:GoldenRod'}).text('Aliases for user interaction').appendTo(cap)
+
+        let header = $("<tr></tr>", {style: "text-align:left;color:Ivory"}).appendTo(tab);
+        $("<th></th>", {style:'width:10em'}).text('Command').appendTo(header);
+        $("<th></th>", {style:'width:auto'}).text('Summary').appendTo(header);
+
+    for(let x in cmds) {
+        let row  = $("<tr></tr>", {style:'color:dimgrey;border-top: 1px solid white;border-bottom: 1px solid white;'}).appendTo(tab);
+        $("<td></td>", {style:'color:grey'}).text(x).appendTo(row);
+        $("<td></td>", {style:'color:gainsboro;'}).text(cmds[x]).appendTo(row);
+    }   
+
+    print(tab[0].outerHTML);
 }
 
 nexMap.display.configDialog = function() {
