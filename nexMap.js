@@ -368,7 +368,7 @@ nexMap.startUp = function() {
 nexMap.settings = {};
 
 nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
-    version: '0.4',
+    version: '0.8',
     commandSeparator: '\\',
     useDuanathar: false,
     useDuanatharan: false,
