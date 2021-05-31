@@ -1,6 +1,6 @@
 'use strict';
-cy = {};
-nexMap = {
+var cy = {};
+var nexMap = {
     logging: true,
     mudmap: {},
 	cytoscapeLoaded: false,
@@ -418,7 +418,7 @@ nexMap.styles = {}
 nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
 	nodeShape: 'rectangle',
     currentRoomShape: 'star',
-    currentRoomColor: 'DeepPink',
+    currentRoomColor: '#ff1493',
     displayWormholes: false
 }
 
@@ -607,7 +607,8 @@ nexMap.styles.style = function() {
         if ( $('.client_nexmap-rules').length ) { 
             $('.client_nexmap-rules').remove();
         };
-        inject('.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}'+
+        inject('#tab_nexmap_map::before {content: "\\f262";}'+
+            '.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}'+
             '.nexswitch input {opacity: 0;width: 0;height: 0;}'+
             '.nexslider {position: absolute;cursor: pointer;top: 0;left: 0;right: 0;bottom: 0;background-color: #555555;-webkit-transition: .4s;transition: .4s;border-radius: 24px;}'+
             '.nexslider:before {position: absolute;content: "";height: 16px;width: 16px;left: 3px;bottom: 3px;background-color: white;-webkit-transition: .4s;transition: .4s;border-radius: 50%;}'+
@@ -619,6 +620,14 @@ nexMap.styles.style = function() {
             '.nexflex-item    { flex-grow: 1; }')
     };         
     generateStyle(); 
+}
+
+nexMap.styles.refresh = function() {
+    cy.unmount();
+    cy.mount($('#cy'));
+    nexMap.styles.style();
+    cy.center('.currentRoom');
+    cy.zoom(1);
 }
 
 nexMap.walker = {
@@ -893,12 +902,12 @@ nexMap.display.configDialog = function() {
         $("<td></td>", {style:'color:grey'}).text('Command Separator').appendTo(tinRow);
         $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(tin).appendTo(tinRow);
     
-    let duanathar = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:100,value:nexMap.settings.userPreferences.duanatharCommand});
+    let duanathar = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:150,value:nexMap.settings.userPreferences.duanatharCommand});
     let duanatharRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
     $("<td></td>", {style:'color:grey'}).text('Low Clouds Command(s)').appendTo(duanatharRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanathar).appendTo(duanatharRow);
 
-    let duanatharan = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanathar',width:100,value:nexMap.settings.userPreferences.duanatharCommand});
+    let duanatharan = $('<input></input>', {type:'text', 'class':'nexInput', id: 'nexDuanatharan',width:150,value:nexMap.settings.userPreferences.duanatharanCommand});
     let duanatharanRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
     $("<td></td>", {style:'color:grey'}).text('High Clouds Command(s)').appendTo(duanatharanRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanatharan).appendTo(duanatharanRow);
