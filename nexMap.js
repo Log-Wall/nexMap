@@ -378,6 +378,7 @@ nexMap.startUp = function() {
             nexMap.display.notice('Mapper loaded and ready for use.');
             client.send_direct('ql');
             cy.center('.currentRoom');
+            nexMap.display.notice(`Use "nm" for summary of user commands`);
         });
     });
 };
@@ -725,6 +726,9 @@ nexMap.walker.checkClouds = function(astar, target) {
     let highCloudPath;
     let firstWingRoom = astar.path.nodes().find(e=>e.data().userData.indoors!='y' && !nmw.antiWingAreas.includes(e.data('area')));
     let wingRoomId = firstWingRoom?firstWingRoom.data('id'):0;
+
+    if (wingRoomId == 0) {return;}
+
     let cloudPath = cy.elements().aStar({
         root: `#${cy.$id(3885).data('id')}`,
         goal: `#${cy.$id(target).data('id')}`,
@@ -898,19 +902,22 @@ nexMap.display.userCommands = function() {
         'nm load':'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
         'nm config':'Display all user configuration options.',
         'nm save':'Saves the current user configuration settings.',
-        'nm find (phrase)':'replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
+        'nm find (phrase)':'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
         'nm goto (id)':'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.',
         'nm stop':'Cancels the current pathing.',
         'nm zoom':'Manual zoom control of the map. Accepts values between 0.2 - 3.0',
-        'nm refresh':'Refresh the graphical display of the map. Fail safe for problems.',
+        'nm refresh':'Refresh the graphical display of the map. Fail safe for display issues.',
         'nm update':'Attempt to load the latest version of nexMap without regenerating the entire map.',
-        '(gui)':'Selecting any room on the map via mouse click will speedwalk to the selected room',
-        '(gui)':'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.',
+        'nm wormholes':'Toggles the use of wormholes for pathing.',
+        'nm clouds':'Toggles the use of clouds, both high and low, for pathing.',
+        '(gui) note 1':'Selecting any room on the map via mouse click will speedwalk to the selected room.',
+        '(gui) note 2':'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.',
     }
 
     let tab = $("<table></table>", {
         class:"mono", 
-        style:"max-width:100%;border:1px solid white;border-spacing:5px"});
+        style:"max-width:100%;border:1px solid white;border-spacing:5px"
+    });
 
         let cap = $("<caption></caption>", {style:"text-align:left"}).appendTo(tab);
         $('<span></span>',{style:'color:DodgerBlue'}).text('[-').appendTo(cap);
@@ -977,26 +984,7 @@ nexMap.display.configDialog = function() {
     let duanatharanRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
     $("<td></td>", {style:'color:grey'}).text('High Clouds Command(s)').appendTo(duanatharanRow);
     $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(duanatharan).appendTo(duanatharanRow);
-    /*
-    let nodeShape = $('<select></select>', {'class':'nexInput', id:'nexNodeShape',height:'auto',width:'auto'})
-    	.on('change',function(){
-            nexMap.styles.userPreferences.nodeShape=$(this)[0].value;
-        	cy.style()
-        		.selector('node')
-            		.style({
-        				'shape':$(this)[0].value})
-                .selector('.currentRoom')
-            		.style({
-        				'shape':nexMap.styles.userPreferences.currentRoomShape}).update();
-        });
-    $('<option></option>',{value:'rectangle',text:'Rectangle'})
-        .prop('selected', nexMap.styles.userPreferences.nodeShape=='rectangle'?true:false).appendTo(nodeShape);
-    $('<option></option>',{value:'ellipse',text:'Circle'})
-        .prop('selected', nexMap.styles.userPreferences.nodeShape=='ellipse'?true:false).appendTo(nodeShape);
-    let nodeShapeRow  = $("<tr></tr>", {class: 'nexRow',style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
-    $("<td></td>", {style:'color:grey'}).text('Node shape').appendTo(nodeShapeRow);
-    $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(nodeShape).appendTo(nodeShapeRow);
-    */
+
     let playerShape = $('<select></select>', {'class':'nexInput', id:'nexPlayerShape',height:'auto',width:'auto'})
     	.on('change',function(){
             nexMap.styles.userPreferences.currentRoomShape=$(this)[0].value;
