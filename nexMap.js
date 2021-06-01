@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.9,
+    version: 0.95,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -219,7 +219,7 @@ nexMap.generateGraph = async function() {
     
         cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
 
-        nexMap.wormWarpExits.data({
+        cy.$('.wormhole').data({
             weight: nexMap.settings.userPreferences.useWormholes?1:100
         });
         
