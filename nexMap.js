@@ -485,7 +485,10 @@ nexMap.styles.style = function() {
     	.selector('.wormhole')
     		.style({
     			visibility: nexMap.settings.userPreferences.displayWormholes?'visible':'hidden',
-        		width: 1
+        		width: 1,
+                'line-style':'dashed',
+                'line-dash-pattern':[5,10],
+                'line-color':'#8d32a8'
     		})
     	.selector('.sewergrate')
     		.style({
