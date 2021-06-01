@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.8,
+    version: 0.9,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -25,7 +25,6 @@ var nexMap = {
         down: "d",
         up: "up",
     },
-    wormWarpExits: {},
 };
 
 nexMap.findRoom = function(roomNum) {
@@ -191,6 +190,7 @@ nexMap.generateGraph = async function() {
                                     id: `${room.id}-${exit.exitId}`,
                                     source: room.id,
                                     target: exit.exitId,
+                                    weight: 1,
                                     area: area.id,
                                     command: xt,
                                     z: room.coordinates[2]
@@ -206,7 +206,7 @@ nexMap.generateGraph = async function() {
                             else if (xt=='d')
                                 newEdge.classes = ['downexit'];
                             else if (xt=='worm warp')
-                                newEdge.classes = ['wormwarp'];
+                                newEdge.classes = ['wormhole'];
                             else if (xt=='enter grate')
                                 newEdge.classes = ['sewergrate'];
 
@@ -218,8 +218,10 @@ nexMap.generateGraph = async function() {
         }
     
         cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
-        nexMap.wormWarpExits = cy.edges().filter(e=>e.data('command') == 'worm warp');
-        if (!nexMap.settings.userPreferences.useWormholes) {nexMap.wormWarpExits.remove();} // removes all worm warp exits.
+
+        nexMap.wormWarpExits.data({
+            weight: nexMap.settings.userPreferences.useWormholes?1:100
+        });
         
         /* 
         //Mudlet map has hundreds of rooms with no name.
@@ -390,6 +392,7 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     duanatharanCommand: 'say duanatharan',
     useWormholes: false,
     vibratingStick: false,
+    displayWormholes: false,
 }
 
 nexMap.settings.save = function() {
@@ -397,32 +400,22 @@ nexMap.settings.save = function() {
     set_variable('nexMapStyles',nexMap.styles.userPreferences);
 }
 
-nexMap.settings.toggleWormholes = function(val) {
-    if (val) {nexMap.settings.userPreferences.useWormholes = val};
-	if (nexMap.settings.userPreferences.useWormholes) {
-        nexMap.settings.userPreferences.useWormholes = false;
-        nexMap.wormWarpExits.remove();
-        nexMap.display.notice('No longer using wormholes.');
-    }
-    else {
-        nexMap.settings.userPreferences.useWormholes = true;
-        nexMap.wormWarpExits.restore();
-        nexMap.display.notice('Will now use wormholes.');
-    }
-    
-    nexMap.settings.save();
-}
-
-nexMap.settings.toggle = function(set) {
-   if (set == 'useWormholes') {
-        nexMap.settings.toggleWormholes();
-    	return;
-	}
-    
+nexMap.settings.toggle = function(set) {    
     if (nexMap.settings.userPreferences[set])
         nexMap.settings.userPreferences[set] = false;
     else
         nexMap.settings.userPreferences[set] = true;
+
+    if (['displayWormholes', 'useWormholes'].includes(set)) {
+        cy.$('.wormhole')
+            .style({
+                visibility: nexMap.settings.userPreferences.displayWormholes?'visible':'hidden',
+                width: 1
+            })
+            .data({
+                weight: nexMap.settings.userPreferences.useWormholes?1:100
+            })
+    }
 
     nexMap.settings.save();       
 }
@@ -433,7 +426,6 @@ nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
 	nodeShape: 'rectangle',
     currentRoomShape: 'star',
     currentRoomColor: '#ff1493',
-    displayWormholes: false
 }
 
 nexMap.styles.style = function() {
@@ -492,7 +484,7 @@ nexMap.styles.style = function() {
     		})    
     	.selector('.wormhole')
     		.style({
-    			visibility: nexMap.styles.userPreferences.displayWormholes?'visible':'hidden',
+    			visibility: nexMap.settings.userPreferences.displayWormholes?'visible':'hidden',
         		width: 1
     		})
     	.selector('.sewergrate')
@@ -700,7 +692,12 @@ nexMap.walker.determinePath = function(s, t) {
     nmw.pathRooms = [];
     nmw.pathCommands = [];
     
-    let astar = cy.elements().aStar({ root: `#${cy.$id(source).data('id')}`, goal: `#${cy.$id(target).data('id')}`, directed: true});
+    let astar = cy.elements().aStar({
+        root: `#${cy.$id(source).data('id')}`,
+        goal: `#${cy.$id(target).data('id')}`,
+        weight: function(edge) {return edge.data('weight');},
+        directed: true
+    });
     
     if (!astar.found) {
         nexMap.display.notice(`No path to ${target} found.`);
@@ -725,10 +722,20 @@ nexMap.walker.checkClouds = function(astar, target) {
     let highCloudPath;
     let firstWingRoom = astar.path.nodes().find(e=>e.data().userData.indoors!='y' && !nmw.antiWingAreas.includes(e.data('area')));
     let wingRoomId = firstWingRoom?firstWingRoom.data('id'):0;
-    let cloudPath = cy.elements().aStar({ root: `#${cy.$id(3885).data('id')}`, goal: `#${cy.$id(target).data('id')}`, directed: true});
+    let cloudPath = cy.elements().aStar({
+        root: `#${cy.$id(3885).data('id')}`,
+        goal: `#${cy.$id(target).data('id')}`,
+        weight: function(edge) {return edge.data('weight');},
+        directed: true
+    });
 
     if (nexMap.settings.userPreferences.useDuanatharan) {
-        highCloudPath = cy.elements().aStar({ root: `#${cy.$id(4882).data('id')}`, goal: `#${cy.$id(target).data('id')}`, directed: true});
+        highCloudPath = cy.elements().aStar({
+            root: `#${cy.$id(4882).data('id')}`,
+            goal: `#${cy.$id(target).data('id')}`,
+            weight: function(edge) {return edge.data('weight');},
+            directed: true
+        });
     }
 
     let cloudType = function(cloud, cmd) {
@@ -936,6 +943,7 @@ nexMap.display.configDialog = function() {
 
     let configs = [
         {name:'Wormholes',setting:'useWormholes'},
+        {name:'Show Wormholes',setting:'displayWormholes'},
         {name:'Vibrating Stick',setting:'vibratingStick'},
         {name:'Low Clouds',setting:'useDuanathar'},
         {name:'High Clouds',setting:'useDuanatharan'}];
@@ -1020,9 +1028,6 @@ nexMap.display.configDialog = function() {
         $("<td></td>", {style:'color:grey'}).text('Current Room Color').appendTo(curColorRow);
         $("<td></td>", {style:'color:gainsboro;text-decoration:underline'}).append(curColor).appendTo(curColorRow);
     
-
-
-
     tab.appendTo(main);
 
     main.dialog({
