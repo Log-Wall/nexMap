@@ -375,6 +375,7 @@ nexMap.startUp = function() {
             if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             nexMap.display.notice('Mapper loaded and ready for use.');
             client.send_direct('ql');
+            cy.center('.currentRoom');
         });
     });
 };
@@ -620,8 +621,7 @@ nexMap.styles.style = function() {
         if ( $('.client_nexmap-rules').length ) { 
             $('.client_nexmap-rules').remove();
         };
-        let nexMapCSS = '#tab_nexmap_map::before {content: "\\f262";}'+
-            '.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}'+
+        let nexMapCSS = '.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}'+
             '.nexswitch input {opacity: 0;width: 0;height: 0;}'+
             '.nexslider {position: absolute;cursor: pointer;top: 0;left: 0;right: 0;bottom: 0;background-color: #555555;-webkit-transition: .4s;transition: .4s;border-radius: 24px;}'+
             '.nexslider:before {position: absolute;content: "";height: 16px;width: 16px;left: 3px;bottom: 3px;background-color: white;-webkit-transition: .4s;transition: .4s;border-radius: 50%;}'+
@@ -633,7 +633,7 @@ nexMap.styles.style = function() {
             '.nexflex-item    { flex-grow: 1; }';
         if (client.css_style!='standard')
             nexMapCSS += '#tab_nexmap_map::before {content: "\\f262";}';
-            
+
         inject(nexMapCSS);
     };         
     generateStyle(); 
