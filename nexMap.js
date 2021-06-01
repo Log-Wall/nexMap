@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.95,
+    version: 0.97,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -768,9 +768,6 @@ nexMap.walker.hybridPath = function() {
     if (nexMap.logging) {console.log(`nexMap: nexMap.walker.hybridPath()`)};
 	let nmwpc = nexMap.walker.pathCommands;
     let nmwpr = nexMap.walker.pathRooms;
-
-    console.log(nmwpc);
-    console.log(nmwpr);
     
     let hybCmds = [];
     let hybRm = [nmwpr[0]];
@@ -790,9 +787,7 @@ nexMap.walker.hybridPath = function() {
             hybRm.push(nmwpr[nmwpr.length-1]);
             hybCmds.push(`path track ${nmwpr[nmwpr.length-1]}`);
         }
-    
-    console.log(hybCmds);
-    console.log(hybRm);
+
     nexMap.walker.pathCommands = [...hybCmds];
     nexMap.walker.pathRooms = [...hybRm];
 }
