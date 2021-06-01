@@ -33,7 +33,7 @@ nexMap.findRoom = function(roomNum) {
     let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2.id==roomNum))
     
     if (typeof area === 'undefined') {
-        console.log(`Room ${roomNum} not mapped`);
+        console.log(`Area ${roomNum} not mapped`);
         return false;
     }
     
@@ -305,7 +305,7 @@ nexMap.loadDependencies = async function() {
             $.ajax({
                 async: true,
                 global: false,
-                url: 'https://raw.githubusercontent.com/Log-Wall/AchaeaNexus/main/mudletmap-min.json',
+                url: 'https://raw.githubusercontent.com/Log-Wall/nexMap/main/mudletmap-min.json',
                 //url: "https://raw.githubusercontent.com/IRE-Mudlet-Mapping/AchaeaCrowdmap/gh-pages/Map/map.json",
                 dataType: "json",
                 success: function (data) {
