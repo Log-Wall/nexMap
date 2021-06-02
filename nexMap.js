@@ -147,15 +147,13 @@ nexMap.generateExits = function() {
 nexMap.generateGraph = async function() {
     if (nexMap.logging) {console.log('nexMap: nexMap.generateGraph()')};
     return new Promise((resolve, reject)=> {
+        cy.startBatch();
+        let nexGraph = [];
         for (let area of nexMap.mudmap.areas) {
             if (area.roomCount) {
-                nexMap.mudmap.areas[area.id].rooms.forEach(room => {
+                area.rooms.forEach(room => {
                     let xts = [];
-                    nexMap.mudmap.areas.find(e=>
-                        e.rooms.find(e2=>
-                            e2.id==room.id)).rooms.find(e3=>
-                                e3.id==room.id).exits.forEach(e=>
-                                    xts.push(nexMap.shortDirs[e.name]?nexMap.shortDirs[e.name]:e.name));
+                    room.exits.forEach(e=>xts.push(nexMap.shortDirs[e.name]?nexMap.shortDirs[e.name]:e.name));
                     let newNode = {
                         group: 'nodes',
                         data: {
@@ -172,14 +170,15 @@ nexMap.generateGraph = async function() {
                         classes: [`environment${room.environment}`],
                         locked: true,
                     };
-                    cy.add(newNode)
+                    //cy.add(newNode)
+                    nexGraph.push(newNode);
                 });   
             }
         }
 
         for (let area of nexMap.mudmap.areas) {
             if (area.roomCount) {
-                nexMap.mudmap.areas[area.id].rooms.forEach(room => {
+                area.rooms.forEach(room => {
                     room.exits.forEach(exit => {
                         let newEdge;
                         let xt = nexMap.shortDirs[exit.name]?nexMap.shortDirs[exit.name]:exit.name;
@@ -210,19 +209,21 @@ nexMap.generateGraph = async function() {
                             else if (xt=='enter grate')
                                 newEdge.classes = ['sewergrate'];
 
-                            cy.add(newEdge);
+                            //cy.add(newEdge);
+                            nexGraph.push(newEdge);
                         }
                     });
                 });   
             }
         }
+        cy.add(nexGraph);
     
         cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
 
         cy.$('.wormhole').data({
             weight: nexMap.settings.userPreferences.useWormholes?1:100
         });
-        
+        cy.endBatch();
         /* 
         //Mudlet map has hundreds of rooms with no name.
         
@@ -353,15 +354,15 @@ nexMap.initializeGraph = function() {
 
 nexMap.startUp = function() {
     if (nexMap.logging) {
-        console.log('nexMap: nexMap.startUp()')
-        nexMap.loggingTime = new Date();
+        console.log('nexMap: nexMap.startUp()');    
     };
+    nexMap.loggingTime = new Date();
 	
     run_function('nexMap.settings', {}, 'nexmap');
     if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
 	run_function('nexMap.display', {}, 'nexmap');
     if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
-	nexMap.display.notice('Loading mapper modules');
+	nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
     if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
     nexMap.loadDependencies().then(()=>{
         if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
@@ -375,7 +376,7 @@ nexMap.startUp = function() {
             if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             nexMap.styles.style();
             if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
-            nexMap.display.notice('Mapper loaded and ready for use.');
+            nexMap.display.notice(`Mapper loaded and ready for use. (${(new Date() - nexMap.loggingTime)/1000}s)`);
             client.send_direct('ql');
             cy.center('.currentRoom');
             nexMap.display.notice(`Use "nm" for summary of user commands`);
@@ -769,6 +770,9 @@ nexMap.walker.hybridPath = function() {
 	let nmwpc = nexMap.walker.pathCommands;
     let nmwpr = nexMap.walker.pathRooms;
     
+    if (nexMap.logging) {console.log(nmwpc);}
+    if (nexMap.logging) {console.log(nmwpr);}
+
     let hybCmds = [];
     let hybRm = [nmwpr[0]];
     nmwpc.forEach((e,i)=>{
@@ -788,6 +792,8 @@ nexMap.walker.hybridPath = function() {
             hybCmds.push(`path track ${nmwpr[nmwpr.length-1]}`);
         }
 
+    if (nexMap.logging) {console.log(hybCmds);}
+    if (nexMap.logging) {console.log(hybRm);}
     nexMap.walker.pathCommands = [...hybCmds];
     nexMap.walker.pathRooms = [...hybRm];
 }
