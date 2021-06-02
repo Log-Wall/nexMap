@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.98,
+    version: 0.99,
     logging: false,
     loggingTime: '',
     mudmap: {},
