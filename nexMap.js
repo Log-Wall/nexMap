@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.97,
+    version: 0.98,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -305,7 +305,7 @@ nexMap.loadDependencies = async function() {
             $.ajax({
                 async: true,
                 global: false,
-                url: 'https://raw.githubusercontent.com/Log-Wall/AchaeaNexus/main/mudletmap-min.json',
+                url: 'https://raw.githubusercontent.com/Log-Wall/nexMap/main/mudletmap-min.json',
                 //url: "https://raw.githubusercontent.com/IRE-Mudlet-Mapping/AchaeaCrowdmap/gh-pages/Map/map.json",
                 dataType: "json",
                 success: function (data) {
