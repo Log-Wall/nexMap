@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.991,
+    version: 0.992,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -59,8 +59,8 @@ nexMap.findRooms = function(search) {
     }
 };
 
-nexMap.findArea = function(search) {
-    let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase()==search.toLowerCase()))
+nexMap.findArea = function(search, change) {
+    let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())))
 
     if (typeof area === 'undefined') {
         console.log(`Area not found`);
@@ -88,7 +88,7 @@ nexMap.changeRoom = function(id) {
 
 nexMap.changeArea = function(area, z) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeArea(${area} ${z})`)};
-    if (area == nexMap.currentArea && z == nexMap.currentZ) {return;}
+    if (area == nexMap.currentArea && z == nexMap.currentZ) {console.log('area return');return;}
     nexMap.currentArea = area;
     nexMap.currentZ = z;
     cy.startBatch();
@@ -222,20 +222,24 @@ nexMap.generateGraph = async function() {
                                     door: exit.door?exit.door:false,
                                     z: room.coordinates[2]
                                 },
+                                classes: []
                             }
 
+                            if (newEdge.data.door)
+                                newEdge.classes.push('doorexit');
+
                             if (xt=='in')
-                                newEdge.classes = ['inexit'];
+                                newEdge.classes.push('inexit');
                             else if (xt=='out')
-                                newEdge.classes = ['outexit'];
+                                newEdge.classes.push('outexit');
                             else if (xt=='up')
-                                newEdge.classes = ['upexit'];
+                                newEdge.classes.push('upexit');
                             else if (xt=='d')
-                                newEdge.classes = ['downexit'];
+                                newEdge.classes.push('downexit');
                             else if (xt=='worm warp')
-                                newEdge.classes = ['wormhole'];
+                                newEdge.classes.push('wormhole');
                             else if (xt=='enter grate')
-                                newEdge.classes = ['sewergrate'];
+                                newEdge.classes.push('sewergrate');
 
                             nexGraph.push(newEdge);
                         }
@@ -547,6 +551,13 @@ nexMap.styles.style = function() {
         		'curve-style':'bezier',
         		visibility: 'hidden'
     		})
+        .selector('.doorexit')
+    		.style({
+    			'curve-style':'straight',
+                'mid-source-arrow-shape':'tee',
+                'mid-target-arrow-shape':'tee',
+                'arrow-scale':.65
+    		})
         .selector('.pseudo-d')
             .style({
             display: 'element',
@@ -666,9 +677,16 @@ nexMap.styles.style = function() {
 nexMap.styles.refresh = function() {
     cy.unmount();
     cy.mount($('#cy'));
-    nexMap.styles.style();
-    cy.center('.currentRoom');
-    cy.zoom(1);
+    cy.startBatch();
+    cy.$('.areaDisplay').removeClass('areaDisplay');
+    cy.$('.pseudo').remove();
+    let x = cy.nodes().filter(e =>
+                            e.data('area') == nexMap.currentArea && e.data('z') == nexMap.currentZ
+                            );
+    x.addClass('areaDisplay');
+    nexMap.generateExits();
+    cy.center(nexMap.currentRoom);
+    cy.endBatch();
 }
 
 nexMap.walker = {
