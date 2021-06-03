@@ -710,10 +710,7 @@ nexMap.styles.stylesheet = [
             'height': '10',
             'border-color': 'black',
             'border-width': '0.5',
-            'display': 'none',
-            'background-fit':'contain',
-            'background-width':'100%',
-            'background-height':'100%',
+            'display': 'none',           
         }
     }, 
     {
@@ -721,6 +718,15 @@ nexMap.styles.stylesheet = [
         'style': {
             'width': '1',
             'line-color': 'grey'
+        }
+    },
+    {
+        'selector':'[image]',
+        'style': {
+            'background-image': 'data(image)',
+            'background-fit':'contain',
+            'background-width':'100%',
+            'background-height':'100%',
         }
     }, 
     {
