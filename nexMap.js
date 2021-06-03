@@ -59,7 +59,7 @@ nexMap.findRooms = function(search) {
     }
 };
 
-nexMap.findArea = function(search, change) {
+nexMap.findArea = function(search) {
     let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())))
 
     if (typeof area === 'undefined') {
@@ -351,7 +351,7 @@ nexMap.loadDependencies = async function() {
             $.ajax({
                 async: true,
                 global: false,
-                url: 'https://raw.githubusercontent.com/Log-Wall/nexMap/main/mudletmap-min.json',
+                url: 'https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/mudletmap-min.json',
                 //url: "https://raw.githubusercontent.com/IRE-Mudlet-Mapping/AchaeaCrowdmap/gh-pages/Map/map.json",
                 dataType: "json",
                 success: function (data) {
@@ -1251,11 +1251,11 @@ nexMap.walker = {
     clientEcho: client.echo_input,
 }
 
-nexMap.walker.speedWalk = function() {
+nexMap.walker.speedWalk = function(s, t) {
     if (nexMap.logging) {console.log('nexMap: nexMap.walker.speedwalk()')};
     nexMap.walker.pathingStartTime = new Date();
     client.echo_input = false;
-	nexMap.walker.determinePath();    
+	nexMap.walker.determinePath(s, t);    
 }
 
 nexMap.walker.step = function() {
@@ -1420,12 +1420,19 @@ nexMap.display = {
     displayEntries: {},
 }
 
-nexMap.display.notice = function(txt) {
+nexMap.display.notice = function(txt, html=false) {
 	let msg = $('<span></span>', {class:"mono"});
     $('<span></span>',{style:'color:DodgerBlue'}).text('[-').appendTo(msg);
     $('<span></span>',{style:'color:OrangeRed'}).text('nexMap').appendTo(msg);
     $('<span></span>',{style:'color:DodgerBlue'}).text('-] ').appendTo(msg);
-    $('<span></span>',{style:'color:GoldenRod'}).text(txt).appendTo(msg)
+
+    if (html) {
+        txt.appendTo(msg)    
+    }
+    else {
+        $('<span></span>',{style:'color:GoldenRod'}).text(txt).appendTo(msg)
+    }
+
     
     print(msg[0].outerHTML);
 }
@@ -1495,42 +1502,75 @@ nexMap.display.displayTable = function() {
 
 nexMap.display.userCommands = function() {
     let cmds = {
-        'nm load':'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
-        'nm config':'Display all user configuration options.',
-        'nm save':'Saves the current user configuration settings.',
-        'nm find (phrase)':'Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
-        'nm goto (id)':'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.',
-        'nm stop':'Cancels the current pathing.',
-        'nm zoom':'Manual zoom control of the map. Accepts values between 0.2 - 3.0',
-        'nm refresh':'Refresh the graphical display of the map. Fail safe for display issues.',
-        'nm update':'Attempt to load the latest version of nexMap without regenerating the entire map.',
-        'nm wormholes':'Toggles the use of wormholes for pathing.',
-        'nm clouds':'Toggles the use of clouds, both high and low, for pathing.',
-        '(gui) note 1':'Selecting any room on the map via mouse click will speedwalk to the selected room.',
-        '(gui) note 2':'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.',
+        0: {
+            cmd:'nm load',
+            txt:'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
+        },
+        1: {
+            cmd:'nm config',
+            txt:'Display all user configuration options.'
+        },
+        2: {
+            cmd:'nm save',
+            txt:'Saves the current user configuration settings.'
+        },
+        3: {
+            cmd:'nm find <phrase>',
+            txt:'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
+        },
+        4: {
+            cmd:'nm goto <id>',
+            txt:'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.'
+        },
+        5: {
+            cmd:'nm stop',
+            txt:'Cancels the current pathing.'
+        },
+        6: {
+            cmd:'nm zoom',
+            txt:'Manual zoom control of the map. Accepts values between 0.2 - 3.0'
+        },
+        7: {
+            cmd:'nm refresh',
+            txt:'Refresh the graphical display of the map. Fail safe for display issues.'
+        },
+        8: {
+            cmd:'nm update',
+            txt:'Attempt to load the latest version of nexMap without regenerating the entire map.'
+        },
+        9: {
+            cmd:'nm wormholes',
+            txt:'Toggles the use of wormholes for pathing.'
+        },
+        10: {
+            cmd:'nm clouds',
+            txt:'Toggles the use of clouds, both high and low, for pathing.'
+        },
+        11: {
+            cmd:'(map)',
+            txt:'Selecting any room on the map via mouse click will speedwalk to the selected room.'
+        },
+        12: {
+            cmd:'(map)',
+            txt:'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.'
+        }
     }
 
     let tab = $("<table></table>", {
         class:"mono", 
-        style:"max-width:100%;border:1px solid white;border-spacing:1px"
+        style:"max-width:100%;border:1px solid white;border-spacing:0px"
     });
-
-        let cap = $("<caption></caption>", {style:"text-align:left"}).appendTo(tab);
-        $('<span></span>',{style:'color:DodgerBlue'}).text('[-').appendTo(cap);
-        $('<span></span>',{style:'color:OrangeRed'}).text('nexMap').appendTo(cap);
-        $('<span></span>',{style:'color:DodgerBlue'}).text('-] ').appendTo(cap);
-        $('<span></span>',{style:'color:GoldenRod'}).text('Aliases for user interaction').appendTo(cap)
-
-        let header = $("<tr></tr>", {style: "text-align:left;color:Ivory"}).appendTo(tab);
+	let header = $("<tr></tr>", {style: "text-align:left;color:Ivory"}).appendTo(tab);
         $("<th></th>", {style:'width:10em'}).text('Command').appendTo(header);
         $("<th></th>", {style:'width:auto'}).text('Summary').appendTo(header);
 
     for(let x in cmds) {
+        console.log(x);
         let row  = $("<tr></tr>", {style:'color:dimgrey;border-top: 1px solid white;border-bottom: 1px solid white;'}).appendTo(tab);
-        $("<td></td>", {style:'color:grey'}).text(x).appendTo(row);
-        $("<td></td>", {style:'color:gainsboro;'}).text(cmds[x]).appendTo(row);
+        $("<td></td>", {style:'color:grey'}).text(cmds[x].cmd).appendTo(row);
+        $("<td></td>", {style:'color:gainsboro;'}).text(cmds[x].txt).appendTo(row);
     }   
-
+	nexMap.display.notice('Aliases for user interaction');
     print(tab[0].outerHTML);
 }
 
@@ -1630,3 +1670,4 @@ nexMap.display.configDialog = function() {
         }
     });
 }
+
