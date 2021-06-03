@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.99,
+    version: 0.992,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -33,7 +33,7 @@ nexMap.findRoom = function(roomNum) {
     let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2.id==roomNum))
     
     if (typeof area === 'undefined') {
-        console.log(`Room ${roomNum} not mapped`);
+        console.log(`Area ${roomNum} not mapped`);
         return false;
     }
     
@@ -41,6 +41,34 @@ nexMap.findRoom = function(roomNum) {
     if (nexMap.logging) {console.log(rm);}
     return true;
 };
+
+nexMap.findRooms = function(search) {
+    if (nexMap.logging) {console.log(`nexMap: nexMap.findRoom(${search})`)};
+
+    let qry = cy.nodes().filter(e=>{
+        if (e.data('name') && e.data('name').toLowerCase().includes(search.trim().toLowerCase())) 
+            return true;
+    });
+    
+    if (typeof qry === 'undefined') {
+        console.log(`Rooms matching ${search} not found.`);
+        return false;
+    }
+    else {
+        return qry;
+    }
+};
+
+nexMap.findArea = function(search, change) {
+    let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())))
+
+    if (typeof area === 'undefined') {
+        console.log(`Area not found`);
+        return false;
+    }
+
+    return area;
+}
 
 nexMap.changeRoom = function(id) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeRoom(${id})`)};
@@ -60,7 +88,7 @@ nexMap.changeRoom = function(id) {
 
 nexMap.changeArea = function(area, z, override = false) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeArea(${area} ${z})`)};
-    if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {return;}
+    if (area == nexMap.currentArea && z == nexMap.currentZ) {console.log('area return');return;}
     nexMap.currentArea = area;
     nexMap.currentZ = z;
     cy.startBatch();
@@ -153,7 +181,7 @@ nexMap.generateGraph = async function() {
     return new Promise((resolve, reject)=> {
         cy.startBatch();
         let nexGraph = [];
-        for (let area of nexMap.mudmap.areas) {
+        nexMap.mudmap.areas.forEach(area => {
             if (area.roomCount) {
                 area.rooms.forEach(room => {
                     let xts = [];
@@ -174,13 +202,12 @@ nexMap.generateGraph = async function() {
                         classes: [`environment${room.environment}`],
                         locked: true,
                     };
-                    //cy.add(newNode)
                     nexGraph.push(newNode);
                 });   
             }
-        }
+        });
 
-        for (let area of nexMap.mudmap.areas) {
+        nexMap.mudmap.areas.forEach(area => {
             if (area.roomCount) {
                 area.rooms.forEach(room => {
                     room.exits.forEach(exit => {
@@ -196,33 +223,37 @@ nexMap.generateGraph = async function() {
                                     weight: 1,
                                     area: area.id,
                                     command: xt,
+                                    door: exit.door?exit.door:false,
                                     z: room.coordinates[2]
                                 },
+                                classes: []
                             }
 
-                            if (xt=='in')
-                                newEdge.classes = ['inexit'];
-                            else if (xt=='out')
-                                newEdge.classes = ['outexit'];
-                            else if (xt=='up')
-                                newEdge.classes = ['upexit'];
-                            else if (xt=='d')
-                                newEdge.classes = ['downexit'];
-                            else if (xt=='worm warp')
-                                newEdge.classes = ['wormhole'];
-                            else if (xt=='enter grate')
-                                newEdge.classes = ['sewergrate'];
+                            if (newEdge.data.door)
+                                newEdge.classes.push('doorexit');
 
-                            //cy.add(newEdge);
+                            if (xt=='in')
+                                newEdge.classes.push('inexit');
+                            else if (xt=='out')
+                                newEdge.classes.push('outexit');
+                            else if (xt=='up')
+                                newEdge.classes.push('upexit');
+                            else if (xt=='d')
+                                newEdge.classes.push('downexit');
+                            else if (xt=='worm warp')
+                                newEdge.classes.push('wormhole');
+                            else if (xt=='enter grate')
+                                newEdge.classes.push('sewergrate');
+
                             nexGraph.push(newEdge);
                         }
                     });
                 });   
             }
-        }
+        });
         cy.add(nexGraph);
-
-        cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
+    
+        //cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
 
         cy.$('.wormhole').data({
             weight: nexMap.settings.userPreferences.useWormholes?1:100
@@ -475,8 +506,8 @@ nexMap.styles.style = function() {
     cy.style()
         .selector('.displayLabel')
             .style({
-                //label: 'data(name)',
-        		label: 'data(id)',
+                label: 'data(name)',
+        		//label: 'data(id)',
                 color: 'white',
             })
     	.selector('.areaDisplay')
@@ -523,6 +554,13 @@ nexMap.styles.style = function() {
     			'source-arrow-shape':'circle',
         		'curve-style':'bezier',
         		visibility: 'hidden'
+    		})
+        .selector('.doorexit')
+    		.style({
+    			'curve-style':'straight',
+                'mid-source-arrow-shape':'tee',
+                'mid-target-arrow-shape':'tee',
+                'arrow-scale':.65
     		})
         .selector('.pseudo-d')
             .style({
@@ -910,7 +948,7 @@ nexMap.display.userCommands = function() {
         'nm load':'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
         'nm config':'Display all user configuration options.',
         'nm save':'Saves the current user configuration settings.',
-        'nm find (phrase)':'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
+        'nm find (phrase)':'Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.',
         'nm goto (id)':'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.',
         'nm stop':'Cancels the current pathing.',
         'nm zoom':'Manual zoom control of the map. Accepts values between 0.2 - 3.0',
