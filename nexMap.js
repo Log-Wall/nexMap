@@ -198,7 +198,7 @@ nexMap.generateGraph = async function() {
                             userData: room.userData,
                             z: room.coordinates[2],
                             exits: xts,
-                            symbol: room.symbol?room.symbol:false
+                            symbol: room.symbol?room.symbol:false,
                         },
                         position: {x: room.coordinates[0]*20, y: room.coordinates[1]*-20, z: room.coordinates[2]},
                         classes: [`environment${room.environment}`],
@@ -208,7 +208,10 @@ nexMap.generateGraph = async function() {
                     if (room?.symbol?.text && ['S','F','G','C','N','M','$','L','H','W','A','P','B'].includes(room.symbol.text)) {
                         newNode.data.image = nexMap.styles.generateSVG(room.symbol.text);
                     }
-                        
+                    
+                    if (xts.includes('worm warp'))
+                        newNode.classes.push('wormholeRoom');
+
                     nexGraph.push(newNode);
                 });   
             }
@@ -690,7 +693,7 @@ nexMap.styles.generateSVG = function(txt) {
             x:"2",
             y:"8",
             fill:"black",
-            'font-family':"Arial",
+            'font-family':"Arial, monospace",
             style:"font-size:8px;text-align:center;font-weight:bold"
         }).text(txt);
     
@@ -729,6 +732,15 @@ nexMap.styles.stylesheet = [
             'background-height':'100%',
         }
     }, 
+    /*{
+        'selector':'node[wormhole = true]',
+        'style': {
+            'background-image': 'data(image)',
+            'background-fit':'contain',
+            'background-width':'100%',
+            'background-height':'100%',
+        }
+    },*/
     {
         'selector':'.displayLabel',
         'style': {
@@ -1391,7 +1403,6 @@ nexMap.walker.reset = function() {
     nexMap.walker.destination = 0;
     client.echo_input = nexMap.walker.clientEcho;
 }
-
 
 nexMap.walker.stop = function() {
     if (nexMap.logging) {console.log('nexMap: nexMap.walker.stop()')};
