@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.992,
+    version: 0.995,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -88,7 +88,7 @@ nexMap.changeRoom = function(id) {
 
 nexMap.changeArea = function(area, z, override = false) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeArea(${area} ${z})`)};
-    if (area == nexMap.currentArea && z == nexMap.currentZ) {console.log('area return');return;}
+    if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {console.log('area return');return;}
     nexMap.currentArea = area;
     nexMap.currentZ = z;
     cy.startBatch();
@@ -186,6 +186,7 @@ nexMap.generateGraph = async function() {
                 area.rooms.forEach(room => {
                     let xts = [];
                     room.exits.forEach(e=>xts.push(nexMap.shortDirs[e.name]?nexMap.shortDirs[e.name]:e.name));
+
                     let newNode = {
                         group: 'nodes',
                         data: {
@@ -197,11 +198,17 @@ nexMap.generateGraph = async function() {
                             userData: room.userData,
                             z: room.coordinates[2],
                             exits: xts,
+                            symbol: room.symbol?room.symbol:false
                         },
                         position: {x: room.coordinates[0]*20, y: room.coordinates[1]*-20, z: room.coordinates[2]},
                         classes: [`environment${room.environment}`],
                         locked: true,
                     };
+
+                    if (room?.symbol?.text && ['S','F','G','C','N','M','$','L','H','W','A','P','B'].includes(room.symbol.text)) {
+                        newNode.data.image = nexMap.styles.generateSVG(room.symbol.text);
+                    }
+                        
                     nexGraph.push(newNode);
                 });   
             }
@@ -274,7 +281,7 @@ nexMap.generateGraph = async function() {
         resolve();
     });
 }
-    
+ 
 nexMap.loadDependencies = async function() {
     if (nexMap.logging) {console.log('nexMap: nexMap.loadDependencies()')};
     let preloader = async function() {
@@ -412,9 +419,8 @@ nexMap.startUp = function() {
             if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
             nexMap.styles.style();
             if (nexMap.logging) {console.log(`${(new Date() - nexMap.loggingTime)/1000}s`);}
-            nexMap.display.notice(`Mapper loaded and ready for use. (${(new Date() - nexMap.loggingTime)/1000}s)`);
             client.send_direct('ql');
-            cy.center('.currentRoom');
+            nexMap.display.notice(`Mapper loaded and ready for use. (${(new Date() - nexMap.loggingTime)/1000}s)`);
             nexMap.display.notice(`Use "nm" for summary of user commands`);
         });
     });
@@ -678,6 +684,23 @@ nexMap.styles.style = function() {
     generateStyle(); 
 }
 
+nexMap.styles.generateSVG = function(txt) {
+    let svg_pin =  $('<svg width="11" height="11" viewBox="0 0 11 11" version="1.1"  xmlns="http://www.w3.org/2000/svg"></svg>')
+    let svg_text = $('<text></text>', {
+            x:"2",
+            y:"8",
+            fill:"black",
+            'font-family':"Arial",
+            style:"font-size:8px;text-align:center;font-weight:bold"
+        }).text(txt);
+    
+    svg_text.appendTo(svg_pin)
+
+    let svgpin_Url = encodeURI("data:image/svg+xml;utf-8," + svg_pin[0].outerHTML);
+
+    return svgpin_Url;
+}
+
 nexMap.styles.stylesheet = [
     {
         'selector':'node',
@@ -688,6 +711,9 @@ nexMap.styles.stylesheet = [
             'border-color': 'black',
             'border-width': '0.5',
             'display': 'none',
+            'background-fit':'contain',
+            'background-width':'100%',
+            'background-height':'100%',
         }
     }, 
     {
@@ -763,6 +789,15 @@ nexMap.styles.stylesheet = [
             "visibility": "hidden",
             "curve-style": "bezier",
             "source-arrow-shape": "circle"
+        }
+    },
+    {
+        "selector": ".doorexit",
+        "style": {
+            'curve-style':'straight',
+            'mid-source-arrow-shape':'tee',
+            'mid-target-arrow-shape':'tee',
+            'arrow-scale':.65
         }
     },
     {
