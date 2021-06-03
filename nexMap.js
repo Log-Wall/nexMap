@@ -58,9 +58,9 @@ nexMap.changeRoom = function(id) {
     cy.center('.currentRoom');
 };
 
-nexMap.changeArea = function(area, z) {
+nexMap.changeArea = function(area, z, override = false) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeArea(${area} ${z})`)};
-    if (area == nexMap.currentArea && z == nexMap.currentZ) {return;}
+    if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {return;}
     nexMap.currentArea = area;
     nexMap.currentZ = z;
     cy.startBatch();
@@ -74,6 +74,10 @@ nexMap.changeArea = function(area, z) {
     cy.center(nexMap.currentRoom);
     cy.endBatch();
 };
+
+nexMap.fit = function() {
+    cy.fit();
+}
 
 nexMap.generateExits = function() {
     if (nexMap.logging) {console.log('nexMap: nexMap.generateExits()')};
@@ -217,7 +221,7 @@ nexMap.generateGraph = async function() {
             }
         }
         cy.add(nexGraph);
-    
+
         cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
 
         cy.$('.wormhole').data({
@@ -452,7 +456,7 @@ nexMap.styles.style = function() {
     cy.style()
         .selector('node')
             .style({
-                shape: nexMap.styles.userPreferences.nodeShape,
+                shape: 'rectangle',
                 width: 10,
                 height: 10,
         		'border-color': 'black',
@@ -637,11 +641,14 @@ nexMap.styles.style = function() {
 }
 
 nexMap.styles.refresh = function() {
+    console.log(typeof cy.umount);
+    if (typeof cy.unmount !== 'function') {
+        nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
+        return;
+    }
     cy.unmount();
     cy.mount($('#cy'));
-    nexMap.styles.style();
-    cy.center('.currentRoom');
-    cy.zoom(1);
+    nexMap.changeArea(nexMap.currentArea,nexMap.currentZ,true)
 }
 
 nexMap.walker = {
@@ -917,7 +924,7 @@ nexMap.display.userCommands = function() {
 
     let tab = $("<table></table>", {
         class:"mono", 
-        style:"max-width:100%;border:1px solid white;border-spacing:5px"
+        style:"max-width:100%;border:1px solid white;border-spacing:1px"
     });
 
         let cap = $("<caption></caption>", {style:"text-align:left"}).appendTo(tab);
