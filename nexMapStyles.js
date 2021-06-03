@@ -8,7 +8,6 @@ nexMap.styles.stylesheet = [
             'border-color': 'black',
             'border-width': '0.5',
             'display': 'none',
-            'locked': 'true',
         }
     }, 
     {
@@ -41,10 +40,10 @@ nexMap.styles.stylesheet = [
     {
         'selector': '.wormhole',
         'style': {
-            'visibility': 'hidden',
+            'visibility': nexMap.settings.userPreferences.displayWormholes?'visible':'hidden',
             'width': '1',
             'line-style':'dashed',
-            'line-dash-pattern':'[5,10]',
+            'line-dash-pattern':[5,10],
             'line-color':'#8d32a8'
         }
     },

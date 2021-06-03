@@ -374,6 +374,7 @@ nexMap.initializeGraph = function() {
     cy = cytoscape({
         container: document.getElementById('cy'),
         layout: 'grid',
+        style: nexMap.styles.stylesheet,
         zoom: 1,
         minZoom: 0.25,
         maxZoom: 3,
@@ -479,7 +480,7 @@ nexMap.styles.style = function() {
         'margin-top': '22px',
         'margin-bottom': '22px'
     });
-    
+    /*
     cy.startBatch()
     cy.style().clear();
     
@@ -493,7 +494,6 @@ nexMap.styles.style = function() {
         		'border-color': 'black',
         		'border-width': 0.5,
         		display: 'none',
-        		locked: true,
             })
         .selector('edge')
             .style({
@@ -644,7 +644,7 @@ nexMap.styles.style = function() {
             });
 
     cy.style().update();
-    
+    */
     cy.on('mouseout', 'node', evt=>{evt.target.removeClass('displayLabel');}); // Pop up labels on mouseover
     cy.on('mouseover', 'node', evt=>{evt.target.flashClass('displayLabel', 3000)}); // Pop up labels on mouseover
     cy.on('zoom', e=>{cy.style().selector('.displayLabel').style({'font-size': `${12*1/cy.zoom()}pt`})}) //Increases the size of the label based on the zoom level.
