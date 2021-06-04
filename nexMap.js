@@ -312,11 +312,11 @@ nexMap.loadDependencies = async function () {
 
     let preloader = async function () {
         return new Promise((resolve, reject) => {
-            let src = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"
-
-            let head = document.getElementsByTagName('head')[0]
-            let elem = document.createElement('script')
-            elem.src = src + '?' + Math.random()
+            //let src = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"
+            let src = "https://cdn.jsdelivr.net/npm/cytoscape@3.19.0/dist/cytoscape.min.js";
+            let head = document.getElementsByTagName('head')[0];
+            let elem = document.createElement('script');
+            elem.src = src + '?' + Math.random();
             elem.onload = () => {
                 console.log('Loaded ' + src + '.');
                 nexMap.cytoscapeLoaded = true;
@@ -1142,7 +1142,7 @@ nexMap.walker = {
     pathRawRooms: [],
     delay: false,
     destination: 0,
-    antiWingAreas: [44],
+    antiWingAreas: [44, 49 ,190],
     stepCommand: '',
     clientEcho: client.echo_input,
 }
@@ -1229,6 +1229,10 @@ nexMap.walker.determinePath = function (s, t) {
         path: nexMap.walker.pathCommands,
         rawPath: nexMap.walker.pathRawCommands
     }
+}
+
+nexMap.walker.gareCheck = function (astar, target) {
+    // Room number 12695
 }
 
 nexMap.walker.checkClouds = function (astar, target) {
