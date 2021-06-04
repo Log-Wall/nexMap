@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.9991,
+    version: 0.9992,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -469,10 +469,6 @@ nexMap.startUp = function () {
         nexMap.initializeGraph();
         stopWatch();
         nexMap.generateGraph().then(() => {
-            stopWatch();
-            run_function('nexMap.styles', {}, 'nexmap');
-            stopWatch();
-            run_function('nexMap.walker', {}, 'nexmap');
             stopWatch();
             nexMap.styles.style();
             stopWatch();
@@ -1156,6 +1152,7 @@ nexMap.walker.speedWalk = function (s, t) {
         console.log('nexMap: nexMap.walker.speedwalk()')
     };
     nexMap.walker.pathingStartTime = new Date();
+    nexMap.walker.clientEcho = client.echo_input;
     client.echo_input = false;
     nexMap.walker.determinePath(s, t);
     nexMap.walker.step();
@@ -1406,7 +1403,19 @@ nexMap.display.click.area = function (id) {
         return;
     }
 
-    nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
+    //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
+    // The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
+    // this is a work around.
+    let target = cy.elements().aStar({
+        root: `#11828`,
+        goal: cy.$(`[area = ${id}]`),
+        weight: function (edge) {
+            return edge.data('weight');
+        },
+        directed: true
+    }).path.nodes().find(n => n.data('area') == id).data('id')
+
+    nexMap.walker.speedWalk(nexMap.currentRoom, target)
 }
 
 nexMap.display.displayTable = function () {
@@ -1415,7 +1424,7 @@ nexMap.display.displayTable = function () {
 
     let tab = $("<table></table>", {
         class: "mono",
-        style: "max-width:100%;border:1px solid white;border-spacing:0px"
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
     });
     if (nexMap.display.pageIndex == 0) {
         let cap = $("<caption></caption>", {
@@ -1564,7 +1573,7 @@ nexMap.display.userCommands = function () {
 
     let tab = $("<table></table>", {
         class: "mono",
-        style: "max-width:100%;border:1px solid white;border-spacing:0px"
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
     });
     let header = $("<tr></tr>", {
         style: "text-align:left;color:Ivory"
@@ -1577,9 +1586,8 @@ nexMap.display.userCommands = function () {
     }).text('Summary').appendTo(header);
 
     for (let x in cmds) {
-        console.log(x);
         let row = $("<tr></tr>", {
-            style: 'color:dimgrey;border-top: 1px solid white;border-bottom: 1px solid white;'
+            style: 'color:dimgrey;border-top: 1px solid GoldenRod;border-bottom: 1px solid GoldenRod;'
         }).appendTo(tab);
         $("<td></td>", {
             style: 'color:grey'
@@ -1595,7 +1603,7 @@ nexMap.display.userCommands = function () {
 nexMap.display.areaTable = function (entries, caption) {
     let tab = $("<table></table>", {
         class: "mono",
-        style: "max-width:100%;border:1px solid white;border-spacing:0px"
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
     });
     if (nexMap.display.pageIndex == 0) {
         let cap = $("<caption></caption>", {
