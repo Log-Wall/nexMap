@@ -27,6 +27,7 @@ var nexMap = {
     },
 };
 
+// Returns the JSON object matching the room ID.
 nexMap.findRoom = function(roomNum) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.findRoom(${roomNum})`)};
 
@@ -42,6 +43,7 @@ nexMap.findRoom = function(roomNum) {
     return true;
 };
 
+// Returns a collection of Nodes matching the room NAME
 nexMap.findRooms = function(search) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.findRoom(${search})`)};
 
@@ -59,20 +61,25 @@ nexMap.findRooms = function(search) {
     }
 };
 
+// Returns a collection of JSON area objects.
+// JSON areas have custom names that do not always match the GMCP area names.
+// The GMCP area names are stored as userData in the room objects. Searches all user data for matches,
+// then returns the area containing the matched room.
 nexMap.findArea = function(search) {
-    let area = nexMap.mudmap.areas.find(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())))
+    let areas = nexMap.mudmap.areas.filter(e=>e.rooms.find(e2=>e2?.userData?.['Game Area']?.toLowerCase() == search.toLowerCase()))
 
-    if (typeof area === 'undefined') {
+    if (typeof areas === 'undefined') {
         console.log(`Area not found`);
         return false;
     }
 
-    return area;
+    return areas;
 }
 
 nexMap.changeRoom = function(id) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeRoom(${id})`)};
     if (!nexMap.findRoom(id)) {return;}
+
     let room = cy.$id(id);
     cy.startBatch();
 	cy.$('.currentRoom').removeClass('currentRoom');
@@ -82,13 +89,14 @@ nexMap.changeRoom = function(id) {
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
     $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
-    nexMap.changeArea(cy.$id(id).data().area, cy.$id(id).position().z);
+    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
     cy.center('.currentRoom');
 };
 
 nexMap.changeArea = function(area, z, override = false) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.changeArea(${area} ${z})`)};
     if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {console.log('area return');return;}
+
     nexMap.currentArea = area;
     nexMap.currentZ = z;
     cy.startBatch();
@@ -179,7 +187,6 @@ nexMap.generateExits = function() {
 nexMap.generateGraph = async function() {
     if (nexMap.logging) {console.log('nexMap: nexMap.generateGraph()')};
     return new Promise((resolve, reject)=> {
-        cy.startBatch();
         let nexGraph = [];
         nexMap.mudmap.areas.forEach(area => {
             if (area.roomCount) {
@@ -230,7 +237,7 @@ nexMap.generateGraph = async function() {
                                     id: `${room.id}-${exit.exitId}`,
                                     source: room.id,
                                     target: exit.exitId,
-                                    weight: 1,
+                                    weight: nexMap.settings.userPreferences.useWormholes?1:100,
                                     area: area.id,
                                     command: xt,
                                     door: exit.door?exit.door:false,
@@ -262,13 +269,7 @@ nexMap.generateGraph = async function() {
             }
         });
         cy.add(nexGraph);
-    
-        //cy.edges().filter(e=>e.data('command') == 'southeastst').forEach(e=>e.data().command = 'se'); // Mudlet map misspells 'southeast'
 
-        cy.$('.wormhole').data({
-            weight: nexMap.settings.userPreferences.useWormholes?1:100
-        });
-        cy.endBatch();
         /* 
         //Mudlet map has hundreds of rooms with no name.
         
@@ -1295,10 +1296,12 @@ nexMap.walker.determinePath = function(s, t) {
        
     nmw.pathRooms = [];
     nmw.pathCommands = [];
-    
+
+    let g = typeof target === 'object'?t:`#${target}`
+
     let astar = cy.elements().aStar({
-        root: `#${cy.$id(source).data('id')}`,
-        goal: `#${cy.$id(target).data('id')}`,
+        root: `#${source}`,
+        goal: g,
         weight: function(edge) {return edge.data('weight');},
         directed: true
     });
@@ -1333,17 +1336,19 @@ nexMap.walker.checkClouds = function(astar, target) {
 
     if (wingRoomId == 0) {return;}
 
+    let g = typeof target === 'object'?target:`#${target}`
+
     let cloudPath = cy.elements().aStar({
-        root: `#${cy.$id(3885).data('id')}`,
-        goal: `#${cy.$id(target).data('id')}`,
+        root: `#3885`,
+        goal: g,
         weight: function(edge) {return edge.data('weight');},
         directed: true
     });
 
     if (nexMap.settings.userPreferences.useDuanatharan) {
         highCloudPath = cy.elements().aStar({
-            root: `#${cy.$id(4882).data('id')}`,
-            goal: `#${cy.$id(target).data('id')}`,
+            root: `#4882`,
+            goal: g,
             weight: function(edge) {return edge.data('weight');},
             directed: true
         });
@@ -1451,9 +1456,17 @@ nexMap.display.generateTable = function(entries, caption) {
     nexMap.display.displayTable();
 }
 
-nexMap.display.click = function(id) {
+nexMap.display.click.room = function(id) {
+    if (typeof id !== 'number') {console.log(id);return;}
+
     cy.$(':selected').unselect();
 	cy.$(`#${id}`).select();   
+}
+
+nexMap.display.click.area = function(id) {
+    if (typeof id !== 'number') {console.log(id);return;}
+
+    nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
 }
 
 nexMap.display.displayTable = function() {
@@ -1486,9 +1499,9 @@ nexMap.display.displayTable = function() {
     let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex*nexMap.display.pageBreak) : 0;
     for(let i = startIndex;i < entries.length && i < startIndex+nexMap.display.pageBreak;i++) {
     	let row  = $("<tr></tr>", {style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
-        $("<td></td>", {style:'color:grey',onclick: `nexMap.display.click(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('id')).appendTo(row);
-        $("<td></td>", {style:'color:gainsboro;text-decoration:underline',onclick: `nexMap.display.click(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('name')).appendTo(row);
-        $("<td></td>", {onclick: `nexMap.display.click(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('areaName')).appendTo(row);
+        $("<td></td>", {style:'color:grey',onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('id')).appendTo(row);
+        $("<td></td>", {style:'color:gainsboro;text-decoration:underline',onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('name')).appendTo(row);
+        $("<td></td>", {onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].data('id'))});`}).text(entries[i].data('areaName')).appendTo(row);
     }   
     
     print(tab[0].outerHTML);
@@ -1578,6 +1591,41 @@ nexMap.display.userCommands = function() {
         $("<td></td>", {style:'color:gainsboro;'}).text(cmds[x].txt).appendTo(row);
     }   
 	nexMap.display.notice('Aliases for user interaction');
+    print(tab[0].outerHTML);
+}
+
+nexMap.display.areaTable = function(entries, caption) { 
+    let tab = $("<table></table>", {
+        class:"mono", 
+        style:"max-width:100%;border:1px solid white;border-spacing:0px"});
+    if (nexMap.display.pageIndex == 0) {
+        let cap = $("<caption></caption>", {style:"text-align:left"}).appendTo(tab);
+        $('<span></span>',{style:'color:DodgerBlue'}).text('[-').appendTo(cap);
+        $('<span></span>',{style:'color:OrangeRed'}).text('nexMap').appendTo(cap);
+        $('<span></span>',{style:'color:DodgerBlue'}).text('-] ').appendTo(cap);
+        $('<span></span>',{style:'color:GoldenRod'}).text('Displaying matches for ').appendTo(cap)
+        $('<span></span>',{style:'font-weight:bold;color:LawnGreen'}).text(caption).appendTo(cap);//fix
+    
+        let header = $("<tr></tr>", {style: "text-align:left;color:Ivory"}).appendTo(tab);
+        $("<th></th>", {style:'width:5em'}).text('Num').appendTo(header);
+        $("<th></th>", {style:'width:auto'}).text('Area Name').appendTo(header);
+        $("<th></th>", {style:'width:auto'}).text('Room Count').appendTo(header);
+	}
+    else {
+        let header = $("<tr></tr>", {style: "text-align:left;color:Ivory"}).appendTo(tab);
+        $("<th></th>", {style:'width:5em'}).text('').appendTo(header);
+        $("<th></th>", {style:'width:auto'}).text('').appendTo(header);
+        $("<th></th>", {style:'width:auto'}).text('').appendTo(header);
+    }
+    
+    let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex*nexMap.display.pageBreak) : 0;
+    for(let i = startIndex;i < entries.length && i < startIndex+nexMap.display.pageBreak;i++) {
+    	let row  = $("<tr></tr>", {style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
+        $("<td></td>", {style:'color:grey',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].id)).appendTo(row);
+        $("<td></td>", {style:'color:gainsboro;text-decoration:underline',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].name)).appendTo(row);
+        $("<td></td>", {onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].roomCount).appendTo(row);
+    }   
+    
     print(tab[0].outerHTML);
 }
 
