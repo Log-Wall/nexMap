@@ -1,2 +1,2 @@
 # nexMap
-nexMap provides access to the mudlet community map while using the Nexus client.
+nexMap provides access to the Achaea crowd map while using the Nexus client.
