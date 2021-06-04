@@ -1244,6 +1244,8 @@ nexMap.walker = {
     pathing: false,
     pathRooms: [],
     pathCommands: [],
+    pathRawCommands: [],
+    pathRawRooms: [],
     delay: false,
     destination: 0,
     antiWingAreas: [44],
@@ -1255,7 +1257,8 @@ nexMap.walker.speedWalk = function(s, t) {
     if (nexMap.logging) {console.log('nexMap: nexMap.walker.speedwalk()')};
     nexMap.walker.pathingStartTime = new Date();
     client.echo_input = false;
-	nexMap.walker.determinePath(s, t);    
+	nexMap.walker.determinePath(s, t);   
+    nexMap.walker.step(); 
 }
 
 nexMap.walker.step = function() {
@@ -1309,10 +1312,14 @@ nexMap.walker.determinePath = function(s, t) {
     astar.path.edges().forEach(e=>nmw.pathCommands.push(e.data('command')));
 
     nmw.checkClouds(astar, target);
-    
+    nmw.pathRawCommands = [...nmw.pathCommands];
+    nmw.pathRawRooms = [...nmw.pathRooms];
     nmw.hybridPath();
 
-    nmw.step();
+    return {
+        path:nexMap.walker.pathCommands,
+        rawPath:nexMap.walker.pathRawCommands
+    }
 }
 
 nexMap.walker.checkClouds = function(astar, target) {
