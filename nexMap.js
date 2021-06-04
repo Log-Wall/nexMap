@@ -1353,7 +1353,7 @@ nexMap.display = {
     pageBreak: 20,
     pageIndex: 0,
     displayCap: {},
-    displayClick: "",
+    click: {},
     displayEntries: {},
 }
 
