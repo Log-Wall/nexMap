@@ -192,7 +192,48 @@ nexMap.generateGraph = async function() {
             if (area.roomCount) {
                 area.rooms.forEach(room => {
                     let xts = [];
-                    room.exits.forEach(e=>xts.push(nexMap.shortDirs[e.name]?nexMap.shortDirs[e.name]:e.name));
+                    let xt;
+                    let newEdge;
+                    room.exits.forEach(exit=>{
+                        xts.push(nexMap.shortDirs[exit.name]?nexMap.shortDirs[exit.name]:exit.name);
+                        xt = nexMap.shortDirs[exit.name]?nexMap.shortDirs[exit.name]:exit.name;
+                        if (cy.$(`#${room.id}-${exit.exitId}`).length==0) {
+                            newEdge = {
+                                group: 'edges',
+                                data: {
+                                    id: `${room.id}-${exit.exitId}`,
+                                    source: room.id,
+                                    target: exit.exitId,
+                                    weight: 1,
+                                    area: area.id,
+                                    command: xt,
+                                    door: exit.door?exit.door:false,
+                                    z: room.coordinates[2]
+                                },
+                                classes: []
+                            }
+
+                            if (newEdge.data.door)
+                                newEdge.classes.push('doorexit');
+
+                            if (xt=='in')
+                                newEdge.classes.push('inexit');
+                            else if (xt=='out')
+                                newEdge.classes.push('outexit');
+                            else if (xt=='up')
+                                newEdge.classes.push('upexit');
+                            else if (xt=='d')
+                                newEdge.classes.push('downexit');
+                            else if (xt=='worm warp') {
+                                newEdge.classes.push('wormhole');
+                                newEdge.data.weight = nexMap.settings.userPreferences.useWormholes?1:100;
+                            }
+                            else if (xt=='enter grate')
+                                newEdge.classes.push('sewergrate');
+
+                            nexGraph.push(newEdge);
+                        }
+                    });
 
                     let newNode = {
                         group: 'nodes',
@@ -224,50 +265,6 @@ nexMap.generateGraph = async function() {
             }
         });
 
-        nexMap.mudmap.areas.forEach(area => {
-            if (area.roomCount) {
-                area.rooms.forEach(room => {
-                    room.exits.forEach(exit => {
-                        let newEdge;
-                        let xt = nexMap.shortDirs[exit.name]?nexMap.shortDirs[exit.name]:exit.name;
-                        if (cy.$(`#${room.id}-${exit.exitId}`).length==0) {
-                            newEdge = {
-                                group: 'edges',
-                                data: {
-                                    id: `${room.id}-${exit.exitId}`,
-                                    source: room.id,
-                                    target: exit.exitId,
-                                    weight: nexMap.settings.userPreferences.useWormholes?1:100,
-                                    area: area.id,
-                                    command: xt,
-                                    door: exit.door?exit.door:false,
-                                    z: room.coordinates[2]
-                                },
-                                classes: []
-                            }
-
-                            if (newEdge.data.door)
-                                newEdge.classes.push('doorexit');
-
-                            if (xt=='in')
-                                newEdge.classes.push('inexit');
-                            else if (xt=='out')
-                                newEdge.classes.push('outexit');
-                            else if (xt=='up')
-                                newEdge.classes.push('upexit');
-                            else if (xt=='d')
-                                newEdge.classes.push('downexit');
-                            else if (xt=='worm warp')
-                                newEdge.classes.push('wormhole');
-                            else if (xt=='enter grate')
-                                newEdge.classes.push('sewergrate');
-
-                            nexGraph.push(newEdge);
-                        }
-                    });
-                });   
-            }
-        });
         cy.add(nexGraph);
 
         /* 
@@ -387,8 +384,9 @@ nexMap.initializeGraph = function() {
         layout: 'grid',
         style: nexMap.styles.stylesheet,
         zoom: 1,
-        minZoom: 0.25,
+        minZoom: 0.2,
         maxZoom: 3,
+        wheelSensitivity: 0.5,
         boxSelectionEnabled: false,
         selectionType: 'single',
 
@@ -471,7 +469,6 @@ nexMap.settings.toggle = function(set) {
 nexMap.styles = {}
 
 nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
-	nodeShape: 'rectangle',
     currentRoomShape: 'star',
     currentRoomColor: '#ff1493',
 }
@@ -490,171 +487,7 @@ nexMap.styles.style = function() {
         'margin-top': '22px',
         'margin-bottom': '22px'
     });
-    /*
-    cy.startBatch()
-    cy.style().clear();
-    
-    // Core element styles
-    cy.style()
-        .selector('node')
-            .style({
-                shape: 'rectangle',
-                width: 10,
-                height: 10,
-        		'border-color': 'black',
-        		'border-width': 0.5,
-        		display: 'none',
-            })
-        .selector('edge')
-            .style({
-                width: 1,
-                'line-color': 'grey',
-        		//display: 'none',
-            });
-    
-    // Classes styles
-    cy.style()
-        .selector('.displayLabel')
-            .style({
-                label: 'data(name)',
-        		//label: 'data(id)',
-                color: 'white',
-            })
-    	.selector('.areaDisplay')
-    		.style({
-        		display: 'element',
-    		}) 
-        .selector('.areaAdjacent')
-    		.style({
-        		display: 'element',
-    			visibility: 'hidden'
-    		})    
-    	.selector('.wormhole')
-    		.style({
-    			visibility: nexMap.settings.userPreferences.displayWormholes?'visible':'hidden',
-        		width: 1,
-                'line-style':'dashed',
-                'line-dash-pattern':[5,10],
-                'line-color':'#8d32a8'
-    		})
-    	.selector('.sewergrate')
-    		.style({
-        		visibility: 'hidden'
-    		})    
-    	.selector('.downexit')
-    		.style({
-    			'source-arrow-shape':'triangle',
-        		'curve-style':'bezier',
-        		visibility: 'hidden'    
-    		})
-    	.selector('.upexit')
-    		.style({
-    			'source-arrow-shape':'triangle',
-        		'curve-style':'bezier',
-        		visibility: 'hidden'
-    		})
-    	.selector('.inexit')
-    		.style({
-    			'source-arrow-shape':'circle',
-        		'curve-style':'bezier',
-        		visibility: 'hidden'    
-    		})
-    	.selector('.outexit')
-    		.style({
-    			'source-arrow-shape':'circle',
-        		'curve-style':'bezier',
-        		visibility: 'hidden'
-    		})
-        .selector('.doorexit')
-    		.style({
-    			'curve-style':'straight',
-                'mid-source-arrow-shape':'tee',
-                'mid-target-arrow-shape':'tee',
-                'arrow-scale':.65
-    		})
-        .selector('.pseudo-d')
-            .style({
-            display: 'element',
-        	label: '',
-            'border-color':'black',
-            'border-width':0.5,
-            'background-color':'white',
-            shape:'polygon',
-            'shape-polygon-points':[
-                -0.6,-0.7,
-                0.6,-0.7,
-                0,-0.1]
-        })
-        .selector('.pseudo-up')
-            .style({
-            display: 'element',
-        	label: '',
-            'border-color':'black',
-            'border-width':0.5,
-            'background-color':'white',
-            shape:'polygon',
-            'shape-polygon-points':[
-                0.6,0.7,
-                -0.6,0.7,
-                0,0.1]
-        })
-        .selector('.pseudo-in')
-            .style({
-            display: 'element',
-        	label: '',
-            'border-color':'black',
-            'border-width':0.5,
-            'background-color':'white',
-            shape:'polygon',
-            'shape-polygon-points':[
-                0.7,-0.6,
-                0.7,0.6,
-                0.1,0.0]
-        })
-        .selector('.pseudo-out')
-            .style({
-            display: 'element',
-        	label: '',
-            'border-color':'black',
-            'border-width':0.5,
-            'background-color':'white',
-            shape:'polygon',
-            'shape-polygon-points':[
-                -0.7,0.6,
-                -0.7,-0.6,
-                -0.1,0.0]
-        })
-        .selector('.areaAdjacentExit')
-            .style({
-            display: 'element',
-            'target-arrow-shape':'vee',
-            'curve-style':'straight',
-        	'arrow-scale':0.75
-        });
-    
-    // Node colors based on environment tag
-    nexMap.mudmap.customEnvColors.forEach(e => {
-        cy.style()
-        .selector(`.environment${e.id}`)
-            .style('background-color', `rgb(${e.color24RGB.join()})`)     
-    });
-
-    cy.style()
-        .selector(':selected')
-            .style({
-            'background-color': 'green',
-            })
-        .selector('.currentRoom')
-            .style({
-        	'border-color':nexMap.styles.userPreferences.currentRoomColor,
-        	'border-width':2,
-        	shape: nexMap.styles.userPreferences.currentRoomShape,
-        	width:12,
-        	height:12
-            });
-
-    cy.style().update();
-    */
+ 
     cy.on('mouseout', 'node', evt=>{evt.target.removeClass('displayLabel');}); // Pop up labels on mouseover
     cy.on('mouseover', 'node', evt=>{evt.target.flashClass('displayLabel', 3000)}); // Pop up labels on mouseover
     cy.on('zoom', e=>{cy.style().selector('.displayLabel').style({'font-size': `${12*1/cy.zoom()}pt`})}) //Increases the size of the label based on the zoom level.
@@ -1231,7 +1064,6 @@ nexMap.styles.stylesheet = [
 ];
 
 nexMap.styles.refresh = function() {
-    console.log(typeof cy.umount);
     if (typeof cy.unmount !== 'function') {
         nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
         return;
@@ -1621,8 +1453,8 @@ nexMap.display.areaTable = function(entries, caption) {
     let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex*nexMap.display.pageBreak) : 0;
     for(let i = startIndex;i < entries.length && i < startIndex+nexMap.display.pageBreak;i++) {
     	let row  = $("<tr></tr>", {style:'cursor:pointer;color:dimgrey;'}).appendTo(tab);
-        $("<td></td>", {style:'color:grey',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].id)).appendTo(row);
-        $("<td></td>", {style:'color:gainsboro;text-decoration:underline',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].name)).appendTo(row);
+        $("<td></td>", {style:'color:grey',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].id).appendTo(row);
+        $("<td></td>", {style:'color:gainsboro;text-decoration:underline',onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].name).appendTo(row);
         $("<td></td>", {onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`}).text(entries[i].roomCount).appendTo(row);
     }   
     
@@ -1720,6 +1552,7 @@ nexMap.display.configDialog = function() {
             nexMap.settings.userPreferences.duanatharCommand = $('#nexDuanathar')[0].value.toString();
             nexMap.settings.userPreferences.duanatharanCommand = $('#nexDuanatharan')[0].value.toString();
             nexMap.settings.save();
+            nexMap.display.notice('User settings saved to server.');
             $('.nexInput').remove();
             $('.nexMapDialog').parent().remove();       
         }
