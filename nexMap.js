@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.995,
+    version: 0.997,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -1677,4 +1677,3 @@ nexMap.display.configDialog = function() {
         }
     });
 }
-
