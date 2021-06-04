@@ -7,7 +7,7 @@ var nexMap = {
     mudmap: {},
     cytoscapeLoaded: false,
     mudletMapLoaded: false,
-    currentRoom: -99,
+    currentRoom: GMCP.Room.Info.num ? GMCP.Room.Info.num : -99,
     currentArea: -99,
     currentZ: -99,
     shortDirs: {
@@ -83,20 +83,22 @@ nexMap.changeRoom = function (id) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeRoom(${id})`);
 
-    if (!nexMap.findRoom(id))
+    if (cy.$('.currentRoom').data('id') == id || !nexMap.findRoom(id))
         return;
 
+    nexMap.currentRoom = id;
     let room = cy.$id(id);
+
     cy.startBatch();
     cy.$('.currentRoom').removeClass('currentRoom');
     room.addClass('currentRoom');
+    cy.center('.currentRoom');
     cy.endBatch()
-    nexMap.currentRoom = id;
+    
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
     $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
-    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
-    cy.center('.currentRoom');
+    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);   
 };
 
 nexMap.changeArea = function (area, z, override = false) {
@@ -118,7 +120,7 @@ nexMap.changeArea = function (area, z, override = false) {
     );
     x.addClass('areaDisplay');
     nexMap.generateExits();
-    cy.center(nexMap.currentRoom);
+    cy.center('.currentRoom');
     cy.endBatch();
 };
 
@@ -180,6 +182,7 @@ nexMap.generateExits = function () {
                     id: `pseudoE${exitIndex}`,
                     source: tar,
                     target: newNode.data.id,
+                    weight: 1
                 },
                 classes: ['pseudo', 'areaAdjacentExit'],
             });
@@ -450,45 +453,31 @@ nexMap.startUp = function () {
 
     nexMap.loggingTime = new Date();
 
+    let stopWatch = function () {
+        if (nexMap.logging)
+            console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
+    }
+
+    stopWatch();
     run_function('nexMap.settings', {}, 'nexmap');
-    if (nexMap.logging) {
-        console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-    }
+    stopWatch();        
     run_function('nexMap.display', {}, 'nexmap');
-    if (nexMap.logging) {
-        console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-    }
+    stopWatch();
     nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
-    if (nexMap.logging) {
-        console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-    }
     nexMap.loadDependencies().then(() => {
-        if (nexMap.logging) {
-            console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-        }
+        stopWatch();
         nexMap.initializeGraph();
-        if (nexMap.logging) {
-            console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-        }
+        stopWatch();
         nexMap.generateGraph().then(() => {
-            if (nexMap.logging) {
-                console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-            }
+            stopWatch();
             run_function('nexMap.styles', {}, 'nexmap');
-            if (nexMap.logging) {
-                console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-            }
+            stopWatch();
             run_function('nexMap.walker', {}, 'nexmap');
-            if (nexMap.logging) {
-                console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-            }
+            stopWatch();
             nexMap.styles.style();
-            if (nexMap.logging) {
-                console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-            }
-            client.send_direct('ql');
-            nexMap.display.notice(`Mapper loaded and ready for use. (${(new Date() - nexMap.loggingTime) / 1000}s)`);
+            stopWatch();
             nexMap.display.notice(`Use "nm" for summary of user commands`);
+            cy.center(GMCP.Room.Info.num);
         });
     });
 };
@@ -1146,9 +1135,6 @@ nexMap.styles.refresh = function () {
         nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
         return;
     }
-
-    cy.unmount();
-    cy.mount($('#cy'));
     nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
 }
 
@@ -1342,9 +1328,9 @@ nexMap.walker.hybridPath = function () {
 }
 
 nexMap.walker.reset = function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.walker.reset()')
-    };
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.walker.reset()');
+
     nexMap.walker.pathing = false;
     cy.$(':selected').unselect();
     nexMap.walker.pathCommands = [];
@@ -1356,11 +1342,11 @@ nexMap.walker.reset = function () {
 nexMap.walker.stop = function () {
     if (nexMap.logging)
         console.log('nexMap: nexMap.walker.stop()');
-        
-    if (nexMap.walker.pathing === true) {
-        nexMap.walker.reset();
-        nexMap.display.notice('Pathing canceled')
-    }
+
+    if (nexMap.walker.pathing === true) 
+        nexMap.display.notice('Pathing canceled');
+
+    nexMap.walker.reset();
 }
 
 nexMap.display = {
