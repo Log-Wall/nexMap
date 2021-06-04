@@ -29,9 +29,8 @@ var nexMap = {
 
 // Returns the JSON object matching the room ID.
 nexMap.findRoom = function (roomNum) {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.findRoom(${roomNum})`)
-    };
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.findRoom(${roomNum})`);
 
     let area = nexMap.mudmap.areas.find(e => e.rooms.find(e2 => e2.id == roomNum))
 
@@ -49,9 +48,8 @@ nexMap.findRoom = function (roomNum) {
 
 // Returns a collection of Nodes matching the room NAME
 nexMap.findRooms = function (search) {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.findRoom(${search})`)
-    };
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.findRoom(${search})`);
 
     let qry = cy.nodes().filter(e => {
         if (e.data('name') && e.data('name').toLowerCase().includes(search.trim().toLowerCase()))
@@ -82,12 +80,11 @@ nexMap.findArea = function (search) {
 }
 
 nexMap.changeRoom = function (id) {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.changeRoom(${id})`)
-    };
-    if (!nexMap.findRoom(id)) {
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.changeRoom(${id})`);
+
+    if (!nexMap.findRoom(id))
         return;
-    }
 
     let room = cy.$id(id);
     cy.startBatch();
@@ -103,9 +100,9 @@ nexMap.changeRoom = function (id) {
 };
 
 nexMap.changeArea = function (area, z, override = false) {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.changeArea(${area} ${z})`)
-    };
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
+
     if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {
         console.log('area return');
         return;
@@ -130,9 +127,9 @@ nexMap.fit = function () {
 }
 
 nexMap.generateExits = function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.generateExits()')
-    };
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.generateExits()');
+
     let exitIndex = 0;
 
     let createExit = function (position, cmd, tar) {
@@ -204,9 +201,9 @@ nexMap.generateExits = function () {
 };
 
 nexMap.generateGraph = async function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.generateGraph()')
-    };
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.generateGraph()');
+
     return new Promise((resolve, reject) => {
         let nexGraph = [];
         nexMap.mudmap.areas.forEach(area => {
@@ -277,9 +274,8 @@ nexMap.generateGraph = async function () {
                         locked: true,
                     };
 
-                    if (room?.symbol?.text && ['S', 'F', 'G', 'C', 'N', 'M', '$', 'L', 'H', 'W', 'A', 'P', 'B'].includes(room.symbol.text)) {
+                    if (room?.symbol?.text && ['S', 'F', 'G', 'C', 'N', 'M', '$', 'L', 'H', 'W', 'A', 'P', 'B'].includes(room.symbol.text))
                         newNode.data.image = nexMap.styles.generateSVG(room.symbol.text);
-                    }
 
                     if (xts.includes('worm warp'))
                         newNode.classes.push('wormholeRoom');
@@ -308,9 +304,9 @@ nexMap.generateGraph = async function () {
 }
 
 nexMap.loadDependencies = async function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.loadDependencies()')
-    };
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.loadDependencies()');
+
     let preloader = async function () {
         return new Promise((resolve, reject) => {
             let src = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"
@@ -394,7 +390,6 @@ nexMap.loadDependencies = async function () {
                 success: function (data) {
                     nexMap.mudmap = data;
                     nexMap.mudletMapLoaded = true;
-
                 },
                 complete: () => {
                     if (nexMap.mudletMapLoaded)
@@ -414,12 +409,12 @@ nexMap.loadDependencies = async function () {
 };
 
 nexMap.initializeGraph = function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.initializeGraph()')
-    };
-    if ($('#cy').length) {
-        $('#cy').remove()
-    }
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.initializeGraph()');
+
+    if ($('#cy').length)
+        $('#cy').remove();
+
     $('<div></div>', {
         id: 'currentRoomLabel'
     }).appendTo('#tbl_nexmap_map');
@@ -450,9 +445,9 @@ nexMap.initializeGraph = function () {
 };
 
 nexMap.startUp = function () {
-    if (nexMap.logging) {
+    if (nexMap.logging) 
         console.log('nexMap: nexMap.startUp()');
-    };
+
     nexMap.loggingTime = new Date();
 
     run_function('nexMap.settings', {}, 'nexmap');
@@ -536,7 +531,7 @@ nexMap.settings.toggle = function (set) {
     nexMap.settings.save();
 }
 
-nexMap.styles = {}
+nexMap.styles = {};
 
 nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
     currentRoomShape: 'star',
@@ -1151,6 +1146,7 @@ nexMap.styles.refresh = function () {
         nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
         return;
     }
+
     cy.unmount();
     cy.mount($('#cy'));
     nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
@@ -1182,9 +1178,8 @@ nexMap.walker.speedWalk = function (s, t) {
 nexMap.walker.step = function () {
     let nmw = nexMap.walker;
 
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.walker.step()')
-    };
+    if (nexMap.logging) 
+        console.log('nexMap: nexMap.walker.step()');
 
     if (nmw.pathCommands.length == 0) {
         if (nexMap.logging) {
@@ -1254,21 +1249,19 @@ nexMap.walker.determinePath = function (s, t) {
 }
 
 nexMap.walker.checkClouds = function (astar, target) {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.walker.checkClouds()`)
-    };
-    if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan) {
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.walker.checkClouds()`);
+
+    if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan)
         return;
-    }
 
     let nmw = nexMap.walker;
     let highCloudPath;
     let firstWingRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
     let wingRoomId = firstWingRoom ? firstWingRoom.data('id') : 0;
 
-    if (wingRoomId == 0) {
+    if (wingRoomId == 0)
         return;
-    }
 
     let g = typeof target === 'object' ? target : `#${target}`
 
@@ -1303,24 +1296,21 @@ nexMap.walker.checkClouds = function (astar, target) {
         }
     }
 
-    if (highCloudPath && cloudPath.distance > highCloudPath.distance) {
+    if (highCloudPath && cloudPath.distance > highCloudPath.distance)
         cloudType(highCloudPath, nexMap.settings.userPreferences.duanatharanCommand);
-    } else {
+    else
         cloudType(cloudPath, nexMap.settings.userPreferences.duanatharCommand);
-    }
 }
 
 nexMap.walker.hybridPath = function () {
-    if (nexMap.logging) {
-        console.log(`nexMap: nexMap.walker.hybridPath()`)
-    };
+    if (nexMap.logging)
+        console.log(`nexMap: nexMap.walker.hybridPath()`);
+
     let nmwpc = nexMap.walker.pathCommands;
     let nmwpr = nexMap.walker.pathRooms;
 
     if (nexMap.logging) {
         console.log(nmwpc);
-    }
-    if (nexMap.logging) {
         console.log(nmwpr);
     }
 
@@ -1344,10 +1334,9 @@ nexMap.walker.hybridPath = function () {
 
     if (nexMap.logging) {
         console.log(hybCmds);
-    }
-    if (nexMap.logging) {
         console.log(hybRm);
     }
+
     nexMap.walker.pathCommands = [...hybCmds];
     nexMap.walker.pathRooms = [...hybRm];
 }
@@ -1365,9 +1354,9 @@ nexMap.walker.reset = function () {
 }
 
 nexMap.walker.stop = function () {
-    if (nexMap.logging) {
-        console.log('nexMap: nexMap.walker.stop()')
-    };
+    if (nexMap.logging)
+        console.log('nexMap: nexMap.walker.stop()');
+        
     if (nexMap.walker.pathing === true) {
         nexMap.walker.reset();
         nexMap.display.notice('Pathing canceled')
