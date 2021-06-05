@@ -27,6 +27,15 @@ var nexMap = {
     },
 };
 
+nexMap.stopWatch = function () {
+    let t = (new Date() - nexMap.loggingTime) / 1000;
+
+    if (nexMap.logging)
+        console.log(`${t}s`);
+
+    return t;
+}
+
 // Returns the JSON object matching the room ID.
 nexMap.findRoom = function (roomNum) {
     if (nexMap.logging)
@@ -92,13 +101,14 @@ nexMap.changeRoom = function (id) {
     cy.startBatch();
     cy.$('.currentRoom').removeClass('currentRoom');
     room.addClass('currentRoom');
-    cy.center('.currentRoom');
-    cy.endBatch()
+    //cy.endBatch()
     
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
     $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
-    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);   
+    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
+    cy.center('.currentRoom');   
+    cy.endBatch()
 };
 
 nexMap.changeArea = function (area, z, override = false) {
@@ -112,7 +122,7 @@ nexMap.changeArea = function (area, z, override = false) {
 
     nexMap.currentArea = area;
     nexMap.currentZ = z;
-    cy.startBatch();
+
     cy.$('.areaDisplay').removeClass('areaDisplay');
     cy.$('.pseudo').remove();
     let x = cy.nodes().filter(e =>
@@ -120,8 +130,6 @@ nexMap.changeArea = function (area, z, override = false) {
     );
     x.addClass('areaDisplay');
     nexMap.generateExits();
-    cy.center('.currentRoom');
-    cy.endBatch();
 };
 
 nexMap.fit = function () {
@@ -453,27 +461,28 @@ nexMap.startUp = function () {
 
     nexMap.loggingTime = new Date();
 
-    let stopWatch = function () {
-        if (nexMap.logging)
-            console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-    }
-
-    stopWatch();
+    nexMap.stopWatch();
     run_function('nexMap.settings', {}, 'nexmap');
-    stopWatch();        
+    nexMap.stopWatch();        
     run_function('nexMap.display', {}, 'nexmap');
-    stopWatch();
+    nexMap.stopWatch();
     nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
     nexMap.loadDependencies().then(() => {
-        stopWatch();
+        nexMap.stopWatch();
         nexMap.initializeGraph();
-        stopWatch();
+        nexMap.stopWatch();
         nexMap.generateGraph().then(() => {
-            stopWatch();
+            nexMap.stopWatch();
+            
             nexMap.styles.style();
-            stopWatch();
+            nexMap.stopWatch();
+            
             nexMap.display.notice(`Use "nm" for summary of user commands`);
-            cy.center(GMCP.Room.Info.num);
+
+            cy.once('render', () => {
+                nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
+                nexMap.styles.refresh();
+            });
         });
     });
 };
@@ -1131,7 +1140,10 @@ nexMap.styles.refresh = function () {
         nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
         return;
     }
-    nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+    setTimeout(function(){
+        nexMap.changeRoom(GMCP.Room.Info.num);
+        nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+    }, 500);  
 }
 
 nexMap.walker = {
@@ -1185,8 +1197,7 @@ nexMap.walker.step = function () {
         nmw.stepCommand = nmw.pathCommands[index];
     }
 
-    send_direct(`path stop${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
-
+    send_direct(`${nmw.stepCommand}`);
 }
 
 nexMap.walker.determinePath = function (s, t) {
@@ -1424,7 +1435,6 @@ nexMap.display.click.area = function (id) {
 
 nexMap.display.displayTable = function () {
     let entries = nexMap.display.displayEntries;
-    let caption = nexMap.display.displayCap;
 
     let tab = $("<table></table>", {
         class: "mono",
