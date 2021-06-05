@@ -88,7 +88,7 @@ nexMap.findArea = function (search) {
     return areas;
 }
 
-nexMap.changeRoom = function (id) {
+nexMap.changeRoom =  async function (id) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeRoom(${id})`);
 
@@ -98,20 +98,20 @@ nexMap.changeRoom = function (id) {
     nexMap.currentRoom = id;
     let room = cy.$id(id);
 
-    cy.startBatch();
-    cy.$('.currentRoom').removeClass('currentRoom');
-    room.addClass('currentRoom');
-    //cy.endBatch()
-    
-    $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
-    $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
+    cy.batch( () => {
+        cy.$('.currentRoom').removeClass('currentRoom');
+        room.addClass('currentRoom');
+        //cy.endBatch()
+        
+        $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
+        $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
-    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
-    cy.center('.currentRoom');   
-    cy.endBatch()
+        nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
+        cy.center(`#${id}`);   
+    });
 };
 
-nexMap.changeArea = function (area, z, override = false) {
+nexMap.changeArea = async function (area, z, override = false) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
 
@@ -255,7 +255,7 @@ nexMap.generateGraph = async function () {
                                 newEdge.classes.push('downexit');
                             else if (xt == 'worm warp') {
                                 newEdge.classes.push('wormhole');
-                                newEdge.data.weight = nexMap.settings.userPreferences.useWormholes ? 1 : 100;
+                                newEdge.data.weight = nexMap.settings.userPreferences.useWormholes ? 12 : 1000;
                             } else if (xt == 'enter grate')
                                 newEdge.classes.push('sewergrate');
 
@@ -296,7 +296,9 @@ nexMap.generateGraph = async function () {
             }
         });
 
-        cy.add(nexGraph);
+        cy.batch( () => {
+            cy.add(nexGraph);
+        });
 
         /* 
         //Mudlet map has hundreds of rooms with no name.
@@ -320,7 +322,6 @@ nexMap.loadDependencies = async function () {
 
     let preloader = async function () {
         return new Promise((resolve, reject) => {
-            //let src = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"
             let src = "https://cdn.jsdelivr.net/npm/cytoscape@3.19.0/dist/cytoscape.min.js";
             let head = document.getElementsByTagName('head')[0];
             let elem = document.createElement('script');
@@ -518,7 +519,7 @@ nexMap.settings.toggle = function (set) {
                 width: 1
             })
             .data({
-                weight: nexMap.settings.userPreferences.useWormholes ? 1 : 100
+                weight: nexMap.settings.userPreferences.useWormholes ? 12 : 1000
             })
     }
 
@@ -566,8 +567,6 @@ nexMap.styles.style = function () {
     cy.on('select', 'node', evt => {
         nexMap.walker.speedWalk()
     });
-
-    cy.endBatch();
 
     let generateStyle = function () {
         let inject = function (rule) {
@@ -636,6 +635,8 @@ nexMap.styles.stylesheet = [{
             'background-fit': 'contain',
             'background-width': '100%',
             'background-height': '100%',
+            "background-repeat": "no-repeat",
+            "background-clip": "none"
         }
     },
     /*{
@@ -651,7 +652,8 @@ nexMap.styles.stylesheet = [{
         'selector': '.displayLabel',
         'style': {
             'color': 'white',
-            'label': 'data(id)'
+            'label': 'data(id)',
+            "min-zoomed-font-size": "12pt"
         }
     },
     {
@@ -1197,7 +1199,7 @@ nexMap.walker.step = function () {
         nmw.stepCommand = nmw.pathCommands[index];
     }
 
-    send_direct(`${nmw.stepCommand}`);
+    send_direct(`path stop|${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
 }
 
 nexMap.walker.determinePath = function (s, t) {
@@ -1314,15 +1316,22 @@ nexMap.walker.hybridPath = function () {
 
     let hybCmds = [];
     let hybRm = [nmwpr[0]];
+    let pathTrackDistance = 0;
     nmwpc.forEach((e, i) => {
         if (i == 0 && !Object.values(nexMap.shortDirs).includes(e)) {
             hybRm.push(nmwpr[i + 1]);
-            hybCmds.push(e);
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
         } else if (!Object.values(nexMap.shortDirs).includes(e)) {
             hybRm.push(nmwpr[i]);
             hybRm.push(nmwpr[i + 1]);
             hybCmds.push(`path track ${nmwpr[i]}`);
-            hybCmds.push(e);
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
+            pathTrackDistance = i;
+        }
+        else if (i - pathTrackDistance > 99) {
+            pathTrackDistance = i;
+            hybCmds.push(`path track ${nmwpr[i]}`);
+            hybRm.push(nmwpr[i]);
         }
     })
     if (Object.values(nexMap.shortDirs).includes(nmwpc[nmwpc.length - 1])) {
@@ -1337,6 +1346,10 @@ nexMap.walker.hybridPath = function () {
 
     nexMap.walker.pathCommands = [...hybCmds];
     nexMap.walker.pathRooms = [...hybRm];
+}
+
+nexMap.walker.checkDistance = function () {
+
 }
 
 nexMap.walker.reset = function () {
