@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.9997,
+    version: 0.99991,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -500,18 +500,22 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     useWormholes: false,
     vibratingStick: false,
     displayWormholes: false,
+    currentRoomShape: 'rectangle',
+    currentRoomColor: '#ff1493'
 }
 
 nexMap.settings.save = function () {
     set_variable('nexMapConfigs', nexMap.settings.userPreferences);
-    set_variable('nexMapStyles', nexMap.styles.userPreferences);
 }
 
 nexMap.settings.toggleWormholes = function () {
-    if (nexMap.settings.userPreferences.useWormholes)
+    if (nexMap.settings.userPreferences.useWormholes) {
             nexMap.wormholes.restore();
-        else
+            nexMap.display.notice('Will no longer use wormholes.');
+    } else {
             nexMap.wormholes.remove(); 
+            nexMap.display.notice('Now using wormholes.');
+    }
 }
 
 nexMap.settings.toggle = function (set) {
@@ -527,11 +531,6 @@ nexMap.settings.toggle = function (set) {
 }
 
 nexMap.styles = {};
-
-nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
-    currentRoomShape: 'star',
-    currentRoomColor: '#ff1493',
-}
 
 nexMap.styles.style = function () {
     if (nexMap.logging) {
@@ -1185,7 +1184,7 @@ nexMap.walker.step = function () {
         return;
     }
 
-    let index = nmw.pathRooms.indexOf(GMCP.Room.Info.num);
+    let index = nmw.pathRooms.indexOf(GMCP.Room.Info.num.toString());
 
     if (GMCP.Room.Info.num == nmw.destination) {
         nmw.pathing = false;
@@ -1194,7 +1193,7 @@ nexMap.walker.step = function () {
         return;
     }
 
-    if (nmw.pathRooms.includes(GMCP.Room.Info.num.toString())) {
+    if (index >= 0) {
         nmw.pathing = true;
         nmw.stepCommand = nmw.pathCommands[index];
     }
@@ -1836,7 +1835,7 @@ nexMap.display.configDialog = function () {
             width: 'auto'
         })
         .on('change', function () {
-            nexMap.styles.userPreferences.currentRoomShape = $(this)[0].value;
+            nexMap.settings.userPreferences.currentRoomShape = $(this)[0].value;
             cy.style()
                 .selector('.currentRoom')
                 .style({
@@ -1847,27 +1846,27 @@ nexMap.display.configDialog = function () {
             value: 'rectangle',
             text: 'Rectangle'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'rectangle' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'rectangle' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'ellipse',
             text: 'Circle'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'ellipse' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'ellipse' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'diamond',
             text: 'Diamond'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'diamond' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'diamond' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'star',
             text: 'Star'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'star' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'star' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'vee',
             text: 'Vee'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'vee' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'vee' ? true : false).appendTo(playerShape);
     let playerShapeRow = $("<tr></tr>", {
         class: 'nexRow',
         style: 'cursor:pointer;color:dimgrey;'
@@ -1884,11 +1883,11 @@ nexMap.display.configDialog = function () {
             'class': 'nexInput',
             id: 'nexPlayerColor',
             width: 100,
-            defaultValue: nexMap.styles.userPreferences.currentRoomColor,
-            value: nexMap.styles.userPreferences.currentRoomColor
+            defaultValue: nexMap.settings.userPreferences.currentRoomColor,
+            value: nexMap.settings.userPreferences.currentRoomColor
         })
         .on('change', function () {
-            nexMap.styles.userPreferences.currentRoomColor = $(this)[0].value;
+            nexMap.settings.userPreferences.currentRoomColor = $(this)[0].value;
             cy.style()
                 .selector('.currentRoom')
                 .style({
