@@ -1,11 +1,4 @@
 'use strict';
-var GMCP = {
-    Room: {
-        Info: {
-            num: 1
-        }
-    }
-}
 var cy = {};
 var nexMap = {
     version: 0.9997,
@@ -14,7 +7,7 @@ var nexMap = {
     mudmap: {},
     cytoscapeLoaded: false,
     mudletMapLoaded: false,
-    currentRoom: GMCP.Room.Info.num ? GMCP.Room.Info.num : -99,
+    currentRoom: GMCP?.Room?.Info?.num ? GMCP?.Room?.Info?.num : -99,
     currentArea: -99,
     currentZ: -99,
     shortDirs: {
