@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.99993,
+    version: 0.99994,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -483,7 +483,7 @@ nexMap.startUp = function () {
 
             cy.once('render', () => {
                 nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
-                sned_direct('ql');
+                send_direct('ql');
                 nexMap.styles.refresh();
                 if (!nexMap.settings.userPreferences.initialConfiguration)
                     nexMap.display.notice(`First time using nexMap? "nm config" to set preferences.`);
