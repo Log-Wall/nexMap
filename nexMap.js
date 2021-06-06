@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.99994,
+    version: 0.99995,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -486,7 +486,7 @@ nexMap.startUp = function () {
                 send_direct('ql');
                 nexMap.styles.refresh();
                 if (!nexMap.settings.userPreferences.initialConfiguration)
-                    nexMap.display.notice(`First time using nexMap? "nm config" to set preferences.`);
+                    send_direct('nm config');
             });
         });
     });
