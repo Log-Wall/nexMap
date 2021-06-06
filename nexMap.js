@@ -116,7 +116,6 @@ nexMap.changeArea = async function (area, z, override = false) {
         console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
 
     if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {
-        console.log('area return');
         return;
     }
 
@@ -255,7 +254,7 @@ nexMap.generateGraph = async function () {
                                 newEdge.classes.push('downexit');
                             else if (xt == 'worm warp') {
                                 newEdge.classes.push('wormhole');
-                                newEdge.data.weight = nexMap.settings.userPreferences.useWormholes ? 12 : 1000;
+                                newEdge.data.weight = 12;
                             } else if (xt == 'enter grate')
                                 newEdge.classes.push('sewergrate');
 
@@ -298,6 +297,8 @@ nexMap.generateGraph = async function () {
 
         cy.batch( () => {
             cy.add(nexGraph);
+            nexMap.wormholes = cy.$('.wormhole');
+            nexMap.settings.toggleWormholes();
         });
 
         /* 
@@ -506,22 +507,21 @@ nexMap.settings.save = function () {
     set_variable('nexMapStyles', nexMap.styles.userPreferences);
 }
 
+nexMap.settings.toggleWormholes = function () {
+    if (nexMap.settings.userPreferences.useWormholes)
+            nexMap.wormholes.restore();
+        else
+            nexMap.wormholes.remove(); 
+}
+
 nexMap.settings.toggle = function (set) {
     if (nexMap.settings.userPreferences[set])
         nexMap.settings.userPreferences[set] = false;
     else
         nexMap.settings.userPreferences[set] = true;
 
-    if (['displayWormholes', 'useWormholes'].includes(set)) {
-        cy.$('.wormhole')
-            .style({
-                visibility: nexMap.settings.userPreferences.displayWormholes ? 'visible' : 'hidden',
-                width: 1
-            })
-            .data({
-                weight: nexMap.settings.userPreferences.useWormholes ? 12 : 1000
-            })
-    }
+    if (set == 'useWormholes')
+        nexMap.settings.toggleWormholes();
 
     nexMap.settings.save();
 }
@@ -586,7 +586,7 @@ nexMap.styles.style = function () {
             '.nexfixed    { width: 200px; }' +
             '.nexflex-item    { flex-grow: 1; }';
         if (client.css_style != 'standard')
-            nexMapCSS += '#tab_nexmap_map::before {content: "\\f262";}';
+            nexMapCSS += '#tab_nexmap_map::before {content: "\\f2ae";}';
 
         inject(nexMapCSS);
     };
@@ -1122,7 +1122,7 @@ nexMap.styles.stylesheet = [{
     {
         "selector": ":selected",
         "style": {
-            "background-color": "rgb(0,128,0)"
+            "background-color": "rgb(100,8,58)"
         }
     },
     {
@@ -1199,7 +1199,7 @@ nexMap.walker.step = function () {
         nmw.stepCommand = nmw.pathCommands[index];
     }
 
-    send_direct(`path stop|${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
+    send_direct(`${nmw.stepCommand}`);
 }
 
 nexMap.walker.determinePath = function (s, t) {
@@ -1224,6 +1224,9 @@ nexMap.walker.determinePath = function (s, t) {
         },
         directed: true
     });
+
+    if (nexMap.logging)
+        console.log(astar);
 
     if (!astar.found) {
         nexMap.display.notice(`No path to ${target} found.`);
@@ -1725,10 +1728,10 @@ nexMap.display.configDialog = function () {
             name: 'Wormholes',
             setting: 'useWormholes'
         },
-        {
+        /*{
             name: 'Show Wormholes',
             setting: 'displayWormholes'
-        },
+        },*/
         {
             name: 'Vibrating Stick',
             setting: 'vibratingStick'
