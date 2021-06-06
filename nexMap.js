@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.99992,
+    version: 0.99993,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -483,11 +483,10 @@ nexMap.startUp = function () {
 
             cy.once('render', () => {
                 nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
-                reflex_enable(reflex_find_by_name("group", "Functions", false, false, "nexMap"));
-                reflex_enable(reflex_find_by_name("group", "Aliases", false, false, "nexMap"));
-                reflex_enable(reflex_find_by_name("group", "Triggers", false, false, "nexMap"));
-                send_direct('ql');
+                sned_direct('ql');
                 nexMap.styles.refresh();
+                if (!nexMap.settings.userPreferences.initialConfiguration)
+                    nexMap.display.notice(`First time using nexMap? "nm config" to set preferences.`);
             });
         });
     });
@@ -496,6 +495,7 @@ nexMap.startUp = function () {
 nexMap.settings = {};
 
 nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
+    intialConfiguration: 0,
     commandSeparator: '\\',
     useDuanathar: false,
     useDuanatharan: false,
@@ -509,16 +509,15 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
 }
 
 nexMap.settings.save = function () {
+    nexMap.settings.userPreferences.initialConfiguration = 1;
     set_variable('nexMapConfigs', nexMap.settings.userPreferences);
 }
 
 nexMap.settings.toggleWormholes = function () {
     if (nexMap.settings.userPreferences.useWormholes) {
             nexMap.wormholes.restore();
-            nexMap.display.notice('Will now use wormholes.');
     } else {
             nexMap.wormholes.remove(); 
-            nexMap.display.notice('No longer using wormholes.');
     }
 }
 
@@ -1125,7 +1124,8 @@ nexMap.styles.stylesheet = [{
     {
         "selector": ":selected",
         "style": {
-            "background-color": "rgb(100,8,58)"
+            "shape": "star",
+            "background-color": "#ff1493"
         }
     },
     {
@@ -1336,7 +1336,7 @@ nexMap.walker.hybridPath = function () {
         }
         else if (i - pathTrackDistance > 99) {
             pathTrackDistance = i;
-            hybCmds.push(`path track ${nmwpr[i]}`);
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}path track ${nmwpr[i]}`);
             hybRm.push(nmwpr[i]);
         }
     })
@@ -1352,10 +1352,6 @@ nexMap.walker.hybridPath = function () {
 
     nexMap.walker.pathCommands = [...hybCmds];
     nexMap.walker.pathRooms = [...hybRm];
-}
-
-nexMap.walker.checkDistance = function () {
-
 }
 
 nexMap.walker.reset = function () {
@@ -1422,7 +1418,7 @@ nexMap.display.generateTable = function (entries, caption) {
 }
 
 nexMap.display.click.room = function (id) {
-    if (typeof id !== 'number') {
+    if (typeof parseInt(id) !== 'number') {
         console.log(id);
         return;
     }
@@ -1634,6 +1630,8 @@ nexMap.display.userCommands = function () {
 }
 
 nexMap.display.areaTable = function (entries, caption) {
+    nexMap.display.pageIndex = 0; // Hard coded. fix this.
+
     let tab = $("<table></table>", {
         class: "mono",
         style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
