@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.99995,
+    version: 1.0,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -1125,6 +1125,8 @@ nexMap.styles.stylesheet = [{
         "selector": ":selected",
         "style": {
             "shape": "star",
+            "height": "15px",
+            "width": "12px",
             "background-color": "#ff1493"
         }
     },
