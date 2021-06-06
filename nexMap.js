@@ -88,11 +88,11 @@ nexMap.findArea = function (search) {
     return areas;
 }
 
-nexMap.changeRoom =  async function (id) {
+nexMap.changeRoom =  async function (id, override = false) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeRoom(${id})`);
 
-    if (cy.$('.currentRoom').data('id') == id || !nexMap.findRoom(id))
+    if (!override && (cy.$('.currentRoom').data('id') == id || !nexMap.findRoom(id)))
         return;
 
     nexMap.currentRoom = id;
@@ -483,6 +483,10 @@ nexMap.startUp = function () {
 
             cy.once('render', () => {
                 nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
+                reflex_enable(reflex_find_by_name("group", "Functions", false, false, "nexMap"));
+                reflex_enable(reflex_find_by_name("group", "Aliases", false, false, "nexMap"));
+                reflex_enable(reflex_find_by_name("group", "Triggers", false, false, "nexMap"));
+                send_direct('ql');
                 nexMap.styles.refresh();
             });
         });
@@ -511,10 +515,10 @@ nexMap.settings.save = function () {
 nexMap.settings.toggleWormholes = function () {
     if (nexMap.settings.userPreferences.useWormholes) {
             nexMap.wormholes.restore();
-            nexMap.display.notice('Will no longer use wormholes.');
+            nexMap.display.notice('Will now use wormholes.');
     } else {
             nexMap.wormholes.remove(); 
-            nexMap.display.notice('Now using wormholes.');
+            nexMap.display.notice('No longer using wormholes.');
     }
 }
 
@@ -671,7 +675,7 @@ nexMap.styles.stylesheet = [{
     {
         'selector': '.wormhole',
         'style': {
-            'visibility': nexMap.settings.userPreferences.displayWormholes ? 'visible' : 'hidden',
+            'visibility': 'hidden',
             'width': '1',
             'line-style': 'dashed',
             'line-dash-pattern': [5, 10],
@@ -1129,8 +1133,8 @@ nexMap.styles.stylesheet = [{
         "style": {
             "height": "12px",
             "width": "12px",
-            "shape": "star",
-            "border-color": "rgb(88,233,231)",
+            "shape": nexMap.settings.userPreferences.currentRoomShape,
+            "border-color": nexMap.settings.userPreferences.currentRoomColor,
             "border-width": "2px"
         }
     }
@@ -1142,7 +1146,7 @@ nexMap.styles.refresh = function () {
         return;
     }
     setTimeout(function(){
-        nexMap.changeRoom(GMCP.Room.Info.num);
+        nexMap.changeRoom(GMCP.Room.Info.num, true);
         nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
     }, 500);  
 }
