@@ -1,7 +1,14 @@
 'use strict';
+var GMCP = {
+    Room: {
+        Info: {
+            num: 1
+        }
+    }
+}
 var cy = {};
 var nexMap = {
-    version: 0.9996,
+    version: 0.9997,
     logging: false,
     loggingTime: '',
     mudmap: {},
