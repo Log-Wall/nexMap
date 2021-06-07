@@ -1,13 +1,14 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 0.9994,
+    version: 1.0,
+    nexus: 1.0,
     logging: false,
     loggingTime: '',
     mudmap: {},
     cytoscapeLoaded: false,
     mudletMapLoaded: false,
-    currentRoom: GMCP.Room.Info.num ? GMCP.Room.Info.num : -99,
+    currentRoom: GMCP?.Room?.Info?.num ? GMCP?.Room?.Info?.num : -99,
     currentArea: -99,
     currentZ: -99,
     shortDirs: {
@@ -26,6 +27,15 @@ var nexMap = {
         up: "up",
     },
 };
+
+nexMap.stopWatch = function () {
+    let t = (new Date() - nexMap.loggingTime) / 1000;
+
+    if (nexMap.logging)
+        console.log(`${t}s`);
+
+    return t;
+}
 
 // Returns the JSON object matching the room ID.
 nexMap.findRoom = function (roomNum) {
@@ -79,40 +89,40 @@ nexMap.findArea = function (search) {
     return areas;
 }
 
-nexMap.changeRoom = function (id) {
+nexMap.changeRoom =  async function (id) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeRoom(${id})`);
 
-    if (cy.$('.currentRoom').data('id') == id || !nexMap.findRoom(id))
+    if (cy.$id(id).hasClass('currentRoom') || !cy.$id(id).length)
         return;
 
-    nexMap.currentRoom = id;
     let room = cy.$id(id);
 
-    cy.startBatch();
-    cy.$('.currentRoom').removeClass('currentRoom');
-    room.addClass('currentRoom');
-    cy.center('.currentRoom');
-    cy.endBatch()
-    
+   cy.startBatch();
+        cy.$id(nexMap.currentRoom).removeClass('currentRoom'); //remove the class from the previous room.
+        room.addClass('currentRoom');
+
+        await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
+        cy.center(`#${id}`);   
+    cy.endBatch();
+
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
     $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
-    nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);   
+    nexMap.currentRoom = id;
 };
 
-nexMap.changeArea = function (area, z, override = false) {
+nexMap.changeArea = async function (area, z, override = false) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
 
     if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {
-        console.log('area return');
         return;
     }
 
     nexMap.currentArea = area;
     nexMap.currentZ = z;
-    cy.startBatch();
+
     cy.$('.areaDisplay').removeClass('areaDisplay');
     cy.$('.pseudo').remove();
     let x = cy.nodes().filter(e =>
@@ -120,8 +130,8 @@ nexMap.changeArea = function (area, z, override = false) {
     );
     x.addClass('areaDisplay');
     nexMap.generateExits();
-    cy.center('.currentRoom');
-    cy.endBatch();
+
+    return true;
 };
 
 nexMap.fit = function () {
@@ -247,7 +257,7 @@ nexMap.generateGraph = async function () {
                                 newEdge.classes.push('downexit');
                             else if (xt == 'worm warp') {
                                 newEdge.classes.push('wormhole');
-                                newEdge.data.weight = nexMap.settings.userPreferences.useWormholes ? 1 : 100;
+                                newEdge.data.weight = 12;
                             } else if (xt == 'enter grate')
                                 newEdge.classes.push('sewergrate');
 
@@ -288,7 +298,11 @@ nexMap.generateGraph = async function () {
             }
         });
 
-        cy.add(nexGraph);
+        cy.batch( () => {
+            cy.add(nexGraph);
+            nexMap.wormholes = cy.$('.wormhole');
+            nexMap.settings.toggleWormholes();
+        });
 
         /* 
         //Mudlet map has hundreds of rooms with no name.
@@ -312,7 +326,6 @@ nexMap.loadDependencies = async function () {
 
     let preloader = async function () {
         return new Promise((resolve, reject) => {
-            //let src = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"
             let src = "https://cdn.jsdelivr.net/npm/cytoscape@3.19.0/dist/cytoscape.min.js";
             let head = document.getElementsByTagName('head')[0];
             let elem = document.createElement('script');
@@ -453,27 +466,31 @@ nexMap.startUp = function () {
 
     nexMap.loggingTime = new Date();
 
-    let stopWatch = function () {
-        if (nexMap.logging)
-            console.log(`${(new Date() - nexMap.loggingTime) / 1000}s`);
-    }
-
-    stopWatch();
+    nexMap.stopWatch();
     run_function('nexMap.settings', {}, 'nexmap');
-    stopWatch();        
+    nexMap.stopWatch();        
     run_function('nexMap.display', {}, 'nexmap');
-    stopWatch();
+    nexMap.stopWatch();
     nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
     nexMap.loadDependencies().then(() => {
-        stopWatch();
+        nexMap.stopWatch();
         nexMap.initializeGraph();
-        stopWatch();
+        nexMap.stopWatch();
         nexMap.generateGraph().then(() => {
-            stopWatch();
+            nexMap.stopWatch();
+            
             nexMap.styles.style();
-            stopWatch();
+            nexMap.stopWatch();
+            
             nexMap.display.notice(`Use "nm" for summary of user commands`);
-            cy.center(GMCP.Room.Info.num);
+
+            cy.once('render', () => {
+                nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
+                send_direct('ql');
+                nexMap.styles.refresh();
+                if (!nexMap.settings.userPreferences.initialConfiguration)
+                    send_direct('nm config');
+            });
         });
     });
 };
@@ -481,6 +498,7 @@ nexMap.startUp = function () {
 nexMap.settings = {};
 
 nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
+    intialConfiguration: 0,
     commandSeparator: '\\',
     useDuanathar: false,
     useDuanatharan: false,
@@ -489,11 +507,22 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     useWormholes: false,
     vibratingStick: false,
     displayWormholes: false,
+    currentRoomShape: 'rectangle',
+    currentRoomColor: '#ff1493',
+    labelDisplay: 'name'
 }
 
 nexMap.settings.save = function () {
+    nexMap.settings.userPreferences.initialConfiguration = 1;
     set_variable('nexMapConfigs', nexMap.settings.userPreferences);
-    set_variable('nexMapStyles', nexMap.styles.userPreferences);
+}
+
+nexMap.settings.toggleWormholes = function () {
+    if (nexMap.settings.userPreferences.useWormholes) {
+            nexMap.wormholes.restore();
+    } else {
+            nexMap.wormholes.remove(); 
+    }
 }
 
 nexMap.settings.toggle = function (set) {
@@ -502,26 +531,13 @@ nexMap.settings.toggle = function (set) {
     else
         nexMap.settings.userPreferences[set] = true;
 
-    if (['displayWormholes', 'useWormholes'].includes(set)) {
-        cy.$('.wormhole')
-            .style({
-                visibility: nexMap.settings.userPreferences.displayWormholes ? 'visible' : 'hidden',
-                width: 1
-            })
-            .data({
-                weight: nexMap.settings.userPreferences.useWormholes ? 1 : 100
-            })
-    }
+    if (set == 'useWormholes')
+        nexMap.settings.toggleWormholes();
 
     nexMap.settings.save();
 }
 
 nexMap.styles = {};
-
-nexMap.styles.userPreferences = get_variable('nexMapStyles') || {
-    currentRoomShape: 'star',
-    currentRoomColor: '#ff1493',
-}
 
 nexMap.styles.style = function () {
     if (nexMap.logging) {
@@ -558,8 +574,6 @@ nexMap.styles.style = function () {
         nexMap.walker.speedWalk()
     });
 
-    cy.endBatch();
-
     let generateStyle = function () {
         let inject = function (rule) {
             $('body').append('<div class="client_nexmap-rules">&shy;<style>' + rule + '</style></div>')
@@ -578,7 +592,7 @@ nexMap.styles.style = function () {
             '.nexfixed    { width: 200px; }' +
             '.nexflex-item    { flex-grow: 1; }';
         if (client.css_style != 'standard')
-            nexMapCSS += '#tab_nexmap_map::before {content: "\\f262";}';
+            nexMapCSS += '#tab_nexmap_map::before {content: "\\f2ae";}';
 
         inject(nexMapCSS);
     };
@@ -627,6 +641,8 @@ nexMap.styles.stylesheet = [{
             'background-fit': 'contain',
             'background-width': '100%',
             'background-height': '100%',
+            "background-repeat": "no-repeat",
+            "background-clip": "none"
         }
     },
     /*{
@@ -642,7 +658,8 @@ nexMap.styles.stylesheet = [{
         'selector': '.displayLabel',
         'style': {
             'color': 'white',
-            'label': 'data(id)'
+            'label': 'data(id)',
+            "min-zoomed-font-size": "12pt"
         }
     },
     {
@@ -661,7 +678,7 @@ nexMap.styles.stylesheet = [{
     {
         'selector': '.wormhole',
         'style': {
-            'visibility': nexMap.settings.userPreferences.displayWormholes ? 'visible' : 'hidden',
+            'visibility': 'hidden',
             'width': '1',
             'line-style': 'dashed',
             'line-dash-pattern': [5, 10],
@@ -1111,7 +1128,10 @@ nexMap.styles.stylesheet = [{
     {
         "selector": ":selected",
         "style": {
-            "background-color": "rgb(0,128,0)"
+            "shape": "star",
+            "height": "15px",
+            "width": "12px",
+            "background-color": "#ff1493"
         }
     },
     {
@@ -1119,8 +1139,8 @@ nexMap.styles.stylesheet = [{
         "style": {
             "height": "12px",
             "width": "12px",
-            "shape": "star",
-            "border-color": "rgb(88,233,231)",
+            "shape": nexMap.settings.userPreferences.currentRoomShape,
+            "border-color": nexMap.settings.userPreferences.currentRoomColor,
             "border-width": "2px"
         }
     }
@@ -1131,7 +1151,10 @@ nexMap.styles.refresh = function () {
         nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
         return;
     }
-    nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+    setTimeout(function(){
+        nexMap.changeRoom(GMCP.Room.Info.num);
+        nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+    }, 500);  
 }
 
 nexMap.walker = {
@@ -1171,7 +1194,7 @@ nexMap.walker.step = function () {
         return;
     }
 
-    let index = nmw.pathRooms.indexOf(GMCP.Room.Info.num);
+    let index = nmw.pathRooms.indexOf(GMCP.Room.Info.num.toString());
 
     if (GMCP.Room.Info.num == nmw.destination) {
         nmw.pathing = false;
@@ -1180,13 +1203,12 @@ nexMap.walker.step = function () {
         return;
     }
 
-    if (nmw.pathRooms.includes(GMCP.Room.Info.num.toString())) {
+    if (index >= 0) {
         nmw.pathing = true;
         nmw.stepCommand = nmw.pathCommands[index];
     }
 
-    send_direct(`path stop${nexMap.settings.userPreferences.commandSeparator}${nmw.stepCommand}`);
-
+    send_direct(`${nmw.stepCommand}`);
 }
 
 nexMap.walker.determinePath = function (s, t) {
@@ -1211,6 +1233,9 @@ nexMap.walker.determinePath = function (s, t) {
         },
         directed: true
     });
+
+    if (nexMap.logging)
+        console.log(astar);
 
     if (!astar.found) {
         nexMap.display.notice(`No path to ${target} found.`);
@@ -1303,15 +1328,22 @@ nexMap.walker.hybridPath = function () {
 
     let hybCmds = [];
     let hybRm = [nmwpr[0]];
+    let pathTrackDistance = 0;
     nmwpc.forEach((e, i) => {
         if (i == 0 && !Object.values(nexMap.shortDirs).includes(e)) {
             hybRm.push(nmwpr[i + 1]);
-            hybCmds.push(e);
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
         } else if (!Object.values(nexMap.shortDirs).includes(e)) {
             hybRm.push(nmwpr[i]);
             hybRm.push(nmwpr[i + 1]);
             hybCmds.push(`path track ${nmwpr[i]}`);
-            hybCmds.push(e);
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
+            pathTrackDistance = i;
+        }
+        else if (i - pathTrackDistance > 99) {
+            pathTrackDistance = i;
+            hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}path track ${nmwpr[i]}`);
+            hybRm.push(nmwpr[i]);
         }
     })
     if (Object.values(nexMap.shortDirs).includes(nmwpc[nmwpc.length - 1])) {
@@ -1392,7 +1424,7 @@ nexMap.display.generateTable = function (entries, caption) {
 }
 
 nexMap.display.click.room = function (id) {
-    if (typeof id !== 'number') {
+    if (typeof parseInt(id) !== 'number') {
         console.log(id);
         return;
     }
@@ -1424,7 +1456,6 @@ nexMap.display.click.area = function (id) {
 
 nexMap.display.displayTable = function () {
     let entries = nexMap.display.displayEntries;
-    let caption = nexMap.display.displayCap;
 
     let tab = $("<table></table>", {
         class: "mono",
@@ -1605,6 +1636,8 @@ nexMap.display.userCommands = function () {
 }
 
 nexMap.display.areaTable = function (entries, caption) {
+    nexMap.display.pageIndex = 0; // Hard coded. fix this.
+
     let tab = $("<table></table>", {
         class: "mono",
         style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
@@ -1702,10 +1735,10 @@ nexMap.display.configDialog = function () {
             name: 'Wormholes',
             setting: 'useWormholes'
         },
-        {
+        /*{
             name: 'Show Wormholes',
             setting: 'displayWormholes'
-        },
+        },*/
         {
             name: 'Vibrating Stick',
             setting: 'vibratingStick'
@@ -1810,7 +1843,7 @@ nexMap.display.configDialog = function () {
             width: 'auto'
         })
         .on('change', function () {
-            nexMap.styles.userPreferences.currentRoomShape = $(this)[0].value;
+            nexMap.settings.userPreferences.currentRoomShape = $(this)[0].value;
             cy.style()
                 .selector('.currentRoom')
                 .style({
@@ -1821,27 +1854,27 @@ nexMap.display.configDialog = function () {
             value: 'rectangle',
             text: 'Rectangle'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'rectangle' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'rectangle' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'ellipse',
             text: 'Circle'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'ellipse' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'ellipse' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'diamond',
             text: 'Diamond'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'diamond' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'diamond' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'star',
             text: 'Star'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'star' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'star' ? true : false).appendTo(playerShape);
     $('<option></option>', {
             value: 'vee',
             text: 'Vee'
         })
-        .prop('selected', nexMap.styles.userPreferences.currentRoomShape == 'vee' ? true : false).appendTo(playerShape);
+        .prop('selected', nexMap.settings.userPreferences.currentRoomShape == 'vee' ? true : false).appendTo(playerShape);
     let playerShapeRow = $("<tr></tr>", {
         class: 'nexRow',
         style: 'cursor:pointer;color:dimgrey;'
@@ -1858,11 +1891,11 @@ nexMap.display.configDialog = function () {
             'class': 'nexInput',
             id: 'nexPlayerColor',
             width: 100,
-            defaultValue: nexMap.styles.userPreferences.currentRoomColor,
-            value: nexMap.styles.userPreferences.currentRoomColor
+            defaultValue: nexMap.settings.userPreferences.currentRoomColor,
+            value: nexMap.settings.userPreferences.currentRoomColor
         })
         .on('change', function () {
-            nexMap.styles.userPreferences.currentRoomColor = $(this)[0].value;
+            nexMap.settings.userPreferences.currentRoomColor = $(this)[0].value;
             cy.style()
                 .selector('.currentRoom')
                 .style({
