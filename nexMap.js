@@ -1562,7 +1562,7 @@ nexMap.display.userCommands = function () {
         },
         3: {
             cmd: 'nm find <phrase>',
-            txt: 'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
+            txt: 'Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
         },
         4: {
             cmd: 'nm goto <id>',
