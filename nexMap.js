@@ -1129,8 +1129,8 @@ nexMap.styles.stylesheet = [{
         "selector": ":selected",
         "style": {
             "shape": "star",
-            "height": "15px",
-            "width": "12px",
+            "height": "20px",
+            "width": "20px",
             "background-color": "#ff1493"
         }
     },
@@ -1180,6 +1180,64 @@ nexMap.walker.speedWalk = function (s, t) {
     nexMap.walker.determinePath(s, t);
     nexMap.walker.step();
 }
+
+//nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
+// The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
+// this is a work around.
+nexMap.walker.areaWalk = function (areaID) {
+    let target = cy.elements().aStar({
+        root: `#${nexMap.currentRoom}`,
+        goal: cy.$(`[area = ${areaID}]`),
+        weight: function (edge) {
+            return edge.data('weight');
+        },
+        directed: true
+    }).path.nodes().find(n => n.data('area') == areaID).data('id')
+
+    nexMap.walker.speedWalk(nexMap.currentRoom, target)
+}
+
+nexMap.walker.goto = function (aaa) {
+    console.log(aaa);
+    console.log(nexMap.findArea(aaa));
+    let areas = nexMap.findArea(aaa);
+    console.log(areas);
+}
+    /*if (areas.length == 0) {
+        return;
+    }
+
+    if (areas.length == 1)
+    {
+        nexMap.walker.areaWalk(areas[0].id);
+        return;
+    }
+
+    console.log(areas);
+    let findAreaNode = function (areaID) {
+        let aStar = cy.elements().aStar({
+            root: `#${nexMap.currentRoom}`,
+            goal: cy.$(`[area = ${areaID}]`),
+            weight: function (edge) {
+                return edge.data('weight');
+            },
+            directed: true
+        })
+        let target = aStar?.path?.nodes()?.find(n => n.data('area') == areaID).data('id')
+        return {
+            'distance': aStar.distance,
+            'id': target
+        }
+    }
+    let closestArea = {'id': 0,'distance':999999};
+    areas.forEach(a => {
+        console.log(a);
+        let ar = findAreaNode(a.id);
+        if (ar.distance < closestArea.distance) {
+            closestArea.id = ar.id;
+        }
+    });
+    console.log(closestArea.id);*/
 
 nexMap.walker.step = function () {
     let nmw = nexMap.walker;
@@ -1439,19 +1497,7 @@ nexMap.display.click.area = function (id) {
         return;
     }
 
-    //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
-    // The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
-    // this is a work around.
-    let target = cy.elements().aStar({
-        root: `#11828`,
-        goal: cy.$(`[area = ${id}]`),
-        weight: function (edge) {
-            return edge.data('weight');
-        },
-        directed: true
-    }).path.nodes().find(n => n.data('area') == id).data('id')
-
-    nexMap.walker.speedWalk(nexMap.currentRoom, target)
+    nexMap.walker.areaWalk(id);
 }
 
 nexMap.display.displayTable = function () {
