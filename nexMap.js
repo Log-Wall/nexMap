@@ -2,6 +2,7 @@
 var cy = {};
 var nexMap = {
     version: 1.0,
+    nexus: 1.0,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -88,27 +89,27 @@ nexMap.findArea = function (search) {
     return areas;
 }
 
-nexMap.changeRoom =  async function (id, override = false) {
+nexMap.changeRoom =  async function (id) {
     if (nexMap.logging)
         console.log(`nexMap: nexMap.changeRoom(${id})`);
 
-    if (!override && (cy.$('.currentRoom').data('id') == id || !nexMap.findRoom(id)))
+    if (cy.$id(id).hasClass('currentRoom') || !cy.$id(id).length)
         return;
 
-    nexMap.currentRoom = id;
     let room = cy.$id(id);
 
-    cy.batch( () => {
-        cy.$('.currentRoom').removeClass('currentRoom');
+   cy.startBatch();
+        cy.$id(nexMap.currentRoom).removeClass('currentRoom'); //remove the class from the previous room.
         room.addClass('currentRoom');
-        //cy.endBatch()
-        
-        $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
-        $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
-        nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
+        await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
         cy.center(`#${id}`);   
-    });
+    cy.endBatch();
+
+    $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
+    $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
+
+    nexMap.currentRoom = id;
 };
 
 nexMap.changeArea = async function (area, z, override = false) {
@@ -129,6 +130,8 @@ nexMap.changeArea = async function (area, z, override = false) {
     );
     x.addClass('areaDisplay');
     nexMap.generateExits();
+
+    return true;
 };
 
 nexMap.fit = function () {
@@ -505,7 +508,8 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     vibratingStick: false,
     displayWormholes: false,
     currentRoomShape: 'rectangle',
-    currentRoomColor: '#ff1493'
+    currentRoomColor: '#ff1493',
+    labelDisplay: 'name'
 }
 
 nexMap.settings.save = function () {
@@ -1148,7 +1152,7 @@ nexMap.styles.refresh = function () {
         return;
     }
     setTimeout(function(){
-        nexMap.changeRoom(GMCP.Room.Info.num, true);
+        nexMap.changeRoom(GMCP.Room.Info.num);
         nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
     }, 500);  
 }
@@ -1562,7 +1566,7 @@ nexMap.display.userCommands = function () {
         },
         3: {
             cmd: 'nm find <phrase>',
-            txt: 'Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
+            txt: 'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
         },
         4: {
             cmd: 'nm goto <id>',
