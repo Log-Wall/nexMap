@@ -509,7 +509,21 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     displayWormholes: false,
     currentRoomShape: 'rectangle',
     currentRoomColor: '#ff1493',
-    labelDisplay: 'name'
+    labelDisplay: 'name',
+    landmarks: [
+        {
+            name: "Mhaldor",
+            roomID: 11400,
+        },
+        {
+            name: "Ashtan",
+            roomID: 11400,
+        },
+        {
+            name: "Hashan",
+            roomID: 11400,
+        },
+    ]
 }
 
 nexMap.settings.save = function () {
@@ -525,16 +539,36 @@ nexMap.settings.toggleWormholes = function () {
     }
 }
 
-nexMap.settings.toggle = function (set) {
-    if (nexMap.settings.userPreferences[set])
-        nexMap.settings.userPreferences[set] = false;
+nexMap.settings.toggle = function (seting) {
+    if (nexMap.settings.userPreferences[seting])
+        nexMap.settings.userPreferences[seting] = false;
     else
-        nexMap.settings.userPreferences[set] = true;
+        nexMap.settings.userPreferences[seting] = true;
 
-    if (set == 'useWormholes')
+    if (seting == 'useWormholes')
         nexMap.settings.toggleWormholes();
 
     nexMap.settings.save();
+}
+
+nexMap.settings.addMark = function (name) {
+    if (nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == name.toLowerCase())) {
+        
+    }
+
+    let newMark = {}
+    newMark.name = name;
+    newMark.roomID = cy.$('.currentRoom').data('id');
+
+    nexMap.settings.userPreferences.landmarks.push(newMark);
+    nexMap.display.notice(`Added landmark "${name}"`);
+}
+
+nexMap.settings.removeMark = function (name) {
+    let i = nexMap.settings.userPreferences.landmarks.findIndex(e => e.name.toLowerCase() == name.toLowerCase());
+
+    nexMap.settings.userPreferences.landmarks.splice(i, 1);
+    nexMap.display.notice(`Removed landmark for "${name}"`);
 }
 
 nexMap.styles = {};
@@ -1174,6 +1208,7 @@ nexMap.walker.speedWalk = function (s, t) {
     if (nexMap.logging) {
         console.log('nexMap: nexMap.walker.speedwalk()')
     };
+
     nexMap.walker.pathingStartTime = new Date();
     nexMap.walker.clientEcho = client.echo_input;
     client.echo_input = false;
@@ -1203,7 +1238,6 @@ nexMap.walker.goto = function (str) {
     }
 
     let areas = nexMap.findArea(str);
-    console.log(areas);
 
     if (areas.length == 0) {
         return;
@@ -1215,7 +1249,6 @@ nexMap.walker.goto = function (str) {
         return;
     }
 
-    console.log(areas);
     let findAreaNode = function (areaID) {
         let aStar = cy.elements().aStar({
             root: `#${nexMap.currentRoom}`,
@@ -1225,12 +1258,12 @@ nexMap.walker.goto = function (str) {
             },
             directed: true
         })
-        let target = aStar?.path?.nodes()?.find(n => n.data('area') == areaID).data('id')
         return {
             'distance': aStar.distance,
             'id': areaID
         }
     }
+
     let closestArea = {'id': 0,'distance':999999};
     areas.forEach(a => {
         console.log(a);
@@ -1595,6 +1628,124 @@ nexMap.display.displayTable = function () {
         pagination = $("<span></span>", {
             style: 'color:Goldenrod'
         }).text(`Displaying ${nexMap.display.displayEntries.length} of ${nexMap.display.displayEntries.length}.`);
+    }
+
+    print(pagination[0].outerHTML);
+}
+
+nexMap.display.landmarkTable = function () {
+    let entries = nexMap.settings.userPreferences.landmarks;
+
+    let tab = $("<table></table>", {
+        class: "mono",
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
+    });
+    if (nexMap.display.pageIndex == 0) {
+        let cap = $("<caption></caption>", {
+            style: "text-align:left"
+        }).appendTo(tab);
+        $('<span></span>', {
+            style: 'color:DodgerBlue'
+        }).text('[-').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:OrangeRed'
+        }).text('nexMap').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:DodgerBlue'
+        }).text('-] ').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:GoldenRod'
+        }).text('Displaying all saved ').appendTo(cap)
+        $('<span></span>', {
+            style: 'font-weight:bold;color:LawnGreen'
+        }).text('Landmarks').appendTo(cap); //fix
+
+        let header = $("<tr></tr>", {
+            style: "text-align:left;color:Ivory"
+        }).appendTo(tab);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('Num').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('Name').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('Room').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('Area').appendTo(header);
+    } else {
+        let header = $("<tr></tr>", {
+            style: "text-align:left;color:Ivory"
+        }).appendTo(tab);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('').appendTo(header);
+    }
+
+    let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex * nexMap.display.pageBreak) : 0;
+    for (let i = startIndex; i < entries.length && i < startIndex + nexMap.display.pageBreak; i++) {
+        let node = cy.$id(entries[i].roomID);
+        let row = $("<tr></tr>", {
+            style: 'cursor:pointer;color:dimgrey;'
+        }).appendTo(tab);
+        $("<td></td>", {
+            style:"color:#6b5b95;text-decoration:underline", 
+            onclick: `nexMap.settings.removeMark(${JSON.stringify(entries[i].name)});`
+        }).text('[X]').appendTo(row);
+        $("<td></td>", {
+            style: 'color:#878f99',
+            onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
+        }).text(i).appendTo(row);
+        $("<td></td>", {
+            style: 'color:#a2b9bc',
+            onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
+        }).text(entries[i].name).appendTo(row);
+        $("<td></td>", {
+            style: 'color:#b2ad7f;text-decoration:underline',
+            onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
+        }).text(`${node.data('name')}(${node.data('id')})`).appendTo(row); // Room name(id)
+        $("<td></td>", {
+            style: 'color:#b2ad7f',
+            onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
+        }).text(`${node.data('userData')['Game Area']}(${node.data('area')})`).appendTo(row);
+    }
+
+    print(tab[0].outerHTML);
+
+    let pagination;
+    if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
+        pagination = $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(`Displaying ${startIndex + nexMap.display.pageBreak} of ${entries.length}.`);
+        nexMap.display.pageIndex++;
+        $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(' Click for ').appendTo(pagination);
+        $('<a></a>', {
+            style: 'cursor:pointer;color:Ivory;text-decoration:underline;',
+            onclick: 'nexMap.display.displayTable()'
+        }).text('MORE').appendTo(pagination);
+    } else {
+        pagination = $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(`Displaying ${entries.length} of ${entries.length}.`);
     }
 
     print(pagination[0].outerHTML);
