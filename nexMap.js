@@ -1197,13 +1197,15 @@ nexMap.walker.areaWalk = function (areaID) {
     nexMap.walker.speedWalk(nexMap.currentRoom, target)
 }
 
-nexMap.walker.goto = function (aaa) {
-    console.log(aaa);
-    console.log(nexMap.findArea(aaa));
-    let areas = nexMap.findArea(aaa);
+nexMap.walker.goto = function (str) {
+    if (typeof str !== 'string') {
+        return;
+    }
+
+    let areas = nexMap.findArea(str);
     console.log(areas);
-}
-    /*if (areas.length == 0) {
+
+    if (areas.length == 0) {
         return;
     }
 
@@ -1226,18 +1228,20 @@ nexMap.walker.goto = function (aaa) {
         let target = aStar?.path?.nodes()?.find(n => n.data('area') == areaID).data('id')
         return {
             'distance': aStar.distance,
-            'id': target
+            'id': areaID
         }
     }
     let closestArea = {'id': 0,'distance':999999};
     areas.forEach(a => {
         console.log(a);
         let ar = findAreaNode(a.id);
+        console.log(ar);
         if (ar.distance < closestArea.distance) {
-            closestArea.id = ar.id;
+            closestArea = ar;
         }
     });
-    console.log(closestArea.id);*/
+    console.log(`closests ${closestArea.id}`);
+}
 
 nexMap.walker.step = function () {
     let nmw = nexMap.walker;
