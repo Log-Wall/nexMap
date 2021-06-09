@@ -2,7 +2,7 @@
 var cy = {};
 var nexMap = {
     version: 1.1,
-    nexus: 1.1,
+    nxsVersion: 1.1,
     logging: false,
     loggingTime: '',
     mudmap: {},

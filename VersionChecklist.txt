@@ -1,0 +1,18 @@
+- Check version numbers.
+- tables display for areas/find/landmarks?
+- click to go functions for all tables?
+- goto works for area name?
+- goto works for landmark name?
+- goto works for landmark name that matches area name?
+
+
+Added:
+nm goto <string>
+nm mark <string>
+nm marks
+nm areas <string>
+
+Clarify:
+Crowdmap has custom exit scripts for mudlet users. No current solution for those in nexMap
+Cannot tell cross continent/plane areas for use of wings. Will try and use wings where it cannot work.
+    nexMap then stores those areas in a no wing list and will not try again. Fake learning.
