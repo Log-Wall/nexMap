@@ -1883,64 +1883,72 @@ nexMap.display.areaTable = function (entries, caption) {
 }
 
 nexMap.display.userCommands = function () {
-    let cmds = {
-        0: {
+    let cmds = [
+        {
             cmd: 'nm load',
             txt: 'Initial load of the map. There are a few seconds of degraded performance while the full model is loaded.',
         },
-        1: {
+        {
             cmd: 'nm config',
             txt: 'Display all user configuration options.'
         },
-        2: {
+        {
             cmd: 'nm save',
             txt: 'Saves the current user configuration settings.'
         },
-        3: {
-            cmd: 'nm find <phrase>',
+        {
+            cmd: 'nm find <string>',
             txt: 'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
         },
-        4: {
-            cmd: 'nm goto <id>',
+        {
+            cmd: 'nm goto <####>',
             txt: 'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.'
         },
-        5: {
+        {
+            cmd: 'nm goto <string>',
+            txt: 'Will path to a nexMap landmark or game area matching the string "nm goto ashtan". If no matches are found, tables of possible matches will be displayed.'
+        },
+        {
+            cmd: 'nm mark <string>',
+            txt: 'Creates a landmark for the current room using the string label provided. "nm mark secret place". Pathing to these landmarks uses the goto syntax "nm goto secret place".'
+        },
+        {
+            cmd: 'nm marks',
+            txt: 'Displays a list all stored landmarks with click to go functionality as well as a "[X]" click to remove option.'
+        },
+        {
             cmd: 'nm stop',
             txt: 'Cancels the current pathing.'
         },
-        6: {
+        {
             cmd: 'nm zoom',
             txt: 'Manual zoom control of the map. Accepts values between 0.2 - 3.0'
         },
-        7: {
+        {
             cmd: 'nm refresh',
             txt: 'Refresh the graphical display of the map. Fail safe for display issues.'
         },
-        8: {
-            cmd: 'nm update',
-            txt: 'Attempt to load the latest version of nexMap without regenerating the entire map.'
-        },
-        9: {
+        {
             cmd: 'nm wormholes',
             txt: 'Toggles the use of wormholes for pathing.'
         },
-        10: {
+        {
             cmd: 'nm clouds',
             txt: 'Toggles the use of clouds, both high and low, for pathing.'
         },
-        11: {
+        {
             cmd: '(map)',
-            txt: 'Selecting any room on the map via mouse click will speedwalk to the selected room.'
+            txt: 'Selecting any room on the map via mouse click will path to the selected room.'
         },
-        12: {
+        {
             cmd: '(map)',
-            txt: 'A mouse click on the map anywhere other than a room will unselect the current selection and stop any active pathing.'
+            txt: 'A mouse click on the map anywhere other than a room will deselect the current selection and stop any active pathing.'
         }
-    }
+    ];
 
     let tab = $("<table></table>", {
         class: "mono",
-        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:2px"
     });
     let header = $("<tr></tr>", {
         style: "text-align:left;color:Ivory"
@@ -1960,7 +1968,7 @@ nexMap.display.userCommands = function () {
             style: 'color:grey'
         }).text(cmds[x].cmd).appendTo(row);
         $("<td></td>", {
-            style: 'color:gainsboro;'
+            style: 'color:grey;'
         }).text(cmds[x].txt).appendTo(row);
     }
     nexMap.display.notice('Aliases for user interaction');
