@@ -1500,8 +1500,10 @@ nexMap.walker.stop = function () {
     if (nexMap.logging)
         console.log('nexMap: nexMap.walker.stop()');
 
-    if (nexMap.walker.pathing === true) 
+    if (nexMap.walker.pathing === true) {
         nexMap.display.notice('Pathing canceled');
+        send_direct('path stop');
+    }
 
     nexMap.walker.reset();
 }
