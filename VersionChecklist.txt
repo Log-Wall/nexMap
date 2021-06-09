@@ -10,7 +10,9 @@ Added:
 nm goto <string>
 nm mark <string>
 nm marks
-nm areas <string>
+nm area <string>
+Fixed room centering.
+Polished some code, should feel slightly more responsive.
 
 Clarify:
 Crowdmap has custom exit scripts for mudlet users. No current solution for those in nexMap

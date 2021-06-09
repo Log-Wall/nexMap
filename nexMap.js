@@ -29,7 +29,7 @@ var nexMap = {
 };
 
 nexMap.stopWatch = function () {
-    let t = (performance.now() - nexMap.loggingTime) / 1000;
+    let t = (new Date() - nexMap.loggingTime) / 1000;
 
     if (nexMap.logging)
         console.log(`${t}s`);
@@ -53,6 +53,7 @@ nexMap.findRoom = function (roomNum) {
     if (nexMap.logging) {
         console.log(rm);
     }
+    print(JSON.stringify(rm));
     return true;
 };
 
@@ -111,13 +112,13 @@ nexMap.changeRoom =  async function (id) {
     let room = cy.$id(id);
 
    cy.startBatch();
-        cy.$id(nexMap.currentRoom).removeClass('currentRoom'); //remove the class from the previous room.
+        cy.$('.currentRoom').removeClass('currentRoom'); //remove the class from the previous room.
         room.addClass('currentRoom');
 
-        await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);
-        cy.center(`#${id}`);   
+        await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);   
     cy.endBatch();
-
+    cy.center(`#${id}`); 
+    
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
     $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
 
@@ -1484,6 +1485,35 @@ nexMap.walker.hybridPath = function () {
     nexMap.walker.pathRooms = [...hybRm];
 }
 
+nexMap.walker.checkDash = function(cmd) {
+    if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkDash(${cmd})`)};
+	let nmwpc = nexMap.walker.pathCommands;
+    let nmwpr = nexMap.walker.pathRooms;
+
+    let galCmds = [];
+    let galRm = [nmwpr[0]];
+    let galIndex = -1;
+    let len;
+    nmwpc.forEach((e,i)=>{
+        if (e != nmwpc[i+1]) {
+            len = i-galIndex;
+            
+            if(len==2) {
+            	galCmds.push(e);
+            	galRm.push(nmwpr[i]);    
+            }
+            
+            galCmds.push(len>2?`gallop ${e} ${i-galIndex}`:e);
+            galRm.push(len>2?nmwpr[galIndex+len+1]:nmwpr[i+1]);
+
+            galIndex=i;
+        }
+    })
+    
+    nexMap.walker.pathCommands = [...galCmds];
+    nexMap.walker.pathRooms = [...galRm];
+}
+
 nexMap.walker.reset = function () {
     if (nexMap.logging)
         console.log('nexMap: nexMap.walker.reset()');
@@ -1902,7 +1932,7 @@ nexMap.display.userCommands = function () {
             txt: 'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
         },
         {
-            cmd: 'nm areas <string>',
+            cmd: 'nm area <string>',
             txt: 'Searches for areas matching the provided string. Displays in table format with click to go functionality.'
         },
         {
