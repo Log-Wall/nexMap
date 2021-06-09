@@ -566,7 +566,7 @@ nexMap.settings.toggle = function (seting) {
 nexMap.settings.addMark = function (str) {
     if (nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase())) {
         nexMap.display.notice(`Landmark already exits for "${str}". Please remove existing landmark first.`);
-        nexMap.display.generateTable('landmarkTable', nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase()),str);
+        nexMap.display.generateTable('landmarkTable', [nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase())], str);
         return;
     }
 
@@ -1551,6 +1551,7 @@ nexMap.display.generateTable = function (table, entries = false, caption = false
         nexMap.display.displayTable();
     } else {
         console.log(table);
+        console.log(entries);
         nexMap.display[`${table}`](entries, caption)
     } 
 }
@@ -1899,6 +1900,10 @@ nexMap.display.userCommands = function () {
         {
             cmd: 'nm find <string>',
             txt: 'Replaces the functionality of the mapdb package. Displays all rooms matching the phrase. Clicking any entry on the table will begin pathing.'
+        },
+        {
+            cmd: 'nm areas <string>',
+            txt: 'Searches for areas matching the provided string. Displays in table format with click to go functionality.'
         },
         {
             cmd: 'nm goto <####>',
