@@ -1,3 +1,5 @@
+- Verify CND has correct content.
+- Verify onLoad version number.
 - Check version numbers.
 - tables display for areas/find/landmarks?
 - click to go functions for all tables?
