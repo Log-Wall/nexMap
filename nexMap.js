@@ -91,10 +91,7 @@ nexMap.findArea = function (search) {
 
 // Filters for possible matching areas rather than exact matches.
 nexMap.findAreas = function (search) {
-    let areas = nexMap.mudmap.areas.filter(e => e.rooms.find(e2 => {
-
-        e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())
-    }));
+    let areas = nexMap.mudmap.areas.filter(e => e.rooms.find(e2 => e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())));
 
     if (typeof areas === 'undefined') {
         console.log(`Area not found`);
@@ -479,7 +476,7 @@ nexMap.startUp = function () {
     if (nexMap.logging) 
         console.log('nexMap: nexMap.startUp()');
 
-    nexMap.loggingTime = performance.now();
+    nexMap.loggingTime = new Date();
 
     nexMap.stopWatch();
     run_function('nexMap.settings', {}, 'nexmap');
@@ -576,7 +573,7 @@ nexMap.settings.addMark = function (str) {
     let newMark = {}
     newMark.name = str;
     newMark.roomID = cy.$('.currentRoom').data('id');
-    console.log(newMark);
+
     nexMap.settings.userPreferences.landmarks.push(newMark);
     nexMap.display.notice(`Added landmark "${str}"`);
     nexMap.settings.save();
@@ -1227,7 +1224,7 @@ nexMap.walker.speedWalk = function (s, t) {
         console.log('nexMap: nexMap.walker.speedwalk()')
     };
 
-    nexMap.walker.pathingStartTime = performance.now();
+    nexMap.walker.pathingStartTime = new Date();
     nexMap.walker.clientEcho = client.echo_input;
     client.echo_input = false;
     nexMap.walker.determinePath(s, t);
@@ -1261,11 +1258,11 @@ nexMap.walker.goto = function (str) {
         return;
     }
 
-
     let areas = nexMap.findArea(str);
 
     if (areas.length == 0) {
         let findAreas = nexMap.findAreas(str);
+        console.log(findAreas);
         let findMarks = nexMap.settings.userPreferences.landmarks.filter(e => e.name.toLowerCase().includes(str.toLowerCase()));
         if (findAreas.length) {
             nexMap.display.generateTable('areaTable', findAreas, str);
@@ -1326,7 +1323,7 @@ nexMap.walker.step = function () {
     if (GMCP.Room.Info.num == nmw.destination) {
         nmw.pathing = false;
         nmw.reset();
-        nexMap.display.notice(`Pathing complete. ${(performance.now() - nmw.pathingStartTime) / 1000}s`);
+        nexMap.display.notice(`Pathing complete. ${(new Date() - nmw.pathingStartTime) / 1000}s`);
         return;
     }
 
@@ -1546,13 +1543,14 @@ nexMap.display.notice = function (txt, html = false) {
 nexMap.display.generateTable = function (table, entries = false, caption = false) {
     nexMap.display.pageIndex = 0;
     if (table == 'displayTable') {
+        console.log('works');
         nexMap.display.displayEntries = entries;
         nexMap.display.displayCap = caption;
         nexMap.display.displayTable();
     } else {
-        nexMap.display[table](entries, caption)
-    }
-    
+        console.log(table);
+        nexMap.display[`${table}`](entries, caption)
+    } 
 }
 
 nexMap.display.click.room = function (id) {
@@ -1753,7 +1751,7 @@ nexMap.display.landmarkTable = function (marks = false, caption = false) {
         $("<td></td>", {
             style: 'color:#a2b9bc;text-decoration:underline',
             onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
-        }).text(entries[i].name).appendTo(row);
+        }).text(`"${entries[i].name}"`).appendTo(row);
         $("<td></td>", {
             style: 'color:#b2ad7f',
             onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
