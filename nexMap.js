@@ -2,7 +2,7 @@
 var cy = {};
 var nexMap = {
     version: 1.1,
-    nexus: 1.0,
+    nexus: 1.1,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -29,7 +29,7 @@ var nexMap = {
 };
 
 nexMap.stopWatch = function () {
-    let t = (new Date() - nexMap.loggingTime) / 1000;
+    let t = (performance.now() - nexMap.loggingTime) / 1000;
 
     if (nexMap.logging)
         console.log(`${t}s`);
@@ -76,10 +76,25 @@ nexMap.findRooms = function (search) {
 
 // Returns a collection of JSON area objects.
 // JSON areas have custom names that do not always match the GMCP area names.
-// The GMCP area names are stored as userData in the room objects. Searches all user data for matches,
+// The GMCP area names are stored as userData in the room objects. Searches all user data for exact matches,
 // then returns the area containing the matched room.
 nexMap.findArea = function (search) {
     let areas = nexMap.mudmap.areas.filter(e => e.rooms.find(e2 => e2?.userData?.['Game Area']?.toLowerCase() == search.toLowerCase()))
+
+    if (typeof areas === 'undefined') {
+        console.log(`Area not found`);
+        return false;
+    }
+
+    return areas;
+}
+
+// Filters for possible matching areas rather than exact matches.
+nexMap.findAreas = function (search) {
+    let areas = nexMap.mudmap.areas.filter(e => e.rooms.find(e2 => {
+
+        e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())
+    }));
 
     if (typeof areas === 'undefined') {
         console.log(`Area not found`);
@@ -464,7 +479,7 @@ nexMap.startUp = function () {
     if (nexMap.logging) 
         console.log('nexMap: nexMap.startUp()');
 
-    nexMap.loggingTime = new Date();
+    nexMap.loggingTime = performance.now();
 
     nexMap.stopWatch();
     run_function('nexMap.settings', {}, 'nexmap');
@@ -551,17 +566,20 @@ nexMap.settings.toggle = function (seting) {
     nexMap.settings.save();
 }
 
-nexMap.settings.addMark = function (name) {
-    if (nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == name.toLowerCase())) {
-        
+nexMap.settings.addMark = function (str) {
+    if (nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase())) {
+        nexMap.display.notice(`Landmark already exits for "${str}". Please remove existing landmark first.`);
+        nexMap.display.generateTable('landmarkTable', nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase()),str);
+        return;
     }
 
     let newMark = {}
-    newMark.name = name;
+    newMark.name = str;
     newMark.roomID = cy.$('.currentRoom').data('id');
-
+    console.log(newMark);
     nexMap.settings.userPreferences.landmarks.push(newMark);
-    nexMap.display.notice(`Added landmark "${name}"`);
+    nexMap.display.notice(`Added landmark "${str}"`);
+    nexMap.settings.save();
 }
 
 nexMap.settings.removeMark = function (name) {
@@ -1209,7 +1227,7 @@ nexMap.walker.speedWalk = function (s, t) {
         console.log('nexMap: nexMap.walker.speedwalk()')
     };
 
-    nexMap.walker.pathingStartTime = new Date();
+    nexMap.walker.pathingStartTime = performance.now();
     nexMap.walker.clientEcho = client.echo_input;
     client.echo_input = false;
     nexMap.walker.determinePath(s, t);
@@ -1237,9 +1255,24 @@ nexMap.walker.goto = function (str) {
         return;
     }
 
+    let findMark = nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase());
+    if (findMark) {
+        nexMap.walker.speedWalk(nexMap.currentRoom, findMark.roomID);
+        return;
+    }
+
+
     let areas = nexMap.findArea(str);
 
     if (areas.length == 0) {
+        let findAreas = nexMap.findAreas(str);
+        let findMarks = nexMap.settings.userPreferences.landmarks.filter(e => e.name.toLowerCase().includes(str.toLowerCase()));
+        if (findAreas.length) {
+            nexMap.display.generateTable('areaTable', findAreas, str);
+        }
+        if (findMarks.length) {
+            nexMap.display.generateTable('landmarkTable', findMarks, str);
+        }
         return;
     }
 
@@ -1259,21 +1292,20 @@ nexMap.walker.goto = function (str) {
             directed: true
         })
         return {
-            'distance': aStar.distance,
+            'distance': aStar?.path?.nodes()?.findIndex(e=>e.data('area')==areaID),
             'id': areaID
         }
     }
 
     let closestArea = {'id': 0,'distance':999999};
     areas.forEach(a => {
-        console.log(a);
         let ar = findAreaNode(a.id);
-        console.log(ar);
         if (ar.distance < closestArea.distance) {
             closestArea = ar;
         }
     });
-    console.log(`closests ${closestArea.id}`);
+
+    nexMap.walker.areaWalk(closestArea.id);
 }
 
 nexMap.walker.step = function () {
@@ -1294,7 +1326,7 @@ nexMap.walker.step = function () {
     if (GMCP.Room.Info.num == nmw.destination) {
         nmw.pathing = false;
         nmw.reset();
-        nexMap.display.notice(`Pathing complete. ${(new Date() - nmw.pathingStartTime) / 1000}s`);
+        nexMap.display.notice(`Pathing complete. ${(performance.now() - nmw.pathingStartTime) / 1000}s`);
         return;
     }
 
@@ -1511,11 +1543,16 @@ nexMap.display.notice = function (txt, html = false) {
     print(msg[0].outerHTML);
 }
 
-nexMap.display.generateTable = function (entries, caption) {
+nexMap.display.generateTable = function (table, entries = false, caption = false) {
     nexMap.display.pageIndex = 0;
-    nexMap.display.displayEntries = entries;
-    nexMap.display.displayCap = caption;
-    nexMap.display.displayTable();
+    if (table == 'displayTable') {
+        nexMap.display.displayEntries = entries;
+        nexMap.display.displayCap = caption;
+        nexMap.display.displayTable();
+    } else {
+        nexMap.display[table](entries, caption)
+    }
+    
 }
 
 nexMap.display.click.room = function (id) {
@@ -1633,8 +1670,8 @@ nexMap.display.displayTable = function () {
     print(pagination[0].outerHTML);
 }
 
-nexMap.display.landmarkTable = function () {
-    let entries = nexMap.settings.userPreferences.landmarks;
+nexMap.display.landmarkTable = function (marks = false, caption = false) {
+    let entries = marks ? marks : nexMap.settings.userPreferences.landmarks;
 
     let tab = $("<table></table>", {
         class: "mono",
@@ -1655,10 +1692,10 @@ nexMap.display.landmarkTable = function () {
         }).text('-] ').appendTo(cap);
         $('<span></span>', {
             style: 'color:GoldenRod'
-        }).text('Displaying all saved ').appendTo(cap)
+        }).text('Displaying landmarks matching ').appendTo(cap)
         $('<span></span>', {
             style: 'font-weight:bold;color:LawnGreen'
-        }).text('Landmarks').appendTo(cap); //fix
+        }).text(caption ? caption : 'All').appendTo(cap); //fix
 
         let header = $("<tr></tr>", {
             style: "text-align:left;color:Ivory"
@@ -1714,11 +1751,11 @@ nexMap.display.landmarkTable = function () {
             onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
         }).text(i).appendTo(row);
         $("<td></td>", {
-            style: 'color:#a2b9bc',
+            style: 'color:#a2b9bc;text-decoration:underline',
             onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
         }).text(entries[i].name).appendTo(row);
         $("<td></td>", {
-            style: 'color:#b2ad7f;text-decoration:underline',
+            style: 'color:#b2ad7f',
             onclick: `nexMap.display.click.room(${JSON.stringify(entries[i].roomID)});`
         }).text(`${node.data('name')}(${node.data('id')})`).appendTo(row); // Room name(id)
         $("<td></td>", {
@@ -1740,7 +1777,101 @@ nexMap.display.landmarkTable = function () {
         }).text(' Click for ').appendTo(pagination);
         $('<a></a>', {
             style: 'cursor:pointer;color:Ivory;text-decoration:underline;',
-            onclick: 'nexMap.display.displayTable()'
+            onclick: 'nexMap.display.landmarkTable()'
+        }).text('MORE').appendTo(pagination);
+    } else {
+        pagination = $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(`Displaying ${entries.length} of ${entries.length}.`);
+    }
+
+    print(pagination[0].outerHTML);
+}
+
+nexMap.display.areaTable = function (entries, caption) {
+    let tab = $("<table></table>", {
+        class: "mono",
+        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
+    });
+    if (nexMap.display.pageIndex == 0) {
+        let cap = $("<caption></caption>", {
+            style: "text-align:left"
+        }).appendTo(tab);
+        $('<span></span>', {
+            style: 'color:DodgerBlue'
+        }).text('[-').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:OrangeRed'
+        }).text('nexMap').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:DodgerBlue'
+        }).text('-] ').appendTo(cap);
+        $('<span></span>', {
+            style: 'color:GoldenRod'
+        }).text('Displaying possible areas matching ').appendTo(cap)
+        $('<span></span>', {
+            style: 'font-weight:bold;color:LawnGreen'
+        }).text(caption).appendTo(cap); //fix
+
+        let header = $("<tr></tr>", {
+            style: "text-align:left;color:Ivory"
+        }).appendTo(tab);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('Num').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('Area Name').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('Room Count').appendTo(header);
+    } else {
+        let header = $("<tr></tr>", {
+            style: "text-align:left;color:Ivory"
+        }).appendTo(tab);
+        $("<th></th>", {
+            style: 'width:5em'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('').appendTo(header);
+        $("<th></th>", {
+            style: 'width:auto'
+        }).text('').appendTo(header);
+    }
+
+    let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex * nexMap.display.pageBreak) : 0;
+    for (let i = startIndex; i < entries.length && i < startIndex + nexMap.display.pageBreak; i++) {
+        let row = $("<tr></tr>", {
+            style: 'cursor:pointer;color:dimgrey;'
+        }).appendTo(tab);
+        $("<td></td>", {
+            style: 'color:grey',
+            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
+        }).text(entries[i].id).appendTo(row);
+        $("<td></td>", {
+            style: 'color:gainsboro;text-decoration:underline',
+            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
+        }).text(entries[i].name).appendTo(row);
+        $("<td></td>", {
+            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
+        }).text(entries[i].roomCount).appendTo(row);
+    }
+
+    print(tab[0].outerHTML);
+
+    let pagination;
+    if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
+        pagination = $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(`Displaying ${startIndex + nexMap.display.pageBreak} of ${entries.length}.`);
+        nexMap.display.pageIndex++;
+        $("<span></span>", {
+            style: 'color:Goldenrod'
+        }).text(' Click for ').appendTo(pagination);
+        $('<a></a>', {
+            style: 'cursor:pointer;color:Ivory;text-decoration:underline;',
+            onclick: 'nexMap.display.areaTable()'
         }).text('MORE').appendTo(pagination);
     } else {
         pagination = $("<span></span>", {
@@ -1833,81 +1964,6 @@ nexMap.display.userCommands = function () {
         }).text(cmds[x].txt).appendTo(row);
     }
     nexMap.display.notice('Aliases for user interaction');
-    print(tab[0].outerHTML);
-}
-
-nexMap.display.areaTable = function (entries, caption) {
-    nexMap.display.pageIndex = 0; // Hard coded. fix this.
-
-    let tab = $("<table></table>", {
-        class: "mono",
-        style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
-    });
-    if (nexMap.display.pageIndex == 0) {
-        let cap = $("<caption></caption>", {
-            style: "text-align:left"
-        }).appendTo(tab);
-        $('<span></span>', {
-            style: 'color:DodgerBlue'
-        }).text('[-').appendTo(cap);
-        $('<span></span>', {
-            style: 'color:OrangeRed'
-        }).text('nexMap').appendTo(cap);
-        $('<span></span>', {
-            style: 'color:DodgerBlue'
-        }).text('-] ').appendTo(cap);
-        $('<span></span>', {
-            style: 'color:GoldenRod'
-        }).text('Displaying matches for ').appendTo(cap)
-        $('<span></span>', {
-            style: 'font-weight:bold;color:LawnGreen'
-        }).text(caption).appendTo(cap); //fix
-
-        let header = $("<tr></tr>", {
-            style: "text-align:left;color:Ivory"
-        }).appendTo(tab);
-        $("<th></th>", {
-            style: 'width:5em'
-        }).text('Num').appendTo(header);
-        $("<th></th>", {
-            style: 'width:auto'
-        }).text('Area Name').appendTo(header);
-        $("<th></th>", {
-            style: 'width:auto'
-        }).text('Room Count').appendTo(header);
-    } else {
-        let header = $("<tr></tr>", {
-            style: "text-align:left;color:Ivory"
-        }).appendTo(tab);
-        $("<th></th>", {
-            style: 'width:5em'
-        }).text('').appendTo(header);
-        $("<th></th>", {
-            style: 'width:auto'
-        }).text('').appendTo(header);
-        $("<th></th>", {
-            style: 'width:auto'
-        }).text('').appendTo(header);
-    }
-
-    let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex * nexMap.display.pageBreak) : 0;
-    for (let i = startIndex; i < entries.length && i < startIndex + nexMap.display.pageBreak; i++) {
-        let row = $("<tr></tr>", {
-            style: 'cursor:pointer;color:dimgrey;'
-        }).appendTo(tab);
-        $("<td></td>", {
-            style: 'color:grey',
-            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
-        }).text(entries[i].id).appendTo(row);
-        $("<td></td>", {
-            style: 'color:gainsboro;text-decoration:underline',
-            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
-        }).text(entries[i].name).appendTo(row);
-        $("<td></td>", {
-            onclick: `nexMap.display.click.area(${JSON.stringify(entries[i].id)});`
-        }).text(entries[i].roomCount).appendTo(row);
-    }
-
     print(tab[0].outerHTML);
 }
 
