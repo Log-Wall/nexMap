@@ -1389,9 +1389,24 @@ nexMap.walker.gareCheck = function (astar, target) {
     if (nexMap.walker.antiGareAreas.includes(GMCP.CurrentArea.id)) {
         return;
     }
-
     
-    // Room number 12695
+    let g = typeof target === 'object' ? target : `#${target}`
+
+    let garePath = cy.elements().aStar({
+        root: `#12695`,
+        goal: g,
+        weight: function (edge) {
+            return edge.data('weight');
+        },
+        directed: true
+    });
+
+    if (astar.distance > garePath.distance) {
+        nexMap.walker.pathRooms = [];
+        nexMap.walker.pathCommands = [];
+        garePath.path.nodes().forEach(e => nexMap.walker.pathRooms.push(e.data('id')));
+        garePath.path.edges().forEach(e => nexMap.walker.pathCommands.push(e.data('command')));
+    }
 }
 
 nexMap.walker.checkClouds = function (astar, target) {
@@ -1403,8 +1418,8 @@ nexMap.walker.checkClouds = function (astar, target) {
 
     let nmw = nexMap.walker;
     let highCloudPath;
-    let firstWingRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
-    let wingRoomId = firstWingRoom ? firstWingRoom.data('id') : 0;
+    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
+    let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
 
     if (wingRoomId == 0)
         return;
@@ -1494,11 +1509,13 @@ nexMap.walker.hybridPath = function () {
     nexMap.walker.pathRooms = [...hybRm];
 }
 
-nexMap.walker.checkDash = function(cmd) {
+nexMap.walker.checkGlide = function(astar, target) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkDash(${cmd})`)};
 	let nmwpc = nexMap.walker.pathCommands;
     let nmwpr = nexMap.walker.pathRooms;
 
+    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
+    let firstIndoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
     let galCmds = [];
     let galRm = [nmwpr[0]];
     let galIndex = -1;
@@ -1512,15 +1529,18 @@ nexMap.walker.checkDash = function(cmd) {
             	galRm.push(nmwpr[i]);    
             }
             
-            galCmds.push(len>2?`gallop ${e} ${i-galIndex}`:e);
+            galCmds.push(len>2?`glide ${e} ${i-galIndex}`:e);
             galRm.push(len>2?nmwpr[galIndex+len+1]:nmwpr[i+1]);
 
             galIndex=i;
         }
     })
     
-    nexMap.walker.pathCommands = [...galCmds];
-    nexMap.walker.pathRooms = [...galRm];
+    console.log(galCmds);
+    console.log(galRm);
+    //nexMap.walker.pathCommands = [...galCmds];
+    //nexMap.walker.pathRooms = [...galRm];
+
 }
 
 nexMap.walker.reset = function () {
