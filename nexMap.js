@@ -1373,7 +1373,7 @@ nexMap.walker.determinePath = function (s, t) {
     nmw.checkClouds(astar, target);
     nmw.pathRawCommands = [...nmw.pathCommands];
     nmw.pathRawRooms = [...nmw.pathRooms];
-    nmw.hybridPath();
+    //nmw.hybridPath();
 
     return {
         path: nexMap.walker.pathCommands,
@@ -1382,6 +1382,15 @@ nexMap.walker.determinePath = function (s, t) {
 }
 
 nexMap.walker.gareCheck = function (astar, target) {
+    if (!GMCP.Status.class.includes('Dragon')) {
+        return;
+    }
+
+    if (nexMap.walker.antiGareAreas.includes(GMCP.CurrentArea.id)) {
+        return;
+    }
+
+    
     // Room number 12695
 }
 
