@@ -1,8 +1,8 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 1.1,
-    nxsVersion: 1.1,
+    version: 1.2,
+    nxsVersion: 1.2,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -501,7 +501,7 @@ nexMap.startUp = function () {
                 nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
                 send_direct('ql');
                 nexMap.styles.refresh();
-                if (!nexMap.settings.userPreferences.initialConfiguration)
+                if (nexMap.settings.userPreferences.initialConfiguration != nexMap.version)
                     send_direct('nm config');
             });
         });
@@ -523,24 +523,13 @@ nexMap.settings.userPreferences = get_variable('nexMapConfigs') || {
     currentRoomShape: 'rectangle',
     currentRoomColor: '#ff1493',
     labelDisplay: 'name',
-    landmarks: [
-        {
-            name: "Mhaldor",
-            roomID: 11400,
-        },
-        {
-            name: "Ashtan",
-            roomID: 11400,
-        },
-        {
-            name: "Hashan",
-            roomID: 11400,
-        },
-    ]
+    landmarks: [],
+    antiWingAreas: [],
+    antiGareAreas: []
 }
 
 nexMap.settings.save = function () {
-    nexMap.settings.userPreferences.initialConfiguration = 1;
+    nexMap.settings.userPreferences.initialConfiguration = nexMap.version;
     set_variable('nexMapConfigs', nexMap.settings.userPreferences);
 }
 
@@ -1215,7 +1204,6 @@ nexMap.walker = {
     pathRawRooms: [],
     delay: false,
     destination: 0,
-    antiWingAreas: [44, 49 ,190],
     stepCommand: '',
     clientEcho: client.echo_input,
 }
@@ -1370,10 +1358,27 @@ nexMap.walker.determinePath = function (s, t) {
     astar.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
     astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
 
-    nmw.checkClouds(astar, target);
+    let gare = nmw.checkGare(astar, target);
+    let cloud = nmw.checkClouds(astar, target);
+    let air = nmw.checkAirlord(astar, target);
+    let base = {
+        rooms: nmw.pathRooms,
+        commands: nmw.pathCommands
+    }
+
+    let optimalPath = [gare, cloud, air, base].reduce((a, b) => {
+        if (typeof a == 'undefined') {return b};
+        if (typeof b == 'undefined') {return a};
+        return a?.commands?.length < b?.commands?.length ? a : b;
+    });
+
     nmw.pathRawCommands = [...nmw.pathCommands];
     nmw.pathRawRooms = [...nmw.pathRooms];
-    //nmw.hybridPath();
+
+    nexMap.walker.pathCommands = optimalPath.commands;
+    nexMap.walker.pathRooms = optimalPath.rooms;
+
+    nmw.hybridPath();
 
     return {
         path: nexMap.walker.pathCommands,
@@ -1381,15 +1386,95 @@ nexMap.walker.determinePath = function (s, t) {
     }
 }
 
-nexMap.walker.gareCheck = function (astar, target) {
+nexMap.walker.checkAirlord = function (astar, target) {
+    if (!GMCP.Status.class.toLowerCase().includes('dragon')) {
+        return;
+    }
+
+    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
+    let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
+
+    if (wingRoomId == 0) {
+        return;
+    }
+
+    let nmw = nexMap.walker;
+    let cloudRooms = [...nmw.pathRooms];
+    let cloudCommands = [...nmw.pathCommands];
+    let cloudPath = {distance: 1000};
+    let highCloudPath = {distance: 1000};
+    let stratospherePath = {distance: 1000};
+    let g = typeof target === 'object' ? target : `#${target}`
+
+    if (!nexMap.settings.userPreferences.useDuanathar) {
+        cloudPath = cy.elements().aStar({
+            root: `#3885`,
+            goal: g,
+            weight: function (edge) {
+                return edge.data('weight');
+            },
+            directed: true
+        });
+        cloudPath.command = 'aero soar low';
+    }
+
+    if (!nexMap.settings.userPreferences.useDuanatharan) {
+        highCloudPath = cy.elements().aStar({
+            root: `#4882`,
+            goal: g,
+            weight: function (edge) {
+                return edge.data('weight');
+            },
+            directed: true
+        });
+        highCloudPath.command = 'aero soar high';
+    }
+
+    stratospherePath = cy.elements().aStar({
+        root: `#54173`,
+        goal: g,
+        weight: function (edge) {
+            return edge.data('weight');
+        },
+        directed: true
+    });
+    stratospherePath.command = 'aero soar stratosphere';
+
+    let optimalCloud = [cloudPath, highCloudPath, stratospherePath].reduce((a, b) => {
+        return a?.distance < b?.distance ? a : b;
+    });
+
+    // Added +12 to the comparison based on 5 seconds of balance at an assumed rate of 3 rooms per second.
+    if (astar.distance > cloudCommands.indexOf(wingRoomId) + optimalCloud.distance + 15) {
+        cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 1);
+        cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
+        cloudCommands.push(optimalCloud.command);
+
+        optimalCloud.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
+        optimalCloud.path.edges().forEach(e => cloudCommands.push(e.data('command')));
+    }
+
+    return {
+        rooms: cloudRooms,
+        commands: cloudCommands
+    }
+}
+
+nexMap.walker.checkGare = function (astar, target) {
     if (!GMCP.Status.class.includes('Dragon')) {
         return;
     }
 
-    if (nexMap.walker.antiGareAreas.includes(GMCP.CurrentArea.id)) {
+    let firstGareRoom = astar.path.nodes().find(e => !nexMap.settings.userPreferences.antiGareAreas.includes(e.data('area')));
+    let gareRoomId = firstGareRoom ? firstGareRoom.data('id') : 0;
+
+    if (gareRoomId == 0) {
         return;
     }
-    
+    let nmw = nexMap.walker;
+    let gareRooms = [...nmw.pathRooms];
+    let gareCommands = [...nmw.pathCommands];
+
     let g = typeof target === 'object' ? target : `#${target}`
 
     let garePath = cy.elements().aStar({
@@ -1401,11 +1486,19 @@ nexMap.walker.gareCheck = function (astar, target) {
         directed: true
     });
 
-    if (astar.distance > garePath.distance) {
-        nexMap.walker.pathRooms = [];
-        nexMap.walker.pathCommands = [];
-        garePath.path.nodes().forEach(e => nexMap.walker.pathRooms.push(e.data('id')));
-        garePath.path.edges().forEach(e => nexMap.walker.pathCommands.push(e.data('command')));
+    // Pierce the veil assumed at 3 seconds equilibrium at 3 rooms per second.
+    if (astar.distance > gareCommands.indexOf(gareRoomId) + garePath.distance + 10) {
+        gareRooms.splice(gareRooms.indexOf(gareRoomId) + 1);
+        gareCommands.splice(gareRooms.indexOf(gareRoomId));
+        gareCommands.push('pierce the veil');
+
+        garePath.path.nodes().forEach(e => gareRooms.push(e.data('id')));
+        garePath.path.edges().forEach(e => gareCommands.push(e.data('command')));
+    }
+    
+    return {
+        rooms: gareRooms,
+        commands: gareCommands
     }
 }
 
@@ -1416,13 +1509,17 @@ nexMap.walker.checkClouds = function (astar, target) {
     if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan)
         return;
 
-    let nmw = nexMap.walker;
-    let highCloudPath;
-    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
+    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
     let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
 
-    if (wingRoomId == 0)
+    if (wingRoomId == 0) {
         return;
+    }
+
+    let nmw = nexMap.walker;
+    let highCloudPath;
+    let cloudRooms = [...nmw.pathRooms];
+    let cloudCommands = [...nmw.pathCommands];
 
     let g = typeof target === 'object' ? target : `#${target}`
 
@@ -1447,13 +1544,13 @@ nexMap.walker.checkClouds = function (astar, target) {
     }
 
     let cloudType = function (cloud, cmd) {
-        if (astar.distance > nmw.pathRooms.indexOf(wingRoomId) + cloud.distance) {
-            nmw.pathRooms.splice(nmw.pathRooms.indexOf(wingRoomId) + 1);
-            nmw.pathCommands.splice(nmw.pathRooms.indexOf(wingRoomId));
-            nmw.pathCommands.push(cmd);
+        if (astar.distance > cloudRooms.indexOf(wingRoomId) + cloud.distance) {
+            cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 1);
+            cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
+            cloudCommands.push(cmd);
 
-            cloud.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
-            cloud.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
+            cloud.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
+            cloud.path.edges().forEach(e => cloudCommands.push(e.data('command')));
         }
     }
 
@@ -1461,6 +1558,11 @@ nexMap.walker.checkClouds = function (astar, target) {
         cloudType(highCloudPath, nexMap.settings.userPreferences.duanatharanCommand);
     else
         cloudType(cloudPath, nexMap.settings.userPreferences.duanatharCommand);
+
+    return {
+        rooms: cloudRooms,
+        commands: cloudCommands
+    }
 }
 
 nexMap.walker.hybridPath = function () {
@@ -1509,28 +1611,45 @@ nexMap.walker.hybridPath = function () {
     nexMap.walker.pathRooms = [...hybRm];
 }
 
-nexMap.walker.checkGlide = function(astar, target) {
+nexMap.walker.checkGlide = function(path, target) {
     if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkDash(${cmd})`)};
-	let nmwpc = nexMap.walker.pathCommands;
-    let nmwpr = nexMap.walker.pathRooms;
 
-    let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
-    let firstIndoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nmw.antiWingAreas.includes(e.data('area')));
+    let firstOutdoorRoom = path.rooms.find(e => cy.$id(e).data('userData').indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(cy.$id(e).data('area')));
+    let firstIndoorRoom = path.rooms.slice(path.rooms.indexOf(firstOutdoorRoom)).find(e => cy.$id(e).data().userData.indoors == 'y');
     let galCmds = [];
-    let galRm = [nmwpr[0]];
+    let galRm = [path.rooms[0]];
     let galIndex = -1;
     let len;
-    nmwpc.forEach((e,i)=>{
-        if (e != nmwpc[i+1]) {
+    console.log(firstOutdoorRoom);
+    console.log(firstIndoorRoom);
+
+    let glidePath = cy.elements().aStar({
+        root: `#${firstOutdoorRoom}`,
+        goal: `#${firstIndoorRoom}`,
+        weight: function (edge) {
+            return edge.data('weight');
+        },
+        directed: true
+    });
+    glidePath.commands = [];
+    glidePath.rooms = [];
+
+    console.log(glidePath);
+
+    glidePath.path.nodes().forEach(e => glidePath.rooms.push(e.data('id')));
+    glidePath.path.edges().forEach(e => glidePath.commands.push(e.data('command')));
+
+    glidePath.commands.forEach((e,i)=>{
+        if (e != glidePath.commands[i+1]) {
             len = i-galIndex;
             
             if(len==2) {
             	galCmds.push(e);
-            	galRm.push(nmwpr[i]);    
+            	galRm.push(glidePath.rooms[i]);    
             }
             
-            galCmds.push(len>2?`glide ${e} ${i-galIndex}`:e);
-            galRm.push(len>2?nmwpr[galIndex+len+1]:nmwpr[i+1]);
+            galCmds.push(len > 2 ? `glide ${e} ${i-galIndex}` : e);
+            galRm.push(len > 2 ? glidePath.rooms[galIndex+len+1] : glidePath.rooms[i+1]);
 
             galIndex=i;
         }
@@ -2061,7 +2180,7 @@ nexMap.display.configDialog = function () {
     }).text('Setting').appendTo(header);
 
     let configs = [{
-            name: 'Wormholes',
+            name: 'Use Wormholes',
             setting: 'useWormholes'
         },
         /*{
@@ -2073,11 +2192,11 @@ nexMap.display.configDialog = function () {
             setting: 'vibratingStick'
         },
         {
-            name: 'Low Clouds',
+            name: 'Eagle Wings',
             setting: 'useDuanathar'
         },
         {
-            name: 'High Clouds',
+            name: 'Atavian Wings',
             setting: 'useDuanatharan'
         }
     ];
@@ -2142,7 +2261,7 @@ nexMap.display.configDialog = function () {
     }).appendTo(tab);
     $("<td></td>", {
         style: 'color:grey'
-    }).text('Low Clouds Command(s)').appendTo(duanatharRow);
+    }).text('Eagle Wings Command(s)').appendTo(duanatharRow);
     $("<td></td>", {
         style: 'color:gainsboro;text-decoration:underline'
     }).append(duanathar).appendTo(duanatharRow);
@@ -2160,7 +2279,7 @@ nexMap.display.configDialog = function () {
     }).appendTo(tab);
     $("<td></td>", {
         style: 'color:grey'
-    }).text('High Clouds Command(s)').appendTo(duanatharanRow);
+    }).text('Atavian Wing Command(s)').appendTo(duanatharanRow);
     $("<td></td>", {
         style: 'color:gainsboro;text-decoration:underline'
     }).append(duanatharan).appendTo(duanatharanRow);
