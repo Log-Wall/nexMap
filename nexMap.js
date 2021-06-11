@@ -1,3 +1,4 @@
+cy.edges().filter(e => e.data('command')?.includes('sendAll')).forEach(e => console.log(e.data('command').substr(e.data('command').indexOf('(')+1, e.data('command').indexOf(')')- 1 - e.data('command').indexOf('(')).replace(/['"]/g,"").replace(/,\s?/g,'|')))
 'use strict';
 var cy = {};
 var nexMap = {
@@ -120,7 +121,19 @@ nexMap.changeRoom =  async function (id) {
     cy.center(`#${id}`); 
     
     $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
-    $('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
+    //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
+
+    $('.clickableExitSpace').remove();
+    $('.clickableExit').remove();
+    cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
+        $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline'})
+            .text(`${e}`)
+            .on('click', function() {send_direct(this.innerText)})
+            .appendTo('#currentExitsLabel');
+        $('<span></span>', {class: 'clickableExitSpace'})
+            .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
+            .appendTo('#currentExitsLabel');
+    });
 
     nexMap.currentRoom = id;
 };
@@ -300,11 +313,14 @@ nexMap.generateGraph = async function () {
                         locked: true,
                     };
 
-                    if (room?.symbol?.text && ['S', 'F', 'G', 'C', 'N', 'M', '$', 'L', 'H', 'W', 'A', 'P', 'B'].includes(room.symbol.text))
+                    if (room?.symbol?.text && ['S', 'F', 'G', 'C', 'N', 'M', '$', 'L', 'H', 'W', 'A', 'P', 'B'].includes(room.symbol.text)) {
+                        newNode.classes.push('backgroundImageRoom');
                         newNode.data.image = nexMap.styles.generateSVG(room.symbol.text);
+                    }
 
-                    if (xts.includes('worm warp'))
+                    if (xts.includes('worm warp')) {
                         newNode.classes.push('wormholeRoom');
+                    }
 
                     nexGraph.push(newNode);
                 });
@@ -459,7 +475,7 @@ nexMap.initializeGraph = function () {
         container: document.getElementById('cy'),
         layout: 'grid',
         style: nexMap.styles.stylesheet,
-        zoom: 1,
+        zoom: 1.4,
         minZoom: 0.2,
         maxZoom: 3,
         wheelSensitivity: 0.5,
@@ -639,13 +655,21 @@ nexMap.styles.style = function () {
 }
 
 nexMap.styles.generateSVG = function (txt) {
-    let svg_pin = $('<svg width="11" height="11" viewBox="0 0 11 11" version="1.1"  xmlns="http://www.w3.org/2000/svg"></svg>')
+    let svg_pin = $('<svg width="100" height="100" viewBox="0 0 100 100" version="1.1" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>')
     let svg_text = $('<text></text>', {
-        x: "2",
-        y: "8",
+        x: "50",
+        y: "60",
+        'font-size': '90px',
+        'dominant-baseline': 'middle',
+        'text-anchor': 'middle',
         fill: "black",
+        /*stroke: "black",
+        'stroke-width': '5px',
+        'stroke-linecap': 'butt',
+        'stroke-linejoin': 'miter',*/
         'font-family': "Arial, monospace",
-        style: "font-size:8px;text-align:center;font-weight:bold"
+        'text-align': 'center',
+        'font-weight': 'bold'
     }).text(txt);
 
     svg_text.appendTo(svg_pin)
@@ -677,7 +701,7 @@ nexMap.styles.stylesheet = [{
         'selector': '[image]',
         'style': {
             'background-image': 'data(image)',
-            'background-fit': 'contain',
+            'background-fit': 'contain contain',
             'background-width': '100%',
             'background-height': '100%',
             "background-repeat": "no-repeat",
