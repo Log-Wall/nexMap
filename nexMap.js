@@ -1,4 +1,4 @@
-cy.edges().filter(e => e.data('command')?.includes('sendAll')).forEach(e => console.log(e.data('command').substr(e.data('command').indexOf('(')+1, e.data('command').indexOf(')')- 1 - e.data('command').indexOf('(')).replace(/['"]/g,"").replace(/,\s?/g,'|')))
+//cy.edges().filter(e => e.data('command')?.includes('sendAll')).forEach(e => console.log(e.data('command').substr(e.data('command').indexOf('(')+1, e.data('command').indexOf(')')- 1 - e.data('command').indexOf('(')).replace(/['"]/g,"").replace(/,\s?/g,'|')))
 'use strict';
 var cy = {};
 var nexMap = {
