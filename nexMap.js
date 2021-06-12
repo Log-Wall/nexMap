@@ -624,9 +624,9 @@ nexMap.styles.style = function () {
     cy.on('mouseover', 'node', evt => {
         evt.target.flashClass('displayLabel', 3000)
     }); // Pop up labels on mouseover
-    cy.on('zoom', e => {
+    cy.on('zoom', evt => {
         cy.style().selector('.displayLabel').style({
-            'font-size': `${12 * 1 / cy.zoom()}pt`
+            'font-size': `${12 * (1 / cy.zoom())}px`
         })
     }) //Increases the size of the label based on the zoom level.
     cy.on('unselect', 'node', evt => {
@@ -728,7 +728,7 @@ nexMap.styles.stylesheet = [{
         'selector': '.displayLabel',
         'style': {
             'color': 'white',
-            'label': 'data(id)',
+            'label': 'data(name)',
             "min-zoomed-font-size": "12pt"
         }
     },

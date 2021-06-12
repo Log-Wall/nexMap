@@ -17,3 +17,5 @@ Exits are now clickable on the map GUI. Image showing worm warp or enter grate
 Pierce the veil logic is now integrated automatically when in or not in dragonform
 Aero Soar for air lords is now integrated automatically when in or not in air lord. 
     Will always use wings over aero if toggle is enabled, but still calculate for stratosphere.
+Changed mouse over labels to room names instead of room number.
+The crowd map had numerous exits with mudlet scripts built in; translated all but two.
