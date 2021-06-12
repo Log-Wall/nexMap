@@ -1,4 +1,3 @@
-//cy.edges().filter(e => e.data('command')?.includes('sendAll')).forEach(e => console.log(e.data('command').substr(e.data('command').indexOf('(')+1, e.data('command').indexOf(')')- 1 - e.data('command').indexOf('(')).replace(/['"]/g,"").replace(/,\s?/g,'|')))
 'use strict';
 var cy = {};
 var nexMap = {
@@ -126,7 +125,7 @@ nexMap.changeRoom =  async function (id) {
     $('.clickableExitSpace').remove();
     $('.clickableExit').remove();
     cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
-        $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline'})
+        $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
             .text(`${e}`)
             .on('click', function() {send_direct(this.innerText)})
             .appendTo('#currentExitsLabel');
@@ -286,6 +285,14 @@ nexMap.generateGraph = async function () {
                                 newEdge.data.weight = 12;
                             } else if (xt == 'enter grate')
                                 newEdge.classes.push('sewergrate');
+                            else if (xt.includes('sendAll') && !xt.includes('if')) {
+                                newEdge.data.command = xt.substr(xt.indexOf("(")+1, xt.indexOf(")") - xt.indexOf("(") - 1)
+                                        .replace(/["']/g, '')
+                                            .replace(/,\s?/g, nexMap.settings.userPreferences.commandSeparator);
+                            } else if (xt.includes('send(') && !xt.includes('if')) {
+                                newEdge.data.command = xt.substr(xt.indexOf("(")+1, xt.indexOf(")") - xt.indexOf("(") - 1)
+                                        .replace(/["']/g, '');
+                            }
 
                             nexGraph.push(newEdge);
                         }
