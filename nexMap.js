@@ -570,6 +570,24 @@ nexMap.initializeGraph = function () {
     });
 };
 
+nexMap.sevenTruths = function (num) {
+    let truths = [
+        `Truth One: What is called evil is simply the drive for advancement, for greatness. We seek, through discipline and pain, to spur the advancement of nothing less than sentient life.`,
+        `Truth Two: Cruelty - the application of pain - is the method by which one weeds out the weak and feeble-minded from the population.`,
+        `Truth Three: Weakness must be eliminated in all its forms: Physical, Mental, and Spiritual.`,
+        `Truth Four: The enemies of strength are those who trumpet the effeminate values of forgiveness, tolerance, and laxity of discipline.`,
+        `Truth Five: The body may be made stronger through combat.`,
+        `Truth Six: The mind may be made stronger through the elimination of conscience. One does this by inflicting pain on others.`,
+        `Truth Seven: The spirit may be made stronger by enduring hardships, both self-imposed and externally imposed.`
+    ]
+
+    if (num > truths.length) {
+        return truths[truths.length * Math.random() | 0];
+    } else {
+        return truths[num];
+    }
+}
+
 nexMap.startUp = function () {
     if (nexMap.logging) 
         console.log('nexMap: nexMap.startUp()');
@@ -582,6 +600,11 @@ nexMap.startUp = function () {
     run_function('nexMap.display', {}, 'nexmap');
     nexMap.stopWatch();
     nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
+
+
+
+
+
     nexMap.loadDependencies().then(() => {
         nexMap.stopWatch();
         nexMap.initializeGraph();
@@ -2481,4 +2504,16 @@ nexMap.display.configDialog = function () {
             $('.nexMapDialog').parent().remove();
         }
     });
+}
+
+nexMap.aliases = {
+    aliases: {
+        config: 
+    }
+};
+nexMap.aliases.call = function (alias, args) {
+    if ()
+}
+nexMap.aliases.config = function () {
+    nexMap.display.configDialog();
 }
