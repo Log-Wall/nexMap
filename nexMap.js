@@ -28,6 +28,80 @@ var nexMap = {
     },
 };
 
+nexMap.farseeArea = function (target, area) {
+    let areas = nexMap.findArea(`${area}`);
+
+    let msg = $('<span></span>',{id:'farsee'});
+    $('<span>Though too far away to accurately perceive details, you see that </span>').appendTo(msg);
+    $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
+    $(`<span> is in </span>`).appendTo(msg);
+    let link = $('<span></span>',{
+        id:'farsee', 
+        style:'color:White;text-decoration:underline;cursor:pointer',
+        onclick: `nexMap.display.click.area(${JSON.stringify(areas[0].id)});`
+        })
+        
+        .text(`"${area}"`)
+    
+    if (areas.length>1) {
+        $(`<span>${area}</span>`).appendTo(msg);
+        print(msg[0].outerHTML)
+        nexMap.display.areaTable(areas,area);
+    }
+    else if (areas.length == 1) {    
+        link.appendTo(msg);
+        print(msg[0].outerHTML)
+    }
+    else {
+        $(`<span>${area}</span>`).appendTo(msg);
+        print(msg[0].outerHTML)
+        nexMap.display.notice('nothing found');    
+    }
+}
+
+nexMap.onGMCP = function (method, args) {
+    if(method == 'Room.Info') {
+        GMCP.Room.Info = args;
+        if (args.ohmap) {
+            nexMap_tab.deactivate();
+            return;
+        } else if (!nexMap_tab.active) {
+            nexMap_tab.activate();
+            nexMap.styles.refresh();
+        }
+        
+        nexMap.changeRoom(GMCP.Room.Info.num);
+        
+        if(nexMap.walker.pathing)
+            nexMap.walker.step();
+    }
+    
+    if (method == 'Char.Status') {
+        if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
+            nexMap.settings.toggle('useWormholes');
+    }
+}
+
+nexMap.farseeLocal = function (target, room) {
+    gag_current_line();
+    let tar = cy.$(`node[area = ${nexMap.currentArea}]`).find(n => n.data('name') == room).data('id')
+    let path = nexMap.walker.determinePath(nexMap.currentRoom, tar);
+    let msg = $('<span></span>',{id:'farsee'});
+    $('<span>You see that </span>').appendTo(msg);
+    $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
+    $('<span> is at </span>').appendTo(msg);
+    $('<span></span>',{
+        id:'farsee', 
+        style:'color:White;text-decoration:underline;cursor:pointer',
+        onclick:`nexMap.walker.speedWalk(${nexMap.currentRoom}, ${tar})`
+        })
+        .text(`"${room}"`)
+            .appendTo(msg);
+    $('<span></span>').text(` (${path.rawPath.length} steps)`).appendTo(msg);
+    print(msg[0].outerHTML)
+    print($('<span></span>').text(`[${nexMap.walker.determinePath(nexMap.currentRoom, tar).rawPath.join(', ')}]`)[0].outerHTML);
+}
+
 nexMap.stopWatch = function () {
     let t = (new Date() - nexMap.loggingTime) / 1000;
 
