@@ -1823,7 +1823,11 @@ nexMap.display = {
     
         print(msg[0].outerHTML);
     },
-    versionNotice() {
+    versionNotice(ver) {
+        if (nexMap.nxsVersion == ver) {
+            return;
+        }
+        
         let msg = $("<span></span>", {
             style: 'color:GoldenRod'
         }).text(`Download the newest version ${nexMap.version} `);
@@ -1838,7 +1842,7 @@ nexMap.display = {
         }).text(` for the latest features/fixes.`)
             .appendTo(msg);
 
-
+        nexMap.display.notice(`You are running nxs package version ${ver}.`);
         nexMap.display.notice(msg, true);
     },
     generateTable(table, entries = false, caption = false) {
