@@ -1,8 +1,8 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 1.2,
-    nxsVersion: 1.2,
+    version: 1.3,
+    nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -28,37 +28,6 @@ var nexMap = {
     },
 };
 
-nexMap.farseeArea = function (target, area) {
-    let areas = nexMap.findArea(`${area}`);
-
-    let msg = $('<span></span>',{id:'farsee'});
-    $('<span>Though too far away to accurately perceive details, you see that </span>').appendTo(msg);
-    $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
-    $(`<span> is in </span>`).appendTo(msg);
-    let link = $('<span></span>',{
-        id:'farsee', 
-        style:'color:White;text-decoration:underline;cursor:pointer',
-        onclick: `nexMap.display.click.area(${JSON.stringify(areas[0].id)});`
-        })
-        
-        .text(`"${area}"`)
-    
-    if (areas.length>1) {
-        $(`<span>${area}</span>`).appendTo(msg);
-        print(msg[0].outerHTML)
-        nexMap.display.areaTable(areas,area);
-    }
-    else if (areas.length == 1) {    
-        link.appendTo(msg);
-        print(msg[0].outerHTML)
-    }
-    else {
-        $(`<span>${area}</span>`).appendTo(msg);
-        print(msg[0].outerHTML)
-        nexMap.display.notice('nothing found');    
-    }
-}
-
 nexMap.onGMCP = function (method, args) {
     if(method == 'Room.Info') {
         GMCP.Room.Info = args;
@@ -83,14 +52,13 @@ nexMap.onGMCP = function (method, args) {
 }
 
 nexMap.farseeLocal = function (target, room) {
-    gag_current_line();
     let tar = cy.$(`node[area = ${nexMap.currentArea}]`).find(n => n.data('name') == room).data('id')
     let path = nexMap.walker.determinePath(nexMap.currentRoom, tar);
     let msg = $('<span></span>',{id:'farsee'});
     $('<span>You see that </span>').appendTo(msg);
     $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
     $('<span> is at </span>').appendTo(msg);
-    $('<span></span>',{
+    let link = $('<span></span>',{
         id:'farsee', 
         style:'color:White;text-decoration:underline;cursor:pointer',
         onclick:`nexMap.walker.speedWalk(${nexMap.currentRoom}, ${tar})`
@@ -100,6 +68,45 @@ nexMap.farseeLocal = function (target, room) {
     $('<span></span>').text(` (${path.rawPath.length} steps)`).appendTo(msg);
     print(msg[0].outerHTML)
     print($('<span></span>').text(`[${nexMap.walker.determinePath(nexMap.currentRoom, tar).rawPath.join(', ')}]`)[0].outerHTML);
+
+    return true;
+}
+
+nexMap.farseeArea = function (target, area) {
+    let areas = nexMap.findArea(`${area}`);
+
+    if(!areas.length) {
+        console.log(`${area}`);
+        return false;
+    }
+
+    let msg = $('<span></span>',{id:'farsee'});
+    $('<span>Though too far away to accurately perceive details, you see that </span>').appendTo(msg);
+    $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
+    $(`<span> is in </span>`).appendTo(msg);
+    let link = $('<span></span>',{
+        id:'farsee', 
+        style:'color:White;text-decoration:underline;cursor:pointer',
+        onclick: `nexMap.display.click.area(${JSON.stringify(areas[0].id)});`
+        })        
+        .text(`"${area}"`)
+
+    if (areas.length>1) {
+        $(`<span>${area}</span>`).appendTo(msg);
+        print(msg[0].outerHTML)
+        nexMap.display.areaTable(areas, area);
+    }
+    else if (areas.length == 1) {    
+        link.appendTo(msg);
+        print(msg[0].outerHTML)
+    }
+    else {
+        $(`<span>${area}</span>`).appendTo(msg);
+        print(msg[0].outerHTML)
+        nexMap.display.notice('nothing found');    
+    }
+
+    return true;
 }
 
 nexMap.stopWatch = function () {
@@ -232,10 +239,6 @@ nexMap.changeArea = async function (area, z, override = false) {
 
     return true;
 };
-
-nexMap.fit = function () {
-    cy.fit();
-}
 
 nexMap.generateExits = function () {
     if (nexMap.logging)
@@ -1848,6 +1851,10 @@ nexMap.display.notice = function (txt, html = false) {
     print(msg[0].outerHTML);
 }
 
+nexMap.display.versionNotice = function () {
+    nexMap.display.notice(`Download the newest version ${nexMap.version} for the latest features/fixes.`);
+}
+
 nexMap.display.generateTable = function (table, entries = false, caption = false) {
     nexMap.display.pageIndex = 0;
     if (table == 'displayTable') {
@@ -2507,13 +2514,75 @@ nexMap.display.configDialog = function () {
 }
 
 nexMap.aliases = {
-    aliases: {
-        config: 
+    call: function (alias, args = false) {
+        if (!Object.keys(nexMap.aliases).includes(alias)) {
+            return;
+        }
+
+        nexMap.aliases[alias](args);
+    },
+    config: function () {
+        nexMap.display.configDialog();
+    },
+    save: function () {
+        nexMap.settings.save();
+    },
+    find: function (args) {
+        if (!/^[a-zA-z\s]+$/g.test(args)) {
+            return;
+        }
+        
+        nexMap.display.generateTable('displayTable', nexMap.findRooms(args), args.toLowerCase());
+    },
+    area: function (args) {
+        if (!/^[a-zA-z'-\s]+$/g.test(args)) {
+            return;
+        }
+
+        nexMap.display.generateTable('areaTable', nexMap.findAreas(args[1]), args[1]);
+    },
+    goto: function (args) {
+        if (/^[0-9]+$/g.test(args)) {
+            cy.$(':selected').unselect()
+            cy.$(`#${args}`).select()
+        } else if (/^[a-zA-z'-\s]+$/g.test(args)) {
+            nexMap.walker.goto(args);
+        }
+    },
+    mark: function (args) {
+        if (!/^[a-zA-z\s]+$/g.test(args)) {
+            return;
+        }
+        nexMap.settings.addMark(args);
+    },
+    marks: function () {
+        nexMap.display.generateTable('landmarkTable');
+    },
+    stop: function () {
+        nexMap.walker.stop();
+    },
+    zoom: function (args) {
+        if (!/^\d(?:.\d\d?)?$/g.test(args)) {
+            return;
+        }
+        if(args>3)
+            cy.zoom(3);
+        else if (args<0.2)
+            cy.zoom(0.2);
+        else
+            cy.zoom(parseFloat(args));
+    },
+    fit: function () {
+        cy.fit();
+    },
+    refresh: function () {
+        nexMap.styles.refresh();
+    },
+    wormholes: function () {
+        nexMap.settings.toggle('useWormholes');
+    },
+    clouds: function () {
+        nexMap.settings.toggle('useDuanathar');
+        nexMap.settings.toggle('useDuanatharan');
     }
-};
-nexMap.aliases.call = function (alias, args) {
-    if ()
-}
-nexMap.aliases.config = function () {
-    nexMap.display.configDialog();
 }
