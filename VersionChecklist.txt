@@ -9,13 +9,5 @@
 
 
 Added:
-Changed configuration options for wings. Toggles are now strictly to denote if you own
-the associated artifact wings.
-The wing commands option is strictly for those who like to store their wings when not in use "get wings from pack\wear wings\say duanathar\remove wings\put wings in pack"
-    Do not change this if you are an air lord (see below).
-Exits are now clickable on the map GUI. Image showing worm warp or enter grate
-Pierce the veil logic is now integrated automatically when in or not in dragonform
-Aero Soar for air lords is now integrated automatically when in or not in air lord. 
-    Will always use wings over aero if toggle is enabled, but still calculate for stratosphere.
-Changed mouse over labels to room names instead of room number.
-The crowd map had numerous exits with mudlet scripts built in; translated all but two.
+Revised the farsee code to address an error that was occuring in rare circumstances.
+Moved all GMCP and Alias code out of Nexus into nexMap. This will allow me to make fixes and additions without users needing to download a new nxs file.
