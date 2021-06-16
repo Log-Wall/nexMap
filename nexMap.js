@@ -586,7 +586,7 @@ var nexMap = {
         run_function('nexMap.display', {}, 'nexmap');
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
-    
+        display_notice(`${nexMap.sevenTruths(99)}`, 'red');
     
     
     
@@ -1824,7 +1824,22 @@ nexMap.display = {
         print(msg[0].outerHTML);
     },
     versionNotice() {
-        nexMap.display.notice(`Download the newest version ${nexMap.version} for the latest features/fixes.`);
+        let msg = $("<span></span>", {
+            style: 'color:GoldenRod'
+        }).text(`Download the newest version ${nexMap.version} `);
+        $("<a></a>", {
+            href: 'https://www.google.com',
+            target: '_blank',
+            style: 'color:white;text-decoration:underline'
+        }).text(`HERE`)
+            .appendTo(msg);
+        $("<span></span>", {
+            style: 'color:GoldenRod'
+        }).text(` for the latest features/fixes.`)
+            .appendTo(msg);
+
+
+        nexMap.display.notice(msg, true);
     },
     generateTable(table, entries = false, caption = false) {
         nexMap.display.pageIndex = 0;
