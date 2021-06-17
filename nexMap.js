@@ -587,10 +587,6 @@ var nexMap = {
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
         display_notice(`${nexMap.sevenTruths(99)}`, 'red');
-    
-    
-    
-    
         nexMap.loadDependencies().then(() => {
             nexMap.stopWatch();
             nexMap.initializeGraph();
