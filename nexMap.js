@@ -1828,7 +1828,7 @@ nexMap.display = {
             style: 'color:GoldenRod'
         }).text(`Download the newest version ${nexMap.version} `);
         $("<a></a>", {
-            href: 'https://www.google.com',
+            href: 'https://sites.google.com/view/nexmap/home',
             target: '_blank',
             style: 'color:white;text-decoration:underline'
         }).text(`HERE`)
