@@ -611,6 +611,20 @@ var nexMap = {
     },    
 };
 
+/* PUSHING UPDATES TO THE NXS FILE DIRECTLY
+reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
+GMCP.Char.Items = {};
+$.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js')
+console.log('called nexMap CDN');
+reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
+reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
+
+reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],null,'trigger','nexmap')
+
+client.packages[client.packages.findIndex(e => e.name == 'nexmap')]
+
+*/
+
 nexMap.settings = {
     userPreferences: get_variable('nexMapConfigs') || {
         intialConfiguration: 0,
