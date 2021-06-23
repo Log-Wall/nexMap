@@ -1345,15 +1345,15 @@ var nexMap = {
             if (typeof str !== 'string') {
                 return;
             }
-        
+            console.log(`str: ${str}`);
             let findMark = nexMap.settings.userPreferences.landmarks.find(e => e.name.toLowerCase() == str.toLowerCase());
             if (findMark) {
                 nexMap.walker.speedWalk(nexMap.currentRoom, findMark.roomID);
                 return;
             }
-        
+            console.log(`findMark: ${findMark}`);
             let areas = nexMap.findArea(str);
-        
+            console.log(`areas: ${areas}`);
             if (areas.length == 0) {
                 let findAreas = nexMap.findAreas(str);
                 console.log(findAreas);
@@ -1395,6 +1395,7 @@ var nexMap = {
                     closestArea = ar;
                 }
             });
+            console.log(`closestArea: ${closestArea}`);
         
             nexMap.walker.areaWalk(closestArea.id);
         },
@@ -2196,6 +2197,10 @@ var nexMap = {
                     txt: 'Searches for areas matching the provided string. Displays in table format with click to go functionality.'
                 },
                 {
+                    cmd: 'nm info',
+                    txt: 'Displays the current rooms GMCP information.'
+                },
+                {
                     cmd: 'nm goto <####>',
                     txt: 'Calculates the most efficient path to the target room. Will use wings/wormholes/dash/gallop if enabled by the user in settings.'
                 },
@@ -2520,6 +2525,15 @@ var nexMap = {
             }
     
             nexMap.display.generateTable('areaTable', nexMap.findAreas(args[1]), args[1]);
+        },
+        info: function () {
+            nexMap.display.notice('Room.Info');
+            print(`Name: 		${GMCP.Room.Info.name}`)
+            print(`Number: 		${GMCP.Room.Info.num}`)
+            print(`Area: 		${GMCP.Room.Info.area}`)
+            print(`Environment: 	${GMCP.Room.Info.environment}`)
+            print(`Coordinates: 	${GMCP.Room.Info.coords}`)
+            print(`Details: 		${GMCP.Room.Info.details}`)
         },
         goto: function (args) {
             if (/^[0-9]+$/g.test(args)) {
