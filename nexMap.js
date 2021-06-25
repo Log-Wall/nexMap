@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 1.4,
+    version: 1.5,
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -49,7 +49,7 @@ var nexMap = {
         }
     },
     farseeLocal(target, room) {
-        let tar = cy.$(`node[area = ${nexMap.currentArea}]`).find(n => n.data('name') == room).data('id')
+        let tar = cy.nodes().find(n => n.data('name') == room).data('id')
         let path = nexMap.walker.determinePath(nexMap.currentRoom, tar);
         let msg = $('<span></span>',{id:'farsee'});
         $('<span>You see that </span>').appendTo(msg);
