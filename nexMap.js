@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 1.6,
+    version: 1.7,
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -610,7 +610,7 @@ var nexMap = {
         });
     },
     settings: {
-        userPreferences: /*get_variable('nexMapConfigs') ||*/ {
+        userPreferences: get_variable('nexMapConfigs') || {
             intialConfiguration: 0,
             commandSeparator: '\\',
             useDuanathar: false,
