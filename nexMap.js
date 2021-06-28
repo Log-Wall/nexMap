@@ -1973,6 +1973,7 @@ var nexMap = {
     aliases: {
         call: function (alias, args = false) {
             if (!Object.keys(nexMap.aliases).includes(alias)) {
+                nexMap.display.notice(`"nm  ${alias}" is not a valid command.`);
                 return;
             }
     
