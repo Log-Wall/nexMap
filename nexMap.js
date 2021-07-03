@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: 1.7,
+    version: 1.9,
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -438,7 +438,7 @@ var nexMap = {
             nexGraph.push(newNode);
             for(let e of Object.keys(nexMap.universeRooms))
             {
-                newEdge = {
+                let newEdge = {
                     group: 'edges',
                     data: {
                         id: `universe-${nexMap.universeRooms[e]}`,
@@ -633,6 +633,16 @@ var nexMap = {
             return truths[num];
         }
     },
+    updateUniverseTrigger() {
+        if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
+            reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
+            Object.assign(reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap"), {
+                matching: 'exact',
+                text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
+                actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+            });
+        }
+    },
     startUp() {
         if (nexMap.logging) 
             console.log('nexMap: nexMap.startUp()');
@@ -667,6 +677,7 @@ var nexMap = {
                 });
             });
         });
+        this.updateUniverseTrigger();
     },
     settings: {
         userPreferences: get_variable('nexMapConfigs') || {
@@ -2704,4 +2715,16 @@ reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')
 
 client.packages[client.packages.findIndex(e => e.name == 'nexmap')]
 
+
+if (typeof reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap") === 'undefined') {
+    reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
+    Object.assign(reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap"), {
+        matching: 'exact',
+        text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
+        actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+    });
+}
+reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").matching = 'exact';
+reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").actions = [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+"{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}"
 */
