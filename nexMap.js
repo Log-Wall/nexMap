@@ -13,6 +13,22 @@ var nexMap = {
     currentZ: -99,
     wormholes: {},
     sewergrates: {},
+    universeRooms: {
+        azdun: 1772,
+        bitterfork: 25093,
+        blackrock: 10573,
+        brasslantern: 30383,
+        caerwitrin: 17678,
+        genji: 10091,
+        manara: 9124,
+        mannaseh: 1745,
+        manusha: 8730,
+        mhojave: 39103,
+        newhope: 25581,
+        newthera: 20386,
+        shastaan: 2855,
+        thraasi: 35703
+    },
     shortDirs: {
         east: "e",
         west: "w",
@@ -406,8 +422,9 @@ var nexMap = {
                     id: 'universe',
                     area: 'universe',
                     areaName: 'universe',
-                    environment: 'skies',
+                    environment: 'Skies',
                     name: 'Universe Tarot',
+                    userData: {indoors: 'n'},
                     z: 1,
                 },
                 position: {
@@ -419,33 +436,18 @@ var nexMap = {
                 locked: true,
             }
             nexGraph.push(newNode);
-            let uni = {
-                azdun: 1772,
-                bitterfork: 25093,
-                blackrock: 10573,
-                brasslantern: 30383,
-                caerwitrin: 17678,
-                genji: 10091,
-                manara: 9124,
-                mannaseh: 1745,
-                manusha: 8730,
-                mhojave: 39103,
-                newhope: 25581,
-                newthera: 20386,
-                shastaan: 2855,
-                thraasi: 35703
-            }
-            for(let e of Object.keys(uni))
+            for(let e of Object.keys(nexMap.universeRooms))
             {
                 newEdge = {
                     group: 'edges',
                     data: {
-                        id: `universe-${uni[e]}`,
+                        id: `universe-${nexMap.universeRooms[e]}`,
                         source: 'universe',
-                        target: uni[e],
+                        target: nexMap.universeRooms[e],
                         weight: 6,
                         area: 'universe',
                         command: `outd universe${nexMap.settings.userPreferences.commandSeparator}fling universe at ground`,
+                        universe: e,
                         door: false,
                         z: 1
                     },
@@ -955,7 +957,7 @@ var nexMap = {
                 nmw.pathing = true;
                 nmw.stepCommand = nmw.pathCommands[index];
             }
-        
+            if (nexMap.logging) {console.log(nmw.stepCommand)};
             send_direct(`${nmw.stepCommand}`);
         },
         determinePath(s, t) {
@@ -993,20 +995,26 @@ var nexMap = {
             astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
         
             let gare = nmw.checkGare(astar, target);
-            let cloud = nmw.checkClouds(astar, target);
             let air = nmw.checkAirlord(astar, target);
             let universe = nmw.checkUniverse(astar, target);
             let base = {
+                astar: astar,
                 rooms: nmw.pathRooms,
                 commands: nmw.pathCommands
             }
-        
-            let optimalPath = [gare, cloud, air, universe, base].reduce((a, b) => {
+
+            let optimalPath = [gare, air, universe, base].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
                 return a?.commands?.length < b?.commands?.length ? a : b;
             });
-        
+
+            // We are checking the clouds after the otheres. there are situations where the universe/gare
+            // path would provide a quicker outdoor exit that the clouds could then utilize. An example
+            // is deep in azdun, the universe+cloud combo typically is faster.
+            let cloud = nmw.checkClouds(optimalPath, target);
+            optimalPath = optimalPath.commands.length > cloud?.commands?.length ? cloud : optimalPath;
+
             nmw.pathRawCommands = [...nmw.pathCommands];
             nmw.pathRawRooms = [...nmw.pathRooms];
         
@@ -1089,6 +1097,7 @@ var nexMap = {
             }
         
             return {
+                astar: optimalCloud,
                 rooms: cloudRooms,
                 commands: cloudCommands
             }
@@ -1130,28 +1139,28 @@ var nexMap = {
             }
             
             return {
+                astar: garePath,
                 rooms: gareRooms,
                 commands: gareCommands
             }
         },
-        checkClouds(astar, target) {
+        checkClouds(optimalPath, target) {
             if (nexMap.logging)
                 console.log(`nexMap: nexMap.walker.checkClouds()`);
         
             if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan)
                 return;
         
-            let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
+            let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
             let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
         
             if (wingRoomId == 0) {
                 return;
             }
         
-            let nmw = nexMap.walker;
             let highCloudPath;
-            let cloudRooms = [...nmw.pathRooms];
-            let cloudCommands = [...nmw.pathCommands];
+            let cloudRooms = [...optimalPath.rooms];
+            let cloudCommands = [...optimalPath.commands];
         
             let g = typeof target === 'object' ? target : `#${target}`
         
@@ -1176,7 +1185,7 @@ var nexMap = {
             }
         
             let cloudType = function (cloud, cmd) {
-                if (astar.distance > cloudRooms.indexOf(wingRoomId) + cloud.distance) {
+                if (optimalPath.astar.distance > cloudRooms.indexOf(wingRoomId) + cloud.distance) {
                     cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 1);
                     cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
                     cloudCommands.push(cmd);
@@ -1201,9 +1210,8 @@ var nexMap = {
                 return;
             }
 
-            let nmw = nexMap.walker;
-            let universeRooms = [...nmw.pathRooms];
-            let universeCommands = [...nmw.pathCommands];
+            let universeRooms = [];
+            let universeCommands = [];
 
             let g = typeof target === 'object' ? target : `#${target}`
 
@@ -1215,13 +1223,19 @@ var nexMap = {
                 },
                 directed: true
             });
-
+            console.log(astar.distance);
+            console.log(universePath);
             if (astar.distance > universePath.distance + 5) {       
-                garePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
-                garePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
+                universePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
+                universePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
+                universeRooms.shift();
+                //universeRooms.unshift(nexMap.currentRoom.toString());
+                nexMap.walker.universeTarget = Object.entries(nexMap.universeRooms).find(e => e[1] == universeRooms[1])[0];
             }
+            else {return;}
             
             return {
+                astar: universePath,
                 rooms: universeRooms,
                 commands: universeCommands
             }
@@ -1246,9 +1260,11 @@ var nexMap = {
                     hybRm.push(nmwpr[i + 1]);
                     hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
                 } else if (!Object.values(nexMap.shortDirs).includes(e)) {
-                    hybRm.push(nmwpr[i]);
+                    if (Object.values(nexMap.shortDirs).includes(nmwpc[i-1])) {
+                        hybRm.push(nmwpr[i]);
+                        hybCmds.push(`path track ${nmwpr[i]}`);
+                    }
                     hybRm.push(nmwpr[i + 1]);
-                    hybCmds.push(`path track ${nmwpr[i]}`);
                     hybCmds.push(`path stop${nexMap.settings.userPreferences.commandSeparator}${e}`);
                     pathTrackDistance = i;
                 }
