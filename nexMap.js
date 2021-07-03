@@ -11,6 +11,8 @@ var nexMap = {
     currentRoom: GMCP?.Room?.Info?.num ? GMCP?.Room?.Info?.num : -99,
     currentArea: -99,
     currentZ: -99,
+    wormholes: {},
+    sewergrates: {},
     shortDirs: {
         east: "e",
         west: "w",
@@ -396,6 +398,61 @@ var nexMap = {
                     });
                 }
             });
+
+            // Universe Tarot Node and Exits
+            let newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'universe',
+                    area: 'universe',
+                    areaName: 'universe',
+                    environment: 'skies',
+                    name: 'Universe Tarot',
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            let uni = {
+                azdun: 1772,
+                bitterfork: 25093,
+                blackrock: 10573,
+                brasslantern: 30383,
+                caerwitrin: 17678,
+                genji: 10091,
+                manara: 9124,
+                mannaseh: 1745,
+                manusha: 8730,
+                mhojave: 39103,
+                newhope: 25581,
+                newthera: 20386,
+                shastaan: 2855,
+                thraasi: 35703
+            }
+            for(let e of Object.keys(uni))
+            {
+                newEdge = {
+                    group: 'edges',
+                    data: {
+                        id: `universe-${uni[e]}`,
+                        source: 'universe',
+                        target: uni[e],
+                        weight: 6,
+                        area: 'universe',
+                        command: `outd universe${nexMap.settings.userPreferences.commandSeparator}fling universe at ground`,
+                        door: false,
+                        z: 1
+                    },
+                    classes: ['sewergrate']
+                }
+                nexGraph.push(newEdge);
+            }
     
             cy.batch( () => {
                 cy.add(nexGraph);
@@ -786,6 +843,7 @@ var nexMap = {
         delay: false,
         destination: 0,
         stepCommand: '',
+        universeTarget: false,
         clientEcho: client.echo_input,
         speedWalk(s, t) {
             if (nexMap.logging) {
@@ -937,12 +995,13 @@ var nexMap = {
             let gare = nmw.checkGare(astar, target);
             let cloud = nmw.checkClouds(astar, target);
             let air = nmw.checkAirlord(astar, target);
+            let universe = nmw.checkUniverse(astar, target);
             let base = {
                 rooms: nmw.pathRooms,
                 commands: nmw.pathCommands
             }
         
-            let optimalPath = [gare, cloud, air, base].reduce((a, b) => {
+            let optimalPath = [gare, cloud, air, universe, base].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
                 return a?.commands?.length < b?.commands?.length ? a : b;
@@ -962,7 +1021,7 @@ var nexMap = {
             }
         },
         checkAirlord(astar, target) {
-            if (!GMCP.Status.class.toLowerCase().includes('dragon')) {
+            if (!GMCP.Status.class.toLowerCase().includes('air')) {
                 return;
             }
         
@@ -976,13 +1035,13 @@ var nexMap = {
             let nmw = nexMap.walker;
             let cloudRooms = [...nmw.pathRooms];
             let cloudCommands = [...nmw.pathCommands];
-            let cloudPath = {distance: 1000};
-            let highCloudPath = {distance: 1000};
-            let stratospherePath = {distance: 1000};
+            let cloudPath = {path: {}, command: '', distance: 1000};
+            let highCloudPath = {path: {}, command: '', distance: 1000};
+            let stratospherePath = {path: {}, command: '', distance: 1000};
             let g = typeof target === 'object' ? target : `#${target}`
         
             if (!nexMap.settings.userPreferences.useDuanathar) {
-                cloudPath = cy.elements().aStar({
+                cloudPath.path = cy.elements().aStar({
                     root: `#3885`,
                     goal: g,
                     weight: function (edge) {
@@ -994,7 +1053,7 @@ var nexMap = {
             }
         
             if (!nexMap.settings.userPreferences.useDuanatharan) {
-                highCloudPath = cy.elements().aStar({
+                highCloudPath.path = cy.elements().aStar({
                     root: `#4882`,
                     goal: g,
                     weight: function (edge) {
@@ -1005,7 +1064,7 @@ var nexMap = {
                 highCloudPath.command = 'aero soar high';
             }
         
-            stratospherePath = cy.elements().aStar({
+            stratospherePath.path = cy.elements().aStar({
                 root: `#54173`,
                 goal: g,
                 weight: function (edge) {
@@ -1137,6 +1196,36 @@ var nexMap = {
                 commands: cloudCommands
             }
         },
+        checkUniverse(astar, target) {
+            if (!['Jester', 'Occultist'].includes(GMCP.Status.class)) {
+                return;
+            }
+
+            let nmw = nexMap.walker;
+            let universeRooms = [...nmw.pathRooms];
+            let universeCommands = [...nmw.pathCommands];
+
+            let g = typeof target === 'object' ? target : `#${target}`
+
+            let universePath = cy.elements().aStar({
+                root: `#universe`,
+                goal: g,
+                weight: function (edge) {
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+
+            if (astar.distance > universePath.distance + 5) {       
+                garePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
+                garePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
+            }
+            
+            return {
+                rooms: universeRooms,
+                commands: universeCommands
+            }
+        },
         hybridPath() {
             if (nexMap.logging)
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
@@ -1236,7 +1325,8 @@ var nexMap = {
         reset() {
             if (nexMap.logging)
                 console.log('nexMap: nexMap.walker.reset()');
-        
+
+            nexMap.walker.universeTarget = false;
             nexMap.walker.pathing = false;
             cy.$(':selected').unselect();
             nexMap.walker.pathCommands = [];
@@ -1997,7 +2087,7 @@ var nexMap = {
                 return;
             }
     
-            nexMap.display.generateTable('areaTable', nexMap.findAreas(args[1]), args[1]);
+            nexMap.display.generateTable('areaTable', nexMap.findAreas(args), args);
         },
         info: function () {
             nexMap.display.notice('Room.Info');
