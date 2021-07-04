@@ -424,7 +424,7 @@ var nexMap = {
                     areaName: 'universe',
                     environment: 'Skies',
                     name: 'Universe Tarot',
-                    userData: {indoors: 'n'},
+                    userData: {indoors: 'y'},
                     z: 1,
                 },
                 position: {
@@ -1164,7 +1164,8 @@ var nexMap = {
         
             let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
             let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
-        
+        console.log(firstOutdoorRoom)
+        console.log(wingRoomId)
             if (wingRoomId == 0) {
                 return;
             }
@@ -1240,7 +1241,7 @@ var nexMap = {
                 universePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
                 universePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
                 universeRooms.shift();
-                //universeRooms.unshift(nexMap.currentRoom.toString());
+                universeRooms.unshift(nexMap.currentRoom.toString());
                 nexMap.walker.universeTarget = Object.entries(nexMap.universeRooms).find(e => e[1] == universeRooms[1])[0];
             }
             else {return;}
