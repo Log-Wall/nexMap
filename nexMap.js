@@ -53,6 +53,7 @@ var nexMap = {
             } else if (!nexMap_tab.active) {
                 nexMap_tab.activate();
                 nexMap.styles.refresh();
+                cy.center();
             }
             
             nexMap.changeRoom(GMCP.Room.Info.num);
@@ -603,7 +604,7 @@ var nexMap = {
             container: document.getElementById('cy'),
             layout: 'grid',
             style: nexMap.styles.stylesheet,
-            zoom: 1.4,
+            zoom: 1.25,
             minZoom: 0.2,
             maxZoom: 3,
             wheelSensitivity: 0.5,
@@ -1040,6 +1041,10 @@ var nexMap = {
             }
         },
         checkAirlord(astar, target) {
+            if (nexMap.logging) {
+                console.log(`nexMap: nexMap.walker.checkAirlord(${astar}, ${target})`)
+            };
+
             if (!GMCP.Status.class.toLowerCase().includes('air')) {
                 return;
             }
@@ -1114,6 +1119,10 @@ var nexMap = {
             }
         },
         checkGare(astar, target) {
+            if (nexMap.logging) {
+                console.log(`nexMap: nexMap.walker.gare(${astar}, ${target})`)
+            };
+
             if (!GMCP.Status.class.includes('Dragon')) {
                 return;
             }
