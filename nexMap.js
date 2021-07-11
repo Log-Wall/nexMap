@@ -681,23 +681,23 @@ var nexMap = {
         this.updateUniverseTrigger();
     },
     settings: {
-        userPreferences: get_variable('nexMapConfigs') || {
-            intialConfiguration: 0,
-            commandSeparator: '\\',
-            useDuanathar: false,
-            useDuanatharan: false,
-            duanatharCommand: 'say duanathar',
-            duanatharanCommand: 'say duanatharan',
-            useSewergrates: false,
-            useWormholes: false,
-            vibratingStick: false,
-            displayWormholes: false,
-            currentRoomShape: 'rectangle',
-            currentRoomColor: '#ff1493',
-            labelDisplay: 'name',
-            landmarks: [],
-            antiWingAreas: [],
-            antiGareAreas: []
+        userPreferences: {
+            intialConfiguration: get_variable('nexMapConfigs').initialConfiguration || 0,
+            commandSeparator: get_variable('nexMapConfigs').commandSeparator || '\\',
+            useDuanathar: get_variable('nexMapConfigs').useDuanathar || false,
+            useDuanatharan: get_variable('nexMapConfigs').useDuanatharan || false,
+            duanatharCommand: get_variable('nexMapConfigs').duanatharCommand || 'say duanathar',
+            duanatharanCommand: get_variable('nexMapConfigs').duanatharanCommand || 'say duanatharan',
+            useSewergrates: get_variable('nexMapConfigs').useSewergrates || false,
+            useWormholes: get_variable('nexMapConfigs').useWormholes || false,
+            vibratingStick: get_variable('nexMapConfigs').vibratingStick || false,
+            displayWormholes: get_variable('nexMapConfigs').displayWormholes || false,
+            currentRoomShape: get_variable('nexMapConfigs').currentRoomShape || 'rectangle',
+            currentRoomColor: get_variable('nexMapConfigs').currentRoomColor || '#ff1493',
+            labelDisplay: get_variable('nexMapConfigs').labelDisplay || 'name',
+            landmarks: get_variable('nexMapConfigs').landmarks || [],
+            antiWingAreas: get_variable('nexMapConfigs').antiWingAreas || [],
+            antiGareAreas: get_variable('nexMapConfigs').antiGareAreas || []
         },
         save() {
             nexMap.settings.userPreferences.initialConfiguration = nexMap.version;
