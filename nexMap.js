@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.8.2',
+    version: '1.8.4',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -682,22 +682,22 @@ var nexMap = {
     },
     settings: {
         userPreferences: {
-            intialConfiguration: get_variable('nexMapConfigs').initialConfiguration || 0,
-            commandSeparator: get_variable('nexMapConfigs').commandSeparator || '\\',
-            useDuanathar: get_variable('nexMapConfigs').useDuanathar || false,
-            useDuanatharan: get_variable('nexMapConfigs').useDuanatharan || false,
-            duanatharCommand: get_variable('nexMapConfigs').duanatharCommand || 'say duanathar',
-            duanatharanCommand: get_variable('nexMapConfigs').duanatharanCommand || 'say duanatharan',
-            useSewergrates: get_variable('nexMapConfigs').useSewergrates || false,
-            useWormholes: get_variable('nexMapConfigs').useWormholes || false,
-            vibratingStick: get_variable('nexMapConfigs').vibratingStick || false,
-            displayWormholes: get_variable('nexMapConfigs').displayWormholes || false,
-            currentRoomShape: get_variable('nexMapConfigs').currentRoomShape || 'rectangle',
-            currentRoomColor: get_variable('nexMapConfigs').currentRoomColor || '#ff1493',
-            labelDisplay: get_variable('nexMapConfigs').labelDisplay || 'name',
-            landmarks: get_variable('nexMapConfigs').landmarks || [],
-            antiWingAreas: get_variable('nexMapConfigs').antiWingAreas || [],
-            antiGareAreas: get_variable('nexMapConfigs').antiGareAreas || []
+            intialConfiguration: get_variable('nexMapConfigs')?.initialConfiguration || 0,
+            commandSeparator: get_variable('nexMapConfigs')?.commandSeparator || '\\',
+            useDuanathar: get_variable('nexMapConfigs')?.useDuanathar || false,
+            useDuanatharan: get_variable('nexMapConfigs')?.useDuanatharan || false,
+            duanatharCommand: get_variable('nexMapConfigs')?.duanatharCommand || 'say duanathar',
+            duanatharanCommand: get_variable('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
+            useSewergrates: get_variable('nexMapConfigs')?.useSewergrates || false,
+            useWormholes: get_variable('nexMapConfigs')?.useWormholes || false,
+            vibratingStick: get_variable('nexMapConfigs')?.vibratingStick || false,
+            displayWormholes: get_variable('nexMapConfigs')?.displayWormholes || false,
+            currentRoomShape: get_variable('nexMapConfigs')?.currentRoomShape || 'rectangle',
+            currentRoomColor: get_variable('nexMapConfigs')?.currentRoomColor || '#ff1493',
+            labelDisplay: get_variable('nexMapConfigs')?.labelDisplay || 'name',
+            landmarks: get_variable('nexMapConfigs')?.landmarks || [],
+            antiWingAreas: get_variable('nexMapConfigs')?.antiWingAreas || [],
+            antiGareAreas: get_variable('nexMapConfigs')?.antiGareAreas || []
         },
         save() {
             nexMap.settings.userPreferences.initialConfiguration = nexMap.version;
