@@ -673,8 +673,13 @@ var nexMap = {
                     nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
                     send_direct('ql');
                     nexMap.styles.refresh();
-                    if (nexMap.settings.userPreferences.initialConfiguration != nexMap.version)
+                    if (nexMap.settings.userPreferences.initialConfiguration != nexMap.version) {
+                        console.log(`Config error checking:`);
+                        console.log(get_variable('nexMapConfigs').initialConfiguration);
+                        console.log(nexMap.settings.userPreferences.initialConfiguration);
+                        console.log(nexMap.version);
                         send_direct('nm config');
+                    }
                 });
             });
         });
@@ -1438,7 +1443,7 @@ var nexMap = {
         },
         generateTable(table, entries = false, caption = false) {
             nexMap.display.pageIndex = 0;
-            if (table == 'displayTable') {
+            /*if (table == 'displayTable') {
                 console.log('works');
                 nexMap.display.displayEntries = entries;
                 nexMap.display.displayCap = caption;
@@ -1447,7 +1452,10 @@ var nexMap = {
                 console.log(table);
                 console.log(entries);
                 nexMap.display[`${table}`](entries, caption)
-            } 
+            }*/ 
+            nexMap.display.displayEntries = entries;
+            nexMap.display.displayCap = caption;
+            nexMap.display[`${table}`](entries, caption)
         },
         click: {
             room(id) {
@@ -1466,7 +1474,14 @@ var nexMap = {
                 }
             
                 nexMap.walker.areaWalk(id);
+            },
+            denizen(id) {
+                return nexMap.display.displayEntries.find(e => e.id== id);
+            },
+            denizenRemove(id) {
+                return nexMap.display.displayEntries.find(e => e.id== id);
             }
+
         },
         displayTable() {
             let entries = nexMap.display.displayEntries;
@@ -1680,7 +1695,9 @@ var nexMap = {
         
             print(pagination[0].outerHTML);
         },
-        areaTable(entries, caption) {
+        areaTable() {
+            let entries = nexMap.display.displayEntries;
+            let caption = nexMap.display.displayCap;
             let tab = $("<table></table>", {
                 class: "mono",
                 style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px"
@@ -1764,6 +1781,123 @@ var nexMap = {
                 $('<a></a>', {
                     style: 'cursor:pointer;color:Ivory;text-decoration:underline;',
                     onclick: 'nexMap.display.areaTable()'
+                }).text('MORE').appendTo(pagination);
+            } else {
+                pagination = $("<span></span>", {
+                    style: 'color:Goldenrod'
+                }).text(`Displaying ${entries.length} of ${entries.length}.`);
+            }
+        
+            print(pagination[0].outerHTML);
+        },
+        denizenTable() {
+            let entries = nexMap.display.displayEntries;
+            let caption = nexMap.display.displayCap;
+
+            let tab = $("<table></table>", {
+                class: "mono",
+                style: "table-layout:fixed;max-width:100%;border:1px solid GoldenRod;border-spacing:0px;padding:0 3px 0 3px"
+            });
+            if (nexMap.display.pageIndex == 0) {
+                let cap = $("<caption></caption>", {
+                    style: "text-align:left"
+                }).appendTo(tab);
+                $('<span></span>', {
+                    style: 'color:DodgerBlue'
+                }).text('[-').appendTo(cap);
+                $('<span></span>', {
+                    style: 'color:OrangeRed'
+                }).text('nexMap').appendTo(cap);
+                $('<span></span>', {
+                    style: 'color:DodgerBlue'
+                }).text('-] ').appendTo(cap);
+                $('<span></span>', {
+                    style: 'color:GoldenRod'
+                }).text('Displaying denizens matching ').appendTo(cap)
+                $('<span></span>', {
+                    style: 'font-weight:bold;color:LawnGreen'
+                }).text(caption ? caption : 'All').appendTo(cap); //fix
+        
+                let header = $("<tr></tr>", {
+                    style: "text-align:left;color:Ivory"
+                }).appendTo(tab);
+                $("<th></th>", {
+                    style: 'width:5ch'
+                }).text('').appendTo(header);
+                $("<th></th>", {
+                    style: 'width:8ch'
+                }).text('ID').appendTo(header);
+                $("<th></th>", {
+                    //style: 'width:25%'
+                }).text('Name').appendTo(header);
+                $("<th></th>", {
+                    //style: 'padding:0 10px 0 0'
+                }).text('Room').appendTo(header);
+                $("<th></th>", {
+                    style: 'width:25%;padding:0 0 0 10px'
+                }).text('Area').appendTo(header);
+            } else {
+                let header = $("<tr></tr>", {
+                    style: "text-align:left;color:Ivory"
+                }).appendTo(tab);
+                $("<th></th>", {
+                    style: 'width:5ch'
+                }).text('').appendTo(header);
+                $("<th></th>", {
+                    style: 'width:8ch'
+                }).text('').appendTo(header);
+                $("<th></th>", {
+                    //style: 'width:25%'
+                }).text('').appendTo(header);
+                $("<th></th>", {
+                    //style: 'padding:0 0 0 10px'
+                }).text('').appendTo(header);
+                $("<th></th>", {
+                    style: 'width:25%;padding:0 0 0 10px'
+                }).text('').appendTo(header);
+            }
+        
+            let startIndex = nexMap.display.pageIndex > 0 ? (nexMap.display.pageIndex * nexMap.display.pageBreak) : 0;
+            for (let i = startIndex; i < entries.length && i < startIndex + nexMap.display.pageBreak; i++) {
+                let row = $("<tr></tr>", {
+                    style: 'cursor:pointer;color:dimgrey;'
+                }).appendTo(tab);
+                $("<td></td>", {
+                    style:"color:#6b5b95;text-decoration:underline", 
+                    onclick: `nexMap.settings.click.removeDenizen(${JSON.stringify(entries[i].id)});`
+                }).text('[X]').appendTo(row);
+                $("<td></td>", {
+                    style: 'color:#878f99',
+                    onclick: `nexMap.display.click.denizen(${JSON.stringify(entries[i].id)});`
+                }).text(`${entries[i].id}`).appendTo(row);
+                $("<td></td>", {
+                    style: 'color:#a2b9bc;text-decoration:underline',
+                    onclick: `nexMap.display.click.denizen(${JSON.stringify(entries[i].id)});`
+                }).text(`${entries[i].name}`).appendTo(row);
+                $("<td></td>", {
+                    style: 'color:#b2ad7f;overflow:hidden;white-space:nowrap',
+                    onclick: `nexMap.display.click.denizen(${JSON.stringify(entries[i].id)});`
+                }).text(`${entries[i].room}`).appendTo(row); // Room name(id)
+                $("<td></td>", {
+                    style: 'color:#b2ad7f;width 25%;padding:0 0 0 10px',
+                    onclick: `nexMap.display.click.denizen(${JSON.stringify(entries[i].id)});`
+                }).text(`${entries[i].area.name}`).appendTo(row);
+            }
+        
+            print(tab[0].outerHTML);
+        
+            let pagination;
+            if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
+                pagination = $("<span></span>", {
+                    style: 'color:Goldenrod'
+                }).text(`Displaying ${startIndex + nexMap.display.pageBreak} of ${entries.length}.`);
+                nexMap.display.pageIndex++;
+                $("<span></span>", {
+                    style: 'color:Goldenrod'
+                }).text(' Click for ').appendTo(pagination);
+                $('<a></a>', {
+                    style: 'cursor:pointer;color:Ivory;text-decoration:underline;',
+                    onclick: 'nexMap.display.denizenTable()'
                 }).text('MORE').appendTo(pagination);
             } else {
                 pagination = $("<span></span>", {
