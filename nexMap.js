@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.8.4',
+    version: '1.8.5',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -1015,32 +1015,37 @@ var nexMap = {
             astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
         
             let gare = nmw.checkGare(astar, target);
-            let air = nmw.checkAirlord(astar, target);
             let universe = nmw.checkUniverse(astar, target);
             let base = {
                 astar: astar,
                 rooms: nmw.pathRooms,
-                commands: nmw.pathCommands
+                commands: nmw.pathCommands,
+                distanceModifier: 0
             }
 
-            let optimalPath = [gare, air, universe, base].reduce((a, b) => {
+            let optimalPath = [gare, universe, base].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
-                return a?.commands?.length < b?.commands?.length ? a : b;
+                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
             });
 
-            // We are checking the clouds after the otheres. there are situations where the universe/gare
+            // We are checking the clouds/air after the others. there are situations where the universe/gare
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
             let cloud = nmw.checkClouds(optimalPath, target);
-            optimalPath = optimalPath.commands.length > cloud?.commands?.length ? cloud : optimalPath;
+            let air = nmw.checkAirlord(optimalPath, target);
+            optimalPath = [cloud, air, optimalPath].reduce((a, b) => {
+                if (typeof a == 'undefined') {return b};
+                if (typeof b == 'undefined') {return a};
+                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
+            });
 
             nmw.pathRawCommands = [...nmw.pathCommands];
             nmw.pathRawRooms = [...nmw.pathRooms];
         
             nexMap.walker.pathCommands = optimalPath.commands;
             nexMap.walker.pathRooms = optimalPath.rooms;
-        
+        console.log(air);
             nmw.hybridPath();
         
             return {
@@ -1048,7 +1053,7 @@ var nexMap = {
                 rawPath: nexMap.walker.pathRawCommands
             }
         },
-        checkAirlord(astar, target) {
+        checkAirlord(optimalPath, target) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.checkAirlord(${astar}, ${target})`)
             };
@@ -1057,46 +1062,41 @@ var nexMap = {
                 return;
             }
         
-            let firstOutdoorRoom = astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
+            let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
             let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
-        
+            
             if (wingRoomId == 0) {
                 return;
             }
         
-            let nmw = nexMap.walker;
-            let cloudRooms = [...nmw.pathRooms];
-            let cloudCommands = [...nmw.pathCommands];
-            let cloudPath = {path: {}, command: '', distance: 1000};
-            let highCloudPath = {path: {}, command: '', distance: 1000};
-            let stratospherePath = {path: {}, command: '', distance: 1000};
+            let cloudRooms = [...optimalPath.rooms];
+            let cloudCommands = [...optimalPath.commands];
+            let cloudPath = {astar: {}, command: ''};
+            let highCloudPath = {astar: {}, command: ''};
+            let stratospherePath = {astar: {}, command: ''};
             let g = typeof target === 'object' ? target : `#${target}`
         
-            if (!nexMap.settings.userPreferences.useDuanathar) {
-                cloudPath.path = cy.elements().aStar({
-                    root: `#3885`,
-                    goal: g,
-                    weight: function (edge) {
-                        return edge.data('weight');
-                    },
-                    directed: true
-                });
-                cloudPath.command = 'aero soar low';
-            }
+            cloudPath.astar = cy.elements().aStar({
+                root: `#3885`,
+                goal: g,
+                weight: function (edge) {
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+            cloudPath.command = 'aero soar low';
         
-            if (!nexMap.settings.userPreferences.useDuanatharan) {
-                highCloudPath.path = cy.elements().aStar({
-                    root: `#4882`,
-                    goal: g,
-                    weight: function (edge) {
-                        return edge.data('weight');
-                    },
-                    directed: true
-                });
-                highCloudPath.command = 'aero soar high';
-            }
+            highCloudPath.astar = cy.elements().aStar({
+                root: `#4882`,
+                goal: g,
+                weight: function (edge) {
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+            highCloudPath.command = 'aero soar high';
         
-            stratospherePath.path = cy.elements().aStar({
+            stratospherePath.astar = cy.elements().aStar({
                 root: `#54173`,
                 goal: g,
                 weight: function (edge) {
@@ -1107,23 +1107,24 @@ var nexMap = {
             stratospherePath.command = 'aero soar stratosphere';
         
             let optimalCloud = [cloudPath, highCloudPath, stratospherePath].reduce((a, b) => {
-                return a?.distance < b?.distance ? a : b;
+                return a?.astar?.distance < b?.astar?.distance ? a : b;
             });
         
-            // Added +12 to the comparison based on 5 seconds of balance at an assumed rate of 3 rooms per second.
-            if (astar.distance > cloudCommands.indexOf(wingRoomId) + optimalCloud.distance + 15) {
-                cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 1);
+            // Added +12 to the comparison based on 4 seconds of balance at an assumed rate of 3 rooms per second.
+            if (optimalPath.astar.distance > cloudCommands.indexOf(wingRoomId) + optimalCloud.astar.distance + 15) {
+                cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 12);
                 cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
                 cloudCommands.push(optimalCloud.command);
         
-                optimalCloud.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
-                optimalCloud.path.edges().forEach(e => cloudCommands.push(e.data('command')));
+                optimalCloud.astar.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
+                optimalCloud.astar.path.edges().forEach(e => cloudCommands.push(e.data('command')));
             }
         
             return {
                 astar: optimalCloud,
                 rooms: cloudRooms,
-                commands: cloudCommands
+                commands: cloudCommands,
+                distanceModifier: 12 //4 second balance
             }
         },
         checkGare(astar, target) {
@@ -1169,7 +1170,8 @@ var nexMap = {
             return {
                 astar: garePath,
                 rooms: gareRooms,
-                commands: gareCommands
+                commands: gareCommands,
+                distanceModifier: 10
             }
         },
         checkClouds(optimalPath, target) {
@@ -1231,7 +1233,8 @@ var nexMap = {
         
             return {
                 rooms: cloudRooms,
-                commands: cloudCommands
+                commands: cloudCommands,
+                distanceModifier: 0
             }
         },
         checkUniverse(astar, target) {
@@ -1254,7 +1257,7 @@ var nexMap = {
             });
             console.log(astar.distance);
             console.log(universePath);
-            if (astar.distance > universePath.distance + 5) {       
+            if (astar.distance > universePath.distance + 9) {       
                 universePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
                 universePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
                 universeRooms.shift();
@@ -1266,7 +1269,8 @@ var nexMap = {
             return {
                 astar: universePath,
                 rooms: universeRooms,
-                commands: universeCommands
+                commands: universeCommands,
+                distanceModifier: 9 //3 second balance.
             }
         },
         hybridPath() {
