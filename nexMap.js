@@ -656,7 +656,10 @@ var nexMap = {
         run_function('nexMap.display', {}, 'nexmap');
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
-        display_notice(`${nexMap.sevenTruths(99)}`, 'red');
+        print($('<img></img>', {
+            src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
+            width: "35%"
+        })[0].outerHTML);
         nexMap.loadDependencies().then(() => {
             nexMap.stopWatch();
             nexMap.initializeGraph();
@@ -2262,12 +2265,13 @@ var nexMap = {
         },
         info: function () {
             nexMap.display.notice('Room.Info');
-            print(`Name: 		${GMCP.Room.Info.name}`)
-            print(`Number: 		${GMCP.Room.Info.num}`)
-            print(`Area: 		${GMCP.Room.Info.area}`)
-            print(`Environment: 	${GMCP.Room.Info.environment}`)
-            print(`Coordinates: 	${GMCP.Room.Info.coords}`)
-            print(`Details: 		${GMCP.Room.Info.details}`)
+            print(`Name: 		${GMCP.Room.Info.name}`);
+            print(`Number: 		${GMCP.Room.Info.num}`);
+            print(`Area: 		${GMCP.Room.Info.area}`);
+            print(`Area ID: 		${GMCP.CurrentArea.id}`);
+            print(`Environment: 	${GMCP.Room.Info.environment}`);
+            print(`Coordinates: 	${GMCP.Room.Info.coords}`);
+            print(`Details: 		${GMCP.Room.Info.details}`);
         },
         goto: function (args) {
             if (/^[0-9]+$/g.test(args)) {
