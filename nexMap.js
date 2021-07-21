@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.8.5',
+    version: '1.8.6',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -109,7 +109,7 @@ var nexMap = {
         if (areas.length>1) {
             $(`<span>${area}</span>`).appendTo(msg);
             print(msg[0].outerHTML)
-            nexMap.display.areaTable(areas, area);
+            nexMap.display.generateTable('areaTable', areas, area);
         }
         else if (areas.length == 1) {    
             link.appendTo(msg);
@@ -204,9 +204,9 @@ var nexMap = {
             cy.$('.currentRoom').removeClass('currentRoom'); //remove the class from the previous room.
             room.addClass('currentRoom');
     
-            await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z);   
+            await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z); 
+            cy.center(`#${id}`);   
         cy.endBatch();
-        cy.center(`#${id}`); 
         
         $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
@@ -243,7 +243,7 @@ var nexMap = {
         );
         x.addClass('areaDisplay');
         nexMap.generateExits();
-    
+        cy.center(`#${GMCP.Room.Info.num}`);
         return true;
     },
     generateExits() {
@@ -660,6 +660,7 @@ var nexMap = {
             src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
             width: "35%"
         })[0].outerHTML);
+        print($('<p></p>', {style:'color:cyan'}).text('Farsight should now be fixed. I recently learned wings work differently on Meropis. I do not have a fix for that at this time.')[0].outerHTML);
         nexMap.loadDependencies().then(() => {
             nexMap.stopWatch();
             nexMap.initializeGraph();
@@ -676,7 +677,7 @@ var nexMap = {
                     nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
                     send_direct('ql');
                     nexMap.styles.refresh();
-                    if (nexMap.settings.userPreferences.initialConfiguration != nexMap.version) {
+                    if (get_variable('nexMapConfigs').initialConfiguration != nexMap.version) {
                         console.log(`Config error checking:`);
                         console.log(get_variable('nexMapConfigs').initialConfiguration);
                         console.log(nexMap.settings.userPreferences.initialConfiguration);
