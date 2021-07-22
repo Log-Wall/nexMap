@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.8.6',
+    version: '1.8.7',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -205,9 +205,9 @@ var nexMap = {
             room.addClass('currentRoom');
     
             await nexMap.changeArea(cy.$id(id).data('area'), cy.$id(id).position().z); 
-            cy.center(`#${id}`);   
+              
         cy.endBatch();
-        
+        cy.center(`#${id}`); 
         $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
