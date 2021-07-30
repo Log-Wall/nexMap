@@ -706,7 +706,8 @@ var nexMap = {
             labelDisplay: get_variable('nexMapConfigs')?.labelDisplay || 'name',
             landmarks: get_variable('nexMapConfigs')?.landmarks || [],
             antiWingAreas: get_variable('nexMapConfigs')?.antiWingAreas || [],
-            antiGareAreas: get_variable('nexMapConfigs')?.antiGareAreas || []
+            antiGareAreas: get_variable('nexMapConfigs')?.antiGareAreas || [],
+            antiUniverseAreas: get_variable('nexMapConfigs')?.antiUniverseAreas || []
         },
         save() {
             nexMap.settings.userPreferences.initialConfiguration = nexMap.version;
@@ -1240,6 +1241,10 @@ var nexMap = {
         },
         checkUniverse(astar, target) {
             if (!['Jester', 'Occultist'].includes(GMCP.Status.class)) {
+                return;
+            }
+
+            if (nexMap.settings.userPreferences.antiUniverseAreas.includes(nexMap.currentArea)) {
                 return;
             }
 
