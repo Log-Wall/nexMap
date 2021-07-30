@@ -1035,8 +1035,9 @@ var nexMap = {
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
             let cloud = nmw.checkClouds(optimalPath, target);
+            let cloudBase = nmw.checkClouds(base, target);
             let air = nmw.checkAirlord(optimalPath, target);
-            optimalPath = [cloud, air, optimalPath].reduce((a, b) => {
+            optimalPath = [cloud, air, cloudBase, optimalPath].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
                 return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
@@ -1047,7 +1048,7 @@ var nexMap = {
         
             nexMap.walker.pathCommands = optimalPath.commands;
             nexMap.walker.pathRooms = optimalPath.rooms;
-        console.log(air);
+
             nmw.hybridPath();
         
             return {
@@ -2326,6 +2327,9 @@ var nexMap = {
         clouds: function () {
             nexMap.settings.toggle('useDuanathar');
             nexMap.settings.toggle('useDuanatharan');
+        },
+        walkto: function() {
+            
         }
     }
 };
