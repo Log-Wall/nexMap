@@ -55,6 +55,10 @@ var nexMap = {
                 nexMap.styles.refresh();
                 cy.center();
             }
+
+            if (this.mongo) {
+                this.mongo.collect();
+            }
             
             nexMap.changeRoom(GMCP.Room.Info.num);
             
@@ -1186,8 +1190,7 @@ var nexMap = {
         
             let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
             let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
-        console.log(firstOutdoorRoom)
-        console.log(wingRoomId)
+
             if (wingRoomId == 0) {
                 return;
             }
