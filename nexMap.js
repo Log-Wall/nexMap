@@ -664,7 +664,9 @@ var nexMap = {
             src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
             width: "35%"
         })[0].outerHTML);
-        print($('<p></p>', {style:'color:cyan'}).text('Farsight should now be fixed. I recently learned wings work differently on Meropis. I do not have a fix for that at this time.')[0].outerHTML);
+        print($('<p></p>', {style:'color:cyan'}).text(
+            'Users experiencing the load error "TypeError: Cannot convert undefined or null to object" a fixed version of the Nexus package has been posted. Downloading that should fix the problem.'
+            )[0].outerHTML);
         nexMap.loadDependencies().then(() => {
             nexMap.stopWatch();
             nexMap.initializeGraph();
