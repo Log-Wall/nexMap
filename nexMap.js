@@ -2346,6 +2346,15 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
         walkto: function() {
             
+        },
+        npc: function(text) {
+            let qry = text.toLowerCase();
+            let table = async function(rr) {
+                let re = new RegExp(`${rr}`, 'i')
+                let results = await nexMap.mongo.db.find({name: re})
+                nexMap.display.generateTable('denizenTable', results, qry)
+            }
+            table(qry);
         }
     },
 
