@@ -2379,6 +2379,13 @@ var nexMap = {
             }   
         },
         async startUp() {
+            console.log('Monogo startup called');
+
+            if (!Realm) {
+                console.log('Mongo startup cancelled. Realm not loaded.');
+                return;
+            }
+            
             this.app = new Realm.App({ id: "nexmap-izeal" });
             this.apiKey = "pE7xABGhoWjv2XvSLvON4D2oOSF8WcmEwXkLoKzE2bqlIX1HpkxQIJTLUbr0qhPw"; // Provided API key
             this.credentials = await Realm.Credentials.apiKey(this.apiKey);
