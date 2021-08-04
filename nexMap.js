@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.9.4',
+    version: '1.9.5',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -649,14 +649,14 @@ var nexMap = {
         }
 
         reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
-        GMCP.Char = {
-            Items: {}
-        };
-        $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
-        $.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
-        console.log('called nexMap CDN');
-        reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
-        reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
+GMCP.Char = {
+    Items: {}
+};
+$.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
+$.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
+console.log('called nexMap CDN');
+reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
+reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
     },
     startUp() {
         if (nexMap.logging) 
