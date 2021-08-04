@@ -56,7 +56,7 @@ var nexMap = {
                 cy.center();
             }
 
-            if (this.mongo && Realm) {
+            if (this.mongo && typeof Realm != 'undefined') {
                 this.mongo.collect();
             }
             
