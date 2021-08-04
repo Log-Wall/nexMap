@@ -56,7 +56,7 @@ var nexMap = {
                 cy.center();
             }
 
-            if (this.mongo) {
+            if (this.mongo && Realm) {
                 this.mongo.collect();
             }
             
@@ -653,7 +653,7 @@ var nexMap = {
             console.log('nexMap: nexMap.startUp()');
     
         nexMap.loggingTime = new Date();
-    
+        $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js"); //MONGO
         nexMap.stopWatch();
         run_function('nexMap.settings', {}, 'nexmap');
         nexMap.stopWatch();        
@@ -2336,6 +2336,84 @@ var nexMap = {
         walkto: function() {
             
         }
+    },
+
+    mongo: {
+        entries: {},
+        collect() {
+            // Get all denizens in the current room
+            let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.includes(x));// || x.attrib == 'mx');
+            let newDenizens = [];
+            let roamers = [];
+    
+            if(roomDenizens.length>0) {
+                // Remove any denizens that are already in the entries
+                newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
+                if (this.logging) {console.log(newDenizens);}
+                // Find denizens that already have entries, but are in a new room.
+                roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(GMCP.Room.Info.num)));
+            }
+            else
+                return;
+    
+            // Add room number and area to each denizen object
+            for(let denizen of newDenizens) {
+                denizen.room = [GMCP.Room.Info.num];
+                denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id}
+                denizen.user = {
+                    id: this.user.id,
+                    name: GMCP.Status.name
+                }
+                this.entries.push(denizen);
+                this.db.insertOne(denizen);           
+            }
+    
+            for(let denizen of roamers) {
+                console.log(denizen);
+                let denizenUpdate = this.entries.find(x => x.id == denizen.id)
+                console.log(denizenUpdate);
+                denizenUpdate.room.push(GMCP.Room.Info.num);
+                this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
+            }   
+        },
+        async startUp() {
+            this.app = new Realm.App({ id: "nexmap-izeal" });
+            this.apiKey = "pE7xABGhoWjv2XvSLvON4D2oOSF8WcmEwXkLoKzE2bqlIX1HpkxQIJTLUbr0qhPw"; // Provided API key
+            this.credentials = await Realm.Credentials.apiKey(this.apiKey);
+            this.user = await this.app.logIn(this.credentials)
+            this.user.id === this.app.currentUser.id;
+            this.mongodb = this.app.currentUser.mongoClient("mongodb-atlas");
+            this.db = this.mongodb.db('nexMap').collection('denizens')
+            this.entries = await this.db.find();
+            console.log('MongoDB loaded');
+            print(`Denizen database loaded with ${this.entries.length} entries.`);
+        },
+        ignoreList: [
+            "a dervish",
+            "a sharp-toothed gremlin",
+            "a chaos orb",
+            "a bloodleech",
+            "a minion of chaos",
+            "a worm",
+            "a green slime",
+            "a soulmaster",
+            "a humbug",
+            "a chimera",
+            "a bubonis",
+            "a chaos storm",
+            "a chaos hound",
+            "a withered crone",
+            "a pathfinder",
+            "a doppleganger",
+            "an ethereal firelord",
+            "a simpering sycophant",
+            "a water weird",
+            "an eldritch abomination",
+            "Khaseem",
+            "a guardian angel",
+            "a diminutive homunculus",
+            "a Baalzadeen"
+        ]
     }
 };
 // Had to populate stylesheet array outside of the nexMap object. Using the object properties as
