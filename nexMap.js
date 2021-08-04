@@ -665,9 +665,11 @@ var nexMap = {
             width: "35%"
         })[0].outerHTML);
         print($('<p></p>', {style:'color:cyan'}).text(
-            'Users experiencing the load error "TypeError: Cannot convert undefined or null to object" a fixed version of the Nexus package has been posted. Downloading that should fix the problem.'
+            'Users experiencing the load error "TypeError: Cannot convert undefined or null to object" an updated version of the Nexus package has been posted. Downloading that should fix the problem.'
             )[0].outerHTML);
+        
         nexMap.loadDependencies().then(() => {
+            nexMap.mongo.startUp();
             nexMap.stopWatch();
             nexMap.initializeGraph();
             nexMap.stopWatch();
