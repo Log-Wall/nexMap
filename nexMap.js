@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.9.0',
+    version: '1.9.4',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -638,7 +638,7 @@ var nexMap = {
             return truths[num];
         }
     },
-    updateUniverseTrigger() {
+    nxsUpdates() {
         if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
             reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
             Object.assign(reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap"), {
@@ -647,13 +647,22 @@ var nexMap = {
                 actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
             });
         }
+
+        reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
+        GMCP.Char = {
+            Items: {}
+        };
+        $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
+        $.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
+        console.log('called nexMap CDN');
+        reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
+        reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
     },
     startUp() {
         if (nexMap.logging) 
             console.log('nexMap: nexMap.startUp()');
     
         nexMap.loggingTime = new Date();
-        $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js"); //MONGO
         nexMap.stopWatch();
         run_function('nexMap.settings', {}, 'nexmap');
         nexMap.stopWatch();        
@@ -695,7 +704,7 @@ var nexMap = {
                 });
             });
         });
-        this.updateUniverseTrigger();
+        this.nxsUpdates();
     },
     settings: {
         userPreferences: {
@@ -2385,7 +2394,7 @@ var nexMap = {
                 console.log('Mongo startup cancelled. Realm not loaded.');
                 return;
             }
-            
+
             this.app = new Realm.App({ id: "nexmap-izeal" });
             this.apiKey = "pE7xABGhoWjv2XvSLvON4D2oOSF8WcmEwXkLoKzE2bqlIX1HpkxQIJTLUbr0qhPw"; // Provided API key
             this.credentials = await Realm.Credentials.apiKey(this.apiKey);
@@ -2959,8 +2968,11 @@ nexMap.styles.stylesheet = [{
 
 /* PUSHING UPDATES TO THE NXS FILE DIRECTLY
 reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
-GMCP.Char.Items = {};
-$.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js')
+GMCP.Char = {
+    Items: {}
+};
+$.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
+$.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
 console.log('called nexMap CDN');
 reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
 reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
