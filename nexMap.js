@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.8.7',
+    version: '1.9.0',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -2386,7 +2386,7 @@ var nexMap = {
             this.db = this.mongodb.db('nexMap').collection('denizens')
             this.entries = await this.db.find();
             console.log('MongoDB loaded');
-            print(`Denizen database loaded with ${this.entries.length} entries.`);
+            nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
         },
         ignoreList: [
             "a dervish",
