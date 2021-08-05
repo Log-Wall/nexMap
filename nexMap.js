@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '1.9.6',
+    version: '2.0.0',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -695,6 +695,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     send_direct('ql');
                     nexMap.styles.refresh();
                     if (get_variable('nexMapConfigs').initialConfiguration != nexMap.version) {
+                        this.nxsUpdates();
                         console.log(`Config error checking:`);
                         console.log(get_variable('nexMapConfigs').initialConfiguration);
                         console.log(nexMap.settings.userPreferences.initialConfiguration);
@@ -703,8 +704,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     }
                 });
             });
-        });
-        this.nxsUpdates();
+        });       
     },
     settings: {
         userPreferences: {
@@ -2411,7 +2411,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             this.user.id === this.app.currentUser.id;
             this.mongodb = this.app.currentUser.mongoClient("mongodb-atlas");
             this.db = this.mongodb.db('nexMap').collection('denizens')
-            this.entries = await this.db.find();
+            this.entries = await this.db.find({}, {projection: {area:1, attrib:1, icon:1, id:1, name:1, room:1}});
             console.log('MongoDB loaded');
             nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
         },
