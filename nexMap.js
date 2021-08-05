@@ -669,10 +669,6 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         run_function('nexMap.display', {}, 'nexmap');
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
-        print($('<img></img>', {
-            src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
-            width: "35%"
-        })[0].outerHTML);
         print($('<p></p>', {style:'color:cyan'}).text(
             'Users experiencing the load error "TypeError: Cannot convert undefined or null to object" an updated version of the Nexus package has been posted. Downloading that should fix the problem.'
             )[0].outerHTML);
@@ -692,6 +688,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     
                 cy.once('render', () => {
                     nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
+                    print($('<img></img>', {
+                        src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
+                        width: "35%"
+                    })[0].outerHTML);
                     send_direct('ql');
                     nexMap.styles.refresh();
                     if (get_variable('nexMapConfigs').initialConfiguration != nexMap.version) {
