@@ -869,7 +869,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 return;
             }
             setTimeout(function(){
-                nexMap.changeRoom(GMCP.Room.Info.num);
+                nexMap.changeRoom(nexMap.currentRoom);
                 nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
             }, 500);  
         },
