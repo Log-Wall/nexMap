@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.0',
+    version: '2.0.1',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -45,30 +45,33 @@ var nexMap = {
         up: "up",
     },
     onGMCP(method, args) {
-        if(method == 'Room.Info') {
-            GMCP.Room.Info = args;
-            if (args.ohmap) {
-                nexMap_tab.deactivate();
-                return;
-            } else if (!nexMap_tab.active) {
-                nexMap_tab.activate();
-                nexMap.styles.refresh();
-                cy.center();
-            }
+        switch(method) {
+            case 'Room.Info':
+                GMCP.Room.Info = args;
+                if (args.ohmap) {
+                    nexMap_tab.deactivate();
+                    return;
+                } else if (!nexMap_tab.active) {
+                    nexMap_tab.activate();
+                    nexMap.styles.refresh();
+                    cy.center();
+                }
+                nexMap.changeRoom(GMCP.Room.Info.num);
+            
+                if(nexMap.walker.pathing)
+                    nexMap.walker.step();
+                break;
 
-            if (this.mongo && typeof Realm != 'undefined') {
-                this.mongo.collect();
-            }
-            
-            nexMap.changeRoom(GMCP.Room.Info.num);
-            
-            if(nexMap.walker.pathing)
-                nexMap.walker.step();
-        }
-        
-        if (method == 'Char.Status') {
-            if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
-                nexMap.settings.toggle('useWormholes');
+            case 'Char.Status':    
+                if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
+                    nexMap.settings.toggle('useWormholes');
+                break;
+
+            case 'Char.Items.List':
+                if (this.mongo && typeof Realm != 'undefined') {
+                    this.mongo.collect();
+                }
+                break;
         }
     },
     farseeLocal(target, room) {
