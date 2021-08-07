@@ -68,7 +68,7 @@ var nexMap = {
                 break;
 
             case 'Char.Items.List':
-                if (this.mongo && typeof Realm != 'undefined') {
+                if (this.mongo.entries && typeof Realm != 'undefined') {
                     this.mongo.collect();
                 }
                 break;
@@ -2964,6 +2964,12 @@ nexMap.styles.stylesheet = [{
         "height": "20px",
         "width": "20px",
         "background-color": "#ff1493"
+    }
+},
+{
+    "selector": ".basherArea",
+    "style": {
+        "background-color": "deeppink"
     }
 },
 {
