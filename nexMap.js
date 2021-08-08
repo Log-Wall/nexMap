@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.2',
+    version: '2.0.3',
     nxsVersion: 1.3,
     logging: false,
     loggingTime: '',
@@ -68,7 +68,7 @@ var nexMap = {
                 break;
 
             case 'Char.Items.List':
-                if (this.mongo.entries && typeof Realm != 'undefined') {
+                if (this.mongo.entries.length > 0 && typeof Realm != 'undefined') {
                     this.mongo.collect();
                 }
                 break;
@@ -2362,7 +2362,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     },
 
     mongo: {
-        entries: {},
+        entries: [],
         collect() {
             // Get all denizens in the current room
             let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.includes(x));// || x.attrib == 'mx');
