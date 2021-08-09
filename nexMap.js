@@ -68,6 +68,7 @@ var nexMap = {
                 break;
 
             case 'Char.Items.List':
+                GMCP.Char.Items.List = args;
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined') {
                     this.mongo.collect();
                 }
