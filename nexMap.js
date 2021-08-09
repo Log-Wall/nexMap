@@ -1,8 +1,8 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.3',
-    nxsVersion: 1.3,
+    version: '2.0.4',
+    nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -690,7 +690,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 nexMap.display.notice(`Use "nm" for summary of user commands`);
     
                 cy.once('render', () => {
-                    nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
+                    nexMap.display.notice(`nexMap ${nexMap.version} loaded and ready for use. ${nexMap.stopWatch()}s`);
                     print($('<img></img>', {
                         src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
                         width: "35%"
