@@ -1964,6 +1964,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     txt: 'Searches for areas matching the provided string. Displays in table format with click to go functionality.'
                 },
                 {
+                    cmd: 'nm npc <string>',
+                    txt: 'Searches for NPCs matching the provided string. Displays in table format with click to go functionality.'
+                },
+                {
                     cmd: 'nm info',
                     txt: 'Displays the current rooms GMCP information.'
                 },
@@ -2120,7 +2124,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 type: 'text',
                 'class': 'nexInput',
                 id: 'nexCommandSep',
-                maxlength: 1,
+                maxlength: 2,
                 width: 24,
                 value: nexMap.settings.userPreferences.commandSeparator
             });
