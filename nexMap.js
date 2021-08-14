@@ -1510,10 +1510,21 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 nexMap.walker.areaWalk(id);
             },
             denizen(id) {
-                return nexMap.display.displayEntries.find(e => e.id== id);
+                let den = nexMap.display.displayEntries.find(e => e.id == id);
+                console.log(den)
+                let rm = den.room;
+                let idx = rm.indexOf(nexMap.currentRoom);
+                cy.$(':selected').unselect();
+                if (idx == -1) {
+                    cy.$(`#${rm[0]}`).select();
+                } else {
+                    cy.$(`#${rm[idx+1]}`).select();
+                }
             },
             denizenRemove(id) {
-                return nexMap.display.displayEntries.find(e => e.id== id);
+                let msg = nexMap.display.displayEntries.find(e => e.id == id);
+                console.log(`Denizen Remove table click: ${msg}`);
+                return msg;
             }
 
         },
@@ -2270,7 +2281,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         }
     },
     aliases: {
-        call: function (alias, args = false) {
+        call: function (alias) {
             if (!Object.keys(nexMap.aliases).includes(alias)) {
                 nexMap.display.notice(`"nm  ${alias}" is not a valid command.`);
                 return;
@@ -2358,9 +2369,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         npc: function(text) {
             let qry = text.toLowerCase();
             let table = async function(rr) {
-                let re = new RegExp(`${rr}`, 'i')
-                let results = await nexMap.mongo.db.find({name: re})
-                nexMap.display.generateTable('denizenTable', results, qry)
+                let re = new RegExp(`${rr}`, 'i');
+                let results = await nexMap.mongo.db.aggregate([{$match: {name:re}}, {$sort: {name:1,area:1}}]);
+                nexMap.display.generateTable('denizenTable', results, qry);
             }
             table(qry);
         }
