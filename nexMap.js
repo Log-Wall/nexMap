@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.6',
+    version: '2.0.7',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2281,7 +2281,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         }
     },
     aliases: {
-        call: function (alias) {
+        call: function (alias, args = false) {
             if (!Object.keys(nexMap.aliases).includes(alias)) {
                 nexMap.display.notice(`"nm  ${alias}" is not a valid command.`);
                 return;
