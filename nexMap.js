@@ -1460,7 +1460,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             
             let msg = $("<span></span>", {
                 style: 'color:GoldenRod'
-            }).text(`Download the newest version ${nexMap.version} `);
+            }).text(`Download the newest version ${nexMap.nxsVersion} `);
             $("<a></a>", {
                 href: 'https://sites.google.com/view/nexmap/home',
                 target: '_blank',
