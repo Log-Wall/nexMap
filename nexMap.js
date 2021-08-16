@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.9',
+    version: '2.1.0',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2381,7 +2381,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         entries: [],
         collect() {
             // Get all denizens in the current room
-            let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(text)));// || x.attrib == 'mx');
+            let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
             let newDenizens = [];
             let roamers = [];
 
