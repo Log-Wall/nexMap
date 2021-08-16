@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.7',
+    version: '2.0.8',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2381,10 +2381,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         entries: [],
         collect() {
             // Get all denizens in the current room
-            let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.includes(x));// || x.attrib == 'mx');
+            let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(text)));// || x.attrib == 'mx');
             let newDenizens = [];
             let roamers = [];
-    
+
             if(roomDenizens.length>0) {
                 // Remove any denizens that are already in the entries
                 newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
@@ -2434,31 +2434,33 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             console.log('MongoDB loaded');
             nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
         },
-        ignoreList: [
-            "a dervish",
-            "a sharp-toothed gremlin",
-            "a chaos orb",
-            "a bloodleech",
-            "a minion of chaos",
-            "a worm",
-            "a green slime",
-            "a soulmaster",
-            "a humbug",
-            "a chimera",
-            "a bubonis",
-            "a chaos storm",
-            "a chaos hound",
-            "a withered crone",
-            "a pathfinder",
-            "a doppleganger",
-            "an ethereal firelord",
-            "a simpering sycophant",
-            "a water weird",
-            "an eldritch abomination",
-            "Khaseem",
-            "a guardian angel",
-            "a diminutive homunculus",
-            "a Baalzadeen"
+        ignoreList = [
+            /a dervish/,
+            /a sharp-toothed gremlin/,
+            /a chaos orb/,
+            /a bloodleech/,
+            /a minion of chaos/,
+            /a worm/,
+            /a green slime/,
+            /a soulmaster/,
+            /a humbug/,
+            /a chimera/,
+            /a bubonis/,
+            /a chaos storm/,
+            /a chaos hound/,
+            /a withered crone/,
+            /a pathfinder/,
+            /a doppleganger/,
+            /an ethereal firelord/,
+            /a simpering sycophant/,
+            /a water weird/,
+            /an eldritch abomination/,
+            /Khaseem/,
+            /a guardian angel/,
+            /a diminutive homunculus/,
+            /a Baalzadeen/,
+            /a shipmate/,
+            /a squad of/
         ]
     }
 };
