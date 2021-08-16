@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.0.8',
+    version: '2.0.9',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2434,7 +2434,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             console.log('MongoDB loaded');
             nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
         },
-        ignoreList = [
+        ignoreList: [
             /a dervish/,
             /a sharp-toothed gremlin/,
             /a chaos orb/,
