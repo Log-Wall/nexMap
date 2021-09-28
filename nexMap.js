@@ -698,10 +698,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     })[0].outerHTML);
                     send_direct('ql');
                     nexMap.styles.refresh();
-                    if (get_variable('nexMapConfigs').initialConfiguration != nexMap.version) {
+                    if (get_variable('nexMapConfigs')?.initialConfiguration != nexMap.version) {
                         this.nxsUpdates();
                         console.log(`Config error checking:`);
-                        console.log(get_variable('nexMapConfigs').initialConfiguration);
+                        console.log(get_variable('nexMapConfigs')?.initialConfiguration);
                         console.log(nexMap.settings.userPreferences.initialConfiguration);
                         console.log(nexMap.version);
                         send_direct('nm config');
@@ -720,6 +720,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             duanatharanCommand: get_variable('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
             useSewergrates: get_variable('nexMapConfigs')?.useSewergrates || false,
             useWormholes: get_variable('nexMapConfigs')?.useWormholes || false,
+            useUniverse: get_variable('nexMapConfigs')?.useUniverse || false,
             vibratingStick: get_variable('nexMapConfigs')?.vibratingStick || false,
             displayWormholes: get_variable('nexMapConfigs')?.displayWormholes || false,
             currentRoomShape: get_variable('nexMapConfigs')?.currentRoomShape || 'rectangle',
@@ -1261,6 +1262,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         },
         checkUniverse(astar, target) {
+            if (!nexMap.settings.userPreferences.useUniverse) {
+                return;
+            }
+
             if (!['Jester', 'Occultist'].includes(GMCP.Status.class)) {
                 return;
             }
@@ -2416,7 +2421,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }   
         },
         async startUp() {
-            console.log('Monogo startup called');
+            console.log('Mongo startup called');
 
             if (!Realm) {
                 console.log('Mongo startup cancelled. Realm not loaded.');
@@ -2459,8 +2464,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             /a guardian angel/,
             /a diminutive homunculus/,
             /a Baalzadeen/,
-            /a shipmate/,
-            /a squad of/
+            /shipmate/,
+            /a squad of/,
+            /swashbuckler/
         ]
     }
 };
