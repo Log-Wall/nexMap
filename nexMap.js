@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.1.1',
+    version: '2.1.3',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2105,6 +2105,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 {
                     name: 'Atavian Wings',
                     setting: 'useDuanatharan'
+                },
+                {
+                    name: 'Universe Tarot',
+                    setting: 'useUniverse'
                 }
             ];
             for (let i = 0; i < configs.length; i++) {
