@@ -2090,6 +2090,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     name: 'Use Sewer Grates',
                     setting: 'useSewergrates'
                 },
+                {
+                    name: 'Use Universe Tarot',
+                    setting: 'useUniverse'
+                },
                 /*{
                     name: 'Show Wormholes',
                     setting: 'displayWormholes'
