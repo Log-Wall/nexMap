@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.1.3',
+    version: '2.1.4',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2393,6 +2393,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     mongo: {
         entries: [],
         collect() {
+            //Area filter
+            if (GMCP.CurrentArea.id == null) {return;}
             // Get all denizens in the current room
             let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
             let newDenizens = [];
