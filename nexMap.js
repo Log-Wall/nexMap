@@ -2475,7 +2475,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             /a Baalzadeen/,
             /shipmate/,
             /a squad of/,
-            /swashbuckler/
+            /swashbuckler/,
+            /a red admiral butterfly/
         ]
     }
 };
