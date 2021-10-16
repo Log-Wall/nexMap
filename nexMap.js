@@ -202,7 +202,10 @@ var nexMap = {
     async changeRoom(id) {
         if (nexMap.logging)
             console.log(`nexMap: nexMap.changeRoom(${id})`);
-    
+        
+        if (id == nexMap.currentRoom)
+            return;
+
         if (cy.$id(id).hasClass('currentRoom') || !cy.$id(id).length)
             return;
     
@@ -2109,10 +2112,6 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 {
                     name: 'Atavian Wings',
                     setting: 'useDuanatharan'
-                },
-                {
-                    name: 'Universe Tarot',
-                    setting: 'useUniverse'
                 }
             ];
             for (let i = 0; i < configs.length; i++) {
