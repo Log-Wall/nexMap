@@ -2398,20 +2398,22 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
             let newDenizens = [];
             let roamers = [];
+            let curRoom = GMCP.Room.Info.num;
 
             if(roomDenizens.length>0) {
                 // Remove any denizens that are already in the entries
                 newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
-                if (this.logging) {console.log(newDenizens);}
+                if (this.logging) {console.log('newDenizens:');console.log(newDenizens);}
                 // Find denizens that already have entries, but are in a new room.
-                roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(GMCP.Room.Info.num)));
+                roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(curRoom)));
+                if (this.logging) {console.log('roamers:');console.log(roamers);}
             }
             else
                 return;
     
             // Add room number and area to each denizen object
             for(let denizen of newDenizens) {
-                denizen.room = [GMCP.Room.Info.num];
+                denizen.room = [curRoom];
                 denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id}
                 denizen.user = {
                     id: this.user.id,
@@ -2422,10 +2424,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
     
             for(let denizen of roamers) {
-                console.log(denizen);
                 let denizenUpdate = this.entries.find(x => x.id == denizen.id)
-                console.log(denizenUpdate);
-                denizenUpdate.room.push(GMCP.Room.Info.num);
+                denizenUpdate.room.push(curRoom);
                 this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
             }   
         },
