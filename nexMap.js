@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.1.5',
+    version: '2.1.6',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -219,7 +219,8 @@ var nexMap = {
               
         cy.endBatch();
         cy.center(`#${id}`); 
-        $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')}`)
+        $('#currentRoomLabel').text(`${room.data('areaName')}: ${GMCP.Room.Info.num} (${GMCP.Room.Info.num})`)
+        //$('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
         $('.clickableExitSpace').remove();
@@ -1011,7 +1012,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
             };
-            let source = s ? s : cy.$('.currentRoom').data('id');
+            let source = s ? s : GMCP.Room.Info.num;
             let target = t ? t : cy.$(':selected').data('id');
             let nmw = nexMap.walker;
             nmw.destination = target;
@@ -1296,10 +1297,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 universePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
                 universePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
                 universeRooms.shift();
-                universeRooms.unshift(nexMap.currentRoom.toString());
+                universeRooms.unshift(GMCP.Room.Info.num);
                 nexMap.walker.universeTarget = Object.entries(nexMap.universeRooms).find(e => e[1] == universeRooms[1])[0];
-            }
-            else {return;}
+            } else {return;}
             
             return {
                 astar: universePath,
@@ -1416,6 +1416,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.pathCommands = [];
             nexMap.walker.pathRooms = [];
             nexMap.walker.destination = 0;
+            nexMap.walker.stepCommand = '';
+            nexMap.walker.delay = false;
             client.echo_input = nexMap.walker.clientEcho;
         },
         stop() {
