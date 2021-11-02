@@ -677,7 +677,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
         print($('<p></p>', {style:'color:cyan'}).text(
-            'Users experiencing the load error "TypeError: Cannot convert undefined or null to object" an updated version of the Nexus package has been posted. Downloading that should fix the problem.'
+            'nexMap default location does not place well with nexGui. If you wish to use nexMap with nexGui you must change the tab location in Functions>customTabs to "container_1".'
             )[0].outerHTML);
         
         nexMap.loadDependencies().then(() => {
