@@ -236,7 +236,7 @@ var nexMap = {
               
         cy.endBatch();
         cy.center(`#${id}`); 
-        $('#currentRoomLabel').text(`${room.data('areaName')}: ${GMCP.Room.Info.num} (${GMCP.Room.Info.num})`)
+        $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
