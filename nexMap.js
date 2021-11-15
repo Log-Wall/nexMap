@@ -237,7 +237,7 @@ var nexMap = {
               
         cy.endBatch();
         cy.center(`#${id}`); 
-        $('#currentRoomLabel').text(`${room.data('areaName')}: ${GMCP.Room.Info.num} (${GMCP.Room.Info.num})`)
+        $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
@@ -1032,6 +1032,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             };
             let source = s ? s : GMCP.Room.Info.num;
             let target = t ? t : cy.$(':selected').data('id');
+
+            if(source == target) {
+                nmw.pathing = false;
+                nmw.reset();
+                nexMap.display.notice(`Pathing complete. You're already there!`);
+                return;
+            }
+
             let nmw = nexMap.walker;
             nmw.destination = target;
         
@@ -1102,7 +1110,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
         checkAirlord(optimalPath, target) {
             if (nexMap.logging) {
-                console.log(`nexMap: nexMap.walker.checkAirlord(${astar}, ${target})`)
+                console.log(`nexMap: nexMap.walker.checkAirlord(${optimalPath}, ${target})`)
             };
 
             if (!GMCP.Status.class.toLowerCase().includes('air')) {
