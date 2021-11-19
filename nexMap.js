@@ -75,7 +75,11 @@ var nexMap = {
                     cy.center();
                 }
                 nexMap.changeRoom(GMCP.Room.Info.num);
-            
+                
+                if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
+                    this.mongo.collect();
+                }
+
                 if(nexMap.walker.pathing)
                     nexMap.walker.step();
                 break;
@@ -83,13 +87,6 @@ var nexMap = {
             case 'Char.Status':    
                 if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
                     nexMap.settings.toggle('useWormholes');
-                break;
-
-            case 'Char.Items.List':
-                GMCP.Char.Items.List = args;
-                if (this.mongo.entries.length > 0 && typeof Realm != 'undefined') {
-                    this.mongo.collect();
-                }
                 break;
         }
     },
@@ -2429,6 +2426,24 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let curRoom = GMCP.Room.Info.num;
 
             if(roomDenizens.length>0) {
+                for(let denizen of roomDenizens) {
+                    denizen.room = [curRoom];
+                    denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
+                    denizen.time = client.Date();
+                    denizen.user = {
+                        id: this.user.id,
+                        name: GMCP.Status.name
+                    }
+                    //this.entries.push(denizen);
+                    this.db.updateOne({'id':denizen.id}, denizen);
+                }
+            }
+            /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
+                the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
+                the correct room number as they are found. This will erase all roamers room numbers. At some point
+                in the future we will reenable roaming room collection.
+            
+            if(roomDenizens.length>0) {
                 // Remove any denizens that are already in the entries
                 newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
                 if (this.logging) {console.log('newDenizens:');console.log(newDenizens);}
@@ -2442,7 +2457,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             // Add room number and area to each denizen object
             for(let denizen of newDenizens) {
                 denizen.room = [curRoom];
-                denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id}
+                denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
+                denizen.time = client.Date();
                 denizen.user = {
                     id: this.user.id,
                     name: GMCP.Status.name
@@ -2456,6 +2472,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 denizenUpdate.room.push(curRoom);
                 this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
             }   
+            */
         },
         async startUp() {
             console.log('Mongo startup called');
