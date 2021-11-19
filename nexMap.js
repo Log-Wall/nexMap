@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.1.7',
+    version: '2.2.0',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -83,7 +83,10 @@ var nexMap = {
                 if(nexMap.walker.pathing)
                     nexMap.walker.step();
                 break;
-
+            case 'Char.Items.List':
+                console.log(args);
+                GMCP.Char.Items.List = args;
+                break;
             case 'Char.Status':    
                 if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
                     nexMap.settings.toggle('useWormholes');
