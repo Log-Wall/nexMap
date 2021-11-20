@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.2.0',
+    version: '2.2.1',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -84,7 +84,6 @@ var nexMap = {
                     nexMap.walker.step();
                 break;
             case 'Char.Items.List':
-                console.log(args);
                 GMCP.Char.Items.List = args;
                 break;
             case 'Char.Status':    
@@ -100,13 +99,13 @@ var nexMap = {
         $('<span>You see that </span>').appendTo(msg);
         $('<span></span>', {style:"color:goldenrod"}).text(target).appendTo(msg);
         $('<span> is at </span>').appendTo(msg);
-        let link = $('<span></span>',{
+        $('<span></span>',{
             id:'farsee', 
             style:'color:White;text-decoration:underline;cursor:pointer',
             onclick:`nexMap.walker.speedWalk(${nexMap.currentRoom}, ${tar})`
             })
             .text(`"${room}"`)
-                .appendTo(msg);
+            .appendTo(msg);
         $('<span></span>').text(` (${path.rawPath.length} steps)`).appendTo(msg);
         print(msg[0].outerHTML)
         print($('<span></span>').text(`[${nexMap.walker.determinePath(nexMap.currentRoom, tar).rawPath.join(', ')}]`)[0].outerHTML);
