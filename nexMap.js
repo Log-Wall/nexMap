@@ -1350,6 +1350,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let nmwpr = nexMap.walker.pathRooms;
         
             if (nexMap.logging) {
+                console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
                 console.log(nmwpc);
                 console.log(nmwpr);
             }
@@ -1382,6 +1383,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         
             if (nexMap.logging) {
+                console.log('nexMap.walker.hybridPath() hybCmds, hybRm');
                 console.log(hybCmds);
                 console.log(hybRm);
             }
