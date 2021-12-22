@@ -1,7 +1,7 @@
 'use strict';
 var cy = {};
 var nexMap = {
-    version: '2.2.1',
+    version: '2.2.3',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -60,6 +60,14 @@ var nexMap = {
 
     crowdMapRevisions() {
         nexMap.mudmap.areas[343].rooms.find(e=>e.id == 29081).exits.find(e=>e.exitId == 30864).name = `pull rubble${nexMap.settings.userPreferences.commandSeparator}east`;
+        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30136).exits.find(e=>e.exitId == 30469).name = `push bones${nexMap.settings.userPreferences.commandSeparator}east`;
+        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30469).exits.find(e=>e.exitId == 30437).name = `pull shield81739${nexMap.settings.userPreferences.commandSeparator}northeast`;
+        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30523).exits.find(e=>e.exitId == 30631).name = `pull roots${nexMap.settings.userPreferences.commandSeparator}south`;
+        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 31099).exits.find(e=>e.exitId == 23239).name = `pull mucus${nexMap.settings.userPreferences.commandSeparator}northeast`;
+
+        nexMap.mudmap.areas[477].rooms.find(e=>e.id == 58509).exits.push({exitId:58881,name:"northeast"})
+        nexMap.mudmap.areas[477].rooms.push(JSON.parse('{"coordinates":[3,2,-1],"environment":2,"exits":[{"exitId":58509,"name":"west"},{"exitId":58306,"name":"northeast"}],"id":58881,"name":"A narrow, sandy tunnel","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
+        nexMap.mudmap.areas[477].rooms.push(JSON.parse('{"coordinates":[4,3,-1],"environment":2,"exits":[{"exitId":58881,"name":"southwest"}],"id":58306,"name":"A landscape of shifting sand","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
     },
     
     onGMCP(method, args) {
@@ -702,6 +710,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         nexMap.loadDependencies().then(() => {
             nexMap.mongo.startUp();
             nexMap.stopWatch();
+            nexMap.crowdMapRevisions();
             nexMap.initializeGraph();
             nexMap.stopWatch();
             nexMap.generateGraph().then(() => {
@@ -1342,6 +1351,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let nmwpr = nexMap.walker.pathRooms;
         
             if (nexMap.logging) {
+                console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
                 console.log(nmwpc);
                 console.log(nmwpr);
             }
@@ -1374,6 +1384,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         
             if (nexMap.logging) {
+                console.log('nexMap.walker.hybridPath() hybCmds, hybRm');
                 console.log(hybCmds);
                 console.log(hybRm);
             }
