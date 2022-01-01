@@ -949,7 +949,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.speedWalk(nexMap.currentRoom, target)
         },
         goto(str) {
-            if (typeof str !== 'string') {
+            if (typeof str === 'number') {
+                str = str.toString();
+            } else if (typeof str !== 'string') {
                 return;
             }
             console.log(`str: ${str}`);
