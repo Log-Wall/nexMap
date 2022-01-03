@@ -596,8 +596,8 @@ var nexMap = {
                 $.ajax({
                     async: true,
                     global: false,
-                    url: 'https://cdn.jsdelivr.net/gh/IRE-Mudlet-Mapping/AchaeaCrowdmap/Map/map_mini.json',
-                    //url: 'https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/mudletmap-min.json',
+                    //url: 'https://cdn.jsdelivr.net/gh/IRE-Mudlet-Mapping/AchaeaCrowdmap/Map/map_mini.json',
+                    url: 'https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/mudletmap-min.json',
                     //url: "https://raw.githubusercontent.com/IRE-Mudlet-Mapping/AchaeaCrowdmap/gh-pages/Map/map.json",
                     dataType: "json",
                     success: function (data) {
