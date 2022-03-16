@@ -136,8 +136,8 @@ var nexMap = {
             .text(`"${room}"`)
             .appendTo(msg);
         $('<span></span>').text(` (${path.rawPath.length} steps)`).appendTo(msg);
-        print(msg[0].outerHTML)
-        print($('<span></span>').text(`[${nexMap.walker.determinePath(nexMap.currentRoom, tar).rawPath.join(', ')}]`)[0].outerHTML);
+        //print(msg[0].outerHTML)
+        //print($('<span></span>').text(`[${nexMap.walker.determinePath(nexMap.currentRoom, tar).rawPath.join(', ')}]`)[0].outerHTML);
     
         return true;
     },
@@ -162,16 +162,16 @@ var nexMap = {
     
         if (areas.length>1) {
             $(`<span>${area}</span>`).appendTo(msg);
-            print(msg[0].outerHTML)
+            //print(msg[0].outerHTML)
             nexMap.display.generateTable('areaTable', areas, area);
         }
         else if (areas.length == 1) {    
             link.appendTo(msg);
-            print(msg[0].outerHTML)
+            //print(msg[0].outerHTML)
         }
         else {
             $(`<span>${area}</span>`).appendTo(msg);
-            print(msg[0].outerHTML)
+            //print(msg[0].outerHTML)
             nexMap.display.notice('nothing found');    
         }
     
@@ -200,7 +200,7 @@ var nexMap = {
         if (nexMap.logging) {
             console.log(rm);
         }
-        print(JSON.stringify(rm));
+        //print(JSON.stringify(rm));
         return true;
     },
     // Returns a collection of Nodes matching the room NAME
@@ -274,7 +274,7 @@ var nexMap = {
         cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
             $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
                 .text(`${e}`)
-                .on('click', function() {send_direct(this.innerText)})
+                .on('click', function() {nexusclient.send_commands(this.innerText)})
                 .appendTo('#currentExitsLabel');
             $('<span></span>', {class: 'clickableExitSpace'})
                 .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
@@ -694,12 +694,12 @@ var nexMap = {
         }
     },
     nxsUpdates() {
-        if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
+        /*if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
             reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
             Object.assign(reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap"), {
                 matching: 'exact',
                 text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
-                actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+                actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
             });
         }
 
@@ -711,7 +711,7 @@ $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
 $.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
 console.log('called nexMap CDN');
 reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
-reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
+reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`*/
     },
     startUp() {
         if (nexMap.logging) 
@@ -719,14 +719,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     
         nexMap.loggingTime = new Date();
         nexMap.stopWatch();
-        run_function('nexMap.settings', {}, 'nexmap');
+        nexusclient.reflexes().run_function('nexMap.settings', {}, 'nexmap');
         nexMap.stopWatch();        
-        run_function('nexMap.display', {}, 'nexmap');
+        nexusclient.reflexes().run_function('nexMap.display', {}, 'nexmap');
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
-        print($('<p></p>', {style:'color:cyan'}).text(
-            'nexMap default location does not place well with nexGui. If you wish to use nexMap with nexGui you must change the tab location in Functions>customTabs to "container_1".'
-            )[0].outerHTML);
+        //print($('<p></p>', {style:'color:cyan'}).text(
+        //    'nexMap default location does not place well with nexGui. If you wish to use nexMap with nexGui you must change the tab location in Functions>customTabs to "container_1".'
+        //   )[0].outerHTML);
         
         nexMap.loadDependencies().then(() => {
             nexMap.mongo.startUp();
@@ -744,19 +744,19 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     
                 cy.once('render', () => {
                     nexMap.display.notice(`nexMap ${nexMap.version} loaded and ready for use. ${nexMap.stopWatch()}s`);
-                    print($('<img></img>', {
-                        src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
-                        width: "35%"
-                    })[0].outerHTML);
-                    send_direct('ql');
+                    //print($('<img></img>', {
+                    //    src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
+                    //    width: "35%"
+                    //})[0].outerHTML);
+                    nexusclient.send_commands('ql');
                     nexMap.styles.refresh();
-                    if (get_variable('nexMapConfigs')?.initialConfiguration != nexMap.version) {
+                    if (nexusclient.variables().get('nexMapConfigs')?.initialConfiguration != nexMap.version) {
                         this.nxsUpdates();
                         console.log(`Config error checking:`);
-                        console.log(get_variable('nexMapConfigs')?.initialConfiguration);
+                        console.log(nexusclient.variables().get('nexMapConfigs')?.initialConfiguration);
                         console.log(nexMap.settings.userPreferences.initialConfiguration);
                         console.log(nexMap.version);
-                        send_direct('nm config');
+                        nexusclient.send_commands('nm config');
                     }
                 });
             });
@@ -764,28 +764,28 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     },
     settings: {
         userPreferences: {
-            intialConfiguration: get_variable('nexMapConfigs')?.initialConfiguration || 0,
-            commandSeparator: get_variable('nexMapConfigs')?.commandSeparator || '\\',
-            useDuanathar: get_variable('nexMapConfigs')?.useDuanathar || false,
-            useDuanatharan: get_variable('nexMapConfigs')?.useDuanatharan || false,
-            duanatharCommand: get_variable('nexMapConfigs')?.duanatharCommand || 'say duanathar',
-            duanatharanCommand: get_variable('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
-            useSewergrates: get_variable('nexMapConfigs')?.useSewergrates || false,
-            useWormholes: get_variable('nexMapConfigs')?.useWormholes || false,
-            useUniverse: get_variable('nexMapConfigs')?.useUniverse || false,
-            vibratingStick: get_variable('nexMapConfigs')?.vibratingStick || false,
-            displayWormholes: get_variable('nexMapConfigs')?.displayWormholes || false,
-            currentRoomShape: get_variable('nexMapConfigs')?.currentRoomShape || 'rectangle',
-            currentRoomColor: get_variable('nexMapConfigs')?.currentRoomColor || '#ff1493',
-            labelDisplay: get_variable('nexMapConfigs')?.labelDisplay || 'name',
-            landmarks: get_variable('nexMapConfigs')?.landmarks || [],
-            antiWingAreas: get_variable('nexMapConfigs')?.antiWingAreas || [],
-            antiGareAreas: get_variable('nexMapConfigs')?.antiGareAreas || [],
-            antiUniverseAreas: get_variable('nexMapConfigs')?.antiUniverseAreas || []
+            intialConfiguration: nexusclient.variables().get('nexMapConfigs')?.initialConfiguration || 0,
+            commandSeparator: nexusclient.variables().get('nexMapConfigs')?.commandSeparator || '\\',
+            useDuanathar: nexusclient.variables().get('nexMapConfigs')?.useDuanathar || false,
+            useDuanatharan: nexusclient.variables().get('nexMapConfigs')?.useDuanatharan || false,
+            duanatharCommand: nexusclient.variables().get('nexMapConfigs')?.duanatharCommand || 'say duanathar',
+            duanatharanCommand: nexusclient.variables().get('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
+            useSewergrates: nexusclient.variables().get('nexMapConfigs')?.useSewergrates || false,
+            useWormholes: nexusclient.variables().get('nexMapConfigs')?.useWormholes || false,
+            useUniverse: nexusclient.variables().get('nexMapConfigs')?.useUniverse || false,
+            vibratingStick: nexusclient.variables().get('nexMapConfigs')?.vibratingStick || false,
+            displayWormholes: nexusclient.variables().get('nexMapConfigs')?.displayWormholes || false,
+            currentRoomShape: nexusclient.variables().get('nexMapConfigs')?.currentRoomShape || 'rectangle',
+            currentRoomColor: nexusclient.variables().get('nexMapConfigs')?.currentRoomColor || '#ff1493',
+            labelDisplay: nexusclient.variables().get('nexMapConfigs')?.labelDisplay || 'name',
+            landmarks: nexusclient.variables().get('nexMapConfigs')?.landmarks || [],
+            antiWingAreas: nexusclient.variables().get('nexMapConfigs')?.antiWingAreas || [],
+            antiGareAreas: nexusclient.variables().get('nexMapConfigs')?.antiGareAreas || [],
+            antiUniverseAreas: nexusclient.variables().get('nexMapConfigs')?.antiUniverseAreas || []
         },
         save() {
             nexMap.settings.userPreferences.initialConfiguration = nexMap.version;
-            set_variable('nexMapConfigs', nexMap.settings.userPreferences);
+            nexusclient.variables().set('nexMapConfigs', nexMap.settings.userPreferences);
         },
         toggleWormholes() {
             if (nexMap.settings.userPreferences.useWormholes) {
@@ -843,7 +843,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             };
             $('#cy').css({
                 id: 'cy',
-                'background-image': ' url(/includes/images/windows/map-background.jpg)',
+                //'background-image': ' url(/includes/images/windows/map-background.jpg)',
                 width: '100%',
                 height: 'calc(100% - 44px)',
                 position: 'absolute',
@@ -889,7 +889,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     '.nexcontainer   { display: flex; }' +
                     '.nexfixed    { width: 200px; }' +
                     '.nexflex-item    { flex-grow: 1; }';
-                if (client.css_style != 'standard')
+                if (nexusclient.settings().css_style != 'standard')
                     nexMapCSS += '#tab_nexmap_map::before {content: "\\f2ae";}';
         
                 inject(nexMapCSS);
@@ -942,15 +942,15 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         destination: 0,
         stepCommand: '',
         universeTarget: false,
-        clientEcho: client.echo_input,
+        clientEcho: nexusclient.settings().echo_input,
         speedWalk(s, t) {
             if (nexMap.logging) {
                 console.log('nexMap: nexMap.walker.speedwalk()')
             };
         
             nexMap.walker.pathingStartTime = new Date();
-            nexMap.walker.clientEcho = client.echo_input;
-            client.echo_input = false;
+            nexMap.walker.clientEcho = nexusclient.settings().echo_input;
+            nexusclient.settings().echo_input = false;
             nexMap.walker.determinePath(s, t);
             nexMap.walker.step();
         },
@@ -1056,7 +1056,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 nmw.stepCommand = nmw.pathCommands[index];
             }
             if (nexMap.logging) {console.log(nmw.stepCommand)};
-            send_direct(`${nmw.stepCommand}`);
+            nexusclient.send_commands(`${nmw.stepCommand}`);
         },
         determinePath(s, t) {
             if (nexMap.logging) {
@@ -1478,7 +1478,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.destination = 0;
             nexMap.walker.stepCommand = '';
             nexMap.walker.delay = false;
-            client.echo_input = nexMap.walker.clientEcho;
+            nexusclient.settings().echo_input = nexMap.walker.clientEcho;
         },
         stop() {
             if (nexMap.logging)
@@ -1486,7 +1486,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         
             if (nexMap.walker.pathing === true) {
                 nexMap.display.notice('Pathing canceled');
-                send_direct('path stop');
+                nexusclient.send_commands('path stop');
             }
         
             nexMap.walker.reset();
@@ -1521,7 +1521,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         
         
-            print(msg[0].outerHTML);
+            //print(msg[0].outerHTML);
         },
         versionNotice(ver) {
             if (nexMap.nxsVersion == ver) {
@@ -1670,7 +1670,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(entries[i].data('areaName')).appendTo(row);
             }
         
-            print(tab[0].outerHTML);
+            //print(tab[0].outerHTML);
         
             let pagination;
             if (Math.ceil(nexMap.display.displayEntries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
@@ -1691,7 +1691,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`Displaying ${nexMap.display.displayEntries.length} of ${nexMap.display.displayEntries.length}.`);
             }
         
-            print(pagination[0].outerHTML);
+            //print(pagination[0].outerHTML);
         },
         landmarkTable(marks = false, caption = false) {
             let entries = marks ? marks : nexMap.settings.userPreferences.landmarks;
@@ -1787,7 +1787,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`${node.data('userData')['Game Area']}(${node.data('area')})`).appendTo(row);
             }
         
-            print(tab[0].outerHTML);
+            //print(tab[0].outerHTML);
         
             let pagination;
             if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
@@ -1808,7 +1808,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`Displaying ${entries.length} of ${entries.length}.`);
             }
         
-            print(pagination[0].outerHTML);
+            //print(pagination[0].outerHTML);
         },
         areaTable() {
             let entries = nexMap.display.displayEntries;
@@ -1882,7 +1882,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(entries[i].roomCount).appendTo(row);
             }
         
-            print(tab[0].outerHTML);
+            //print(tab[0].outerHTML);
         
             let pagination;
             if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
@@ -1903,7 +1903,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`Displaying ${entries.length} of ${entries.length}.`);
             }
         
-            print(pagination[0].outerHTML);
+            //print(pagination[0].outerHTML);
         },
         denizenTable() {
             let entries = nexMap.display.displayEntries;
@@ -1999,7 +1999,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`${entries[i].area.name}`).appendTo(row);
             }
         
-            print(tab[0].outerHTML);
+            //print(tab[0].outerHTML);
         
             let pagination;
             if (Math.ceil(entries.length / nexMap.display.pageBreak) > nexMap.display.pageIndex + 1) {
@@ -2020,7 +2020,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(`Displaying ${entries.length} of ${entries.length}.`);
             }
         
-            print(pagination[0].outerHTML);
+            //print(pagination[0].outerHTML);
         },
         userCommands() {
             let cmds = [
@@ -2124,7 +2124,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }).text(cmds[x].txt).appendTo(row);
             }
             nexMap.display.notice('Aliases for user interaction');
-            print(tab[0].outerHTML);
+            //print(tab[0].outerHTML);
         },
         configDialog() {
             let main = $('<div></div>', {
@@ -2385,13 +2385,13 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
         info: function () {
             nexMap.display.notice('Room.Info');
-            print(`Name: 		${GMCP.Room.Info.name}`);
-            print(`Number: 		${GMCP.Room.Info.num}`);
-            print(`Area: 		${GMCP.Room.Info.area}`);
-            print(`Area ID: 		${GMCP.CurrentArea.id}`);
-            print(`Environment: 	${GMCP.Room.Info.environment}`);
-            print(`Coordinates: 	${GMCP.Room.Info.coords}`);
-            print(`Details: 		${GMCP.Room.Info.details}`);
+            //print(`Name: 		${GMCP.Room.Info.name}`);
+            //print(`Number: 		${GMCP.Room.Info.num}`);
+            //print(`Area: 		${GMCP.Room.Info.area}`);
+            //print(`Area ID: 		${GMCP.CurrentArea.id}`);
+            //print(`Environment: 	${GMCP.Room.Info.environment}`);
+            //print(`Coordinates: 	${GMCP.Room.Info.coords}`);
+            //print(`Details: 		${GMCP.Room.Info.details}`);
         },
         goto: function (args) {
             if (/^[0-9]+$/g.test(args)) {
@@ -2466,7 +2466,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 for(let denizen of roomDenizens) {
                     denizen.room = [curRoom];
                     denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
-                    denizen.time = client.Date();
+                    denizen.time = Date();
                     denizen.user = {
                         id: this.user.id,
                         name: GMCP.Status.name
@@ -3121,10 +3121,10 @@ if (typeof reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap") =
     Object.assign(reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap"), {
         matching: 'exact',
         text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
-        actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+        actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
     });
 }
 reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").matching = 'exact';
-reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").actions = [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
-"{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}"
+reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").actions = [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+"{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}"
 */
