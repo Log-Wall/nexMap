@@ -58,28 +58,47 @@ var nexMap = {
         Island:[91,92,93,94,97,98,100,161,164,165,195,224,240,464],
     },
     environments: {
-        urban: 8,
+
         'constructed underground': 2,
         'natural underground': 3,
-        desert: 6,
-        road: 12,
-        path: 11,
-        grasslands: 7,
-        river: 10,
-        garden: 21,
-        hills: 9,
-        mountains: 14,
-        trees: 28,
-        ruins: 32,
-        freshwater: 22,
         forest: 4,
-        ocean: 20,
         beach: 5,
+        desert: 6,
+        grasslands: 7,
+        urban: 8,
+        hills: 9,
+        river: 10,
+        path: 11,
+        road: 12,
+        
+        mountains: 14,
+        
+        
         jungle: 17,
+        
+        
+        ocean: 20,
+        garden: 21,
+        freshwater: 22,
+        
+        
+        
+        
+        
+        trees: 28,
         blighted: 29,
+        
+        
+        ruins: 32,
     },
 
     crowdMapRevisions() {
+        //Snippet to add the continent to each area. Useful for determining wings and limiting pathfinding scope.
+        nexMap.mudmap.areas.forEach(e=>{
+            let continent = Object.keys(nexMap.areaContinents).find(c=>nexMap.areaContinents[c].includes(e.id));
+            e['continent'] = typeof continent == 'undefined' ? '' : continent;
+        })
+
         nexMap.mudmap.areas[343].rooms.find(e=>e.id == 29081).exits.find(e=>e.exitId == 30864).name = `pull rubble${nexMap.settings.userPreferences.commandSeparator}east`;
         nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30136).exits.find(e=>e.exitId == 30469).name = `push bones${nexMap.settings.userPreferences.commandSeparator}east`;
         nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30469).exits.find(e=>e.exitId == 30437).name = `pull shield81739${nexMap.settings.userPreferences.commandSeparator}northeast`;
@@ -266,7 +285,6 @@ var nexMap = {
         cy.endBatch();
         cy.center(`#${id}`); 
         $('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
-        //$('#currentRoomLabel').text(`${room.data('areaName')}: ${room.data('name')} (${GMCP.Room.Info.num})`)
         //$('#currentExitsLabel').text(`Exits: ${room.data('exits').join(', ')}`)
     
         $('.clickableExitSpace').remove();
@@ -391,7 +409,6 @@ var nexMap = {
                         let xt;
                         let newEdge;
                         room.exits.forEach(exit => {
-                            xts.push(nexMap.shortDirs[exit.name] ? nexMap.shortDirs[exit.name] : exit.name);
                             xt = nexMap.shortDirs[exit.name] ? nexMap.shortDirs[exit.name] : exit.name;
                             if (cy.$(`#${room.id}-${exit.exitId}`).length == 0) {
                                 newEdge = {
@@ -433,7 +450,7 @@ var nexMap = {
                                     newEdge.data.command = xt.substr(xt.indexOf("(")+1, xt.indexOf(")") - xt.indexOf("(") - 1)
                                             .replace(/["']/g, '');
                                 }
-    
+                                xts.push(newEdge.data.command);
                                 nexGraph.push(newEdge);
                             }
                         });
@@ -446,6 +463,7 @@ var nexMap = {
                                 areaName: area.name,
                                 environment: room.environment,
                                 name: room.name,
+                                continent: area.continent,
                                 userData: room.userData,
                                 z: room.coordinates[2],
                                 exits: xts,
@@ -483,6 +501,7 @@ var nexMap = {
                     areaName: 'universe',
                     environment: 'Skies',
                     name: 'Universe Tarot',
+                    continent: 'Main',
                     userData: {indoors: 'y'},
                     z: 1,
                 },
