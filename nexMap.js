@@ -99,21 +99,24 @@ var nexMap = {
             e['continent'] = typeof continent == 'undefined' ? '' : continent;
         })
 
-        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 29081).exits.find(e=>e.exitId == 30864).name = `pull rubble${nexMap.settings.userPreferences.commandSeparator}east`;
-        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30136).exits.find(e=>e.exitId == 30469).name = `push bones${nexMap.settings.userPreferences.commandSeparator}east`;
-        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30469).exits.find(e=>e.exitId == 30437).name = `pull shield81739${nexMap.settings.userPreferences.commandSeparator}northeast`;
-        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 30523).exits.find(e=>e.exitId == 30631).name = `pull roots${nexMap.settings.userPreferences.commandSeparator}south`;
-        nexMap.mudmap.areas[343].rooms.find(e=>e.id == 31099).exits.find(e=>e.exitId == 23239).name = `pull mucus${nexMap.settings.userPreferences.commandSeparator}northeast`;
-
-        nexMap.mudmap.areas[477].rooms.find(e=>e.id == 58509).exits.push({exitId:58881,name:"northeast"})
-        nexMap.mudmap.areas[477].rooms.push(JSON.parse('{"coordinates":[3,2,-1],"environment":2,"exits":[{"exitId":58509,"name":"west"},{"exitId":58306,"name":"northeast"}],"id":58881,"name":"A narrow, sandy tunnel","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
-        nexMap.mudmap.areas[477].rooms.push(JSON.parse('{"coordinates":[4,3,-1],"environment":2,"exits":[{"exitId":58881,"name":"southwest"}],"id":58306,"name":"A landscape of shifting sand","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
+        nexMap.mudmap.areas.find(e=>e.name == 'Battlesite of Mourning Pass').rooms.find(e=>e.id == 29081).exits.find(e=>e.exitId == 30864).name = `pull rubble${nexMap.settings.userPreferences.commandSeparator}east`;
+        nexMap.mudmap.areas.find(e=>e.name == 'Battlesite of Mourning Pass').rooms.find(e=>e.id == 30136).exits.find(e=>e.exitId == 30469).name = `push bones${nexMap.settings.userPreferences.commandSeparator}east`;
+        nexMap.mudmap.areas.find(e=>e.name == 'Battlesite of Mourning Pass').rooms.find(e=>e.id == 30469).exits.find(e=>e.exitId == 30437).name = `pull shield81739${nexMap.settings.userPreferences.commandSeparator}northeast`;
+        nexMap.mudmap.areas.find(e=>e.name == 'Battlesite of Mourning Pass').rooms.find(e=>e.id == 30523).exits.find(e=>e.exitId == 30631).name = `pull roots${nexMap.settings.userPreferences.commandSeparator}south`;
+        nexMap.mudmap.areas.find(e=>e.name == 'Battlesite of Mourning Pass').rooms.find(e=>e.id == 31099).exits.find(e=>e.exitId == 23239).name = `pull mucus${nexMap.settings.userPreferences.commandSeparator}northeast`;
+        
+        nexMap.mudmap.areas.find(e=>e.name == 'Ghezavat Commune').rooms.find(e=>e.id == 58509).exits.push({exitId:58881,name:"northeast"})
+        nexMap.mudmap.areas.find(e=>e.name == 'Ghezavat Commune').rooms.push(JSON.parse('{"coordinates":[3,2,-1],"environment":2,"exits":[{"exitId":58509,"name":"west"},{"exitId":58306,"name":"northeast"}],"id":58881,"name":"A narrow, sandy tunnel","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
+        nexMap.mudmap.areas.find(e=>e.name == 'Ghezavat Commune').rooms.push(JSON.parse('{"coordinates":[4,3,-1],"environment":2,"exits":[{"exitId":58881,"name":"southwest"}],"id":58306,"name":"A landscape of shifting sand","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
     },
     
     onGMCP(method, args) {
         switch(method) {
             case 'Room.Info':
                 GMCP.Room.Info = args;
+
+                // If we are in the wilderness or sailing. Hide the nexMap tab and display the default
+                // Nexus map window for map display.
                 if (args.ohmap) {
                     nexMap_tab.deactivate();
                     return;
@@ -122,6 +125,7 @@ var nexMap = {
                     nexMap.styles.refresh();
                     cy.center();
                 }
+
                 nexMap.changeRoom(GMCP.Room.Info.num);
                 
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
@@ -131,15 +135,18 @@ var nexMap = {
                 if(nexMap.walker.pathing)
                     nexMap.walker.step();
                 break;
+
             case 'Char.Items.List':
                 GMCP.Char.Items.List = args;
                 break;
+
             case 'Char.Status':    
                 if ((args.class == 'Serpent' || nexMap.settings.vibratingStick) && !nexMap.settings.useWormhole)
                     nexMap.settings.toggle('useWormholes');
                 break;
         }
     },
+
     farseeLocal(target, room) {
         let tar = cy.nodes().find(n => n.data('name') == room).data('id')
         let path = nexMap.walker.determinePath(nexMap.currentRoom, tar);
@@ -160,6 +167,7 @@ var nexMap = {
     
         return true;
     },
+
     farseeArea(target, area) {
         let areas = nexMap.findArea(`${area}`);
     
@@ -196,14 +204,16 @@ var nexMap = {
     
         return true;
     },
+
     stopWatch() {
-        let t = (new Date() - nexMap.loggingTime) / 1000;
+        let t = (Date.now() - nexMap.loggingTime) / 1000;
     
         if (nexMap.logging)
             console.log(`${t}s`);
     
         return t;
     },
+
     findRoom(roomNum) {
         if (nexMap.logging)
             console.log(`nexMap: nexMap.findRoom(${roomNum})`);
@@ -220,8 +230,10 @@ var nexMap = {
             console.log(rm);
         }
         print(JSON.stringify(rm));
+        console.log(rm);
         return true;
     },
+
     // Returns a collection of Nodes matching the room NAME
     findRooms(search) {
         if (nexMap.logging)
@@ -239,6 +251,7 @@ var nexMap = {
             return qry;
         }
     },
+
     // Returns a collection of JSON area objects.
     // JSON areas have custom names that do not always match the GMCP area names.
     // The GMCP area names are stored as userData in the room objects. Searches all user data for exact matches,
@@ -253,6 +266,7 @@ var nexMap = {
 
         return areas;
     },
+
     // Filters for possible matching areas rather than exact matches.
     findAreas(search) {
         let areas = nexMap.mudmap.areas.filter(e => e.rooms.find(e2 => e2?.userData?.['Game Area']?.toLowerCase().includes(search.toLowerCase())));
@@ -264,6 +278,7 @@ var nexMap = {
 
         return areas;
     },
+
     async changeRoom(id) {
         if (nexMap.logging)
             console.log(`nexMap: nexMap.changeRoom(${id})`);
@@ -301,6 +316,7 @@ var nexMap = {
     
         nexMap.currentRoom = id;
     },
+
     async changeArea(area, z, override = false) {
         if (nexMap.logging)
             console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
@@ -322,6 +338,7 @@ var nexMap = {
         cy.center(`#${GMCP.Room.Info.num}`);
         return true;
     },
+
     generateExits() {
         if (nexMap.logging)
             console.log('nexMap: nexMap.generateExits()');
@@ -396,6 +413,7 @@ var nexMap = {
     
         xe.forEach(e => createExit(e.source().position(), e.data('command'), e.data('source')));
     },
+
     async generateGraph() {
         if (nexMap.logging)
             console.log('nexMap: nexMap.generateGraph()');
@@ -465,6 +483,7 @@ var nexMap = {
                                 name: room.name,
                                 continent: area.continent,
                                 userData: room.userData,
+                                coordinates: room.coordinates,
                                 z: room.coordinates[2],
                                 exits: xts,
                                 symbol: room.symbol ? room.symbol : false,
@@ -556,13 +575,14 @@ var nexMap = {
             resolve();
         });
     },
+
     async loadDependencies() {
         if (nexMap.logging)
             console.log('nexMap: nexMap.loadDependencies()');
     
         let preloader = async function () {
             return new Promise((resolve, reject) => {
-                let src = "https://cdn.jsdelivr.net/npm/cytoscape@3.19.0/dist/cytoscape.min.js";
+                let src = "https://cdn.jsdelivr.net/npm/cytoscape@3.21.0/dist/cytoscape.min.js";
                 let head = document.getElementsByTagName('head')[0];
                 let elem = document.createElement('script');
                 elem.src = src + '?' + Math.random();
@@ -612,6 +632,8 @@ var nexMap = {
             throw new Error('Unable to copy object! Type not supported.')
         }
     
+        // Nexus overwrite the Array constructor Map to use for their own mapping. This is an essential function of Javascript
+        // Tysandr solution to create an iframe to get the default Map and clone it back into the Nexus window.
         let restoreMap = function () {
             $('body')
                 .on('restoreMap', function (e, _map) {
@@ -660,6 +682,7 @@ var nexMap = {
         await Promise.all([preloader(), loadMap()]);
         return true;
     },
+    
     initializeGraph() {
         if (nexMap.logging)
             console.log('nexMap: nexMap.initializeGraph()');
@@ -695,6 +718,7 @@ var nexMap = {
             pixelRatio: 'auto',
         });
     },
+
     sevenTruths(num) {
         let truths = [
             `Truth One: What is called evil is simply the drive for advancement, for greatness. We seek, through discipline and pain, to spur the advancement of nothing less than sentient life.`,
@@ -712,6 +736,7 @@ var nexMap = {
             return truths[num];
         }
     },
+
     nxsUpdates() {
         if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
             reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
@@ -732,6 +757,7 @@ console.log('called nexMap CDN');
 reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
 reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
     },
+
     startUp() {
         if (nexMap.logging) 
             console.log('nexMap: nexMap.startUp()');
@@ -781,6 +807,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             });
         });       
     },
+
     settings: {
         userPreferences: {
             intialConfiguration: get_variable('nexMapConfigs')?.initialConfiguration || 0,
@@ -855,6 +882,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.display.notice(`Removed landmark for "${name}"`);
         }
     },
+
     styles: {
         style() {
             if (nexMap.logging) {
@@ -951,6 +979,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
         stylesheet: []
     },
+
     walker: {
         pathing: false,
         pathRooms: [],
@@ -962,17 +991,19 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         stepCommand: '',
         universeTarget: false,
         clientEcho: client.echo_input,
+
         speedWalk(s, t) {
             if (nexMap.logging) {
                 console.log('nexMap: nexMap.walker.speedwalk()')
             };
         
-            nexMap.walker.pathingStartTime = new Date();
+            nexMap.walker.pathingStartTime = Date.now();
             nexMap.walker.clientEcho = client.echo_input;
             client.echo_input = false;
             nexMap.walker.determinePath(s, t);
             nexMap.walker.step();
         },
+
         //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
         // The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
         // this is a work around.
@@ -980,7 +1011,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let target = cy.elements().aStar({
                 root: `#${nexMap.currentRoom}`,
                 goal: cy.$(`[area = ${areaID}]`),
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -988,6 +1019,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     
             nexMap.walker.speedWalk(nexMap.currentRoom, target)
         },
+
         goto(str) {
             if (typeof str === 'number') {
                 str = str.toString();
@@ -1026,7 +1058,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 let aStar = cy.elements().aStar({
                     root: `#${nexMap.currentRoom}`,
                     goal: cy.$(`[area = ${areaID}]`),
-                    weight: function (edge) {
+                    weight: (edge)=>{
                         return edge.data('weight');
                     },
                     directed: true
@@ -1048,6 +1080,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         
             nexMap.walker.areaWalk(closestArea.id);
         },
+
         step() {
             let nmw = nexMap.walker;
         
@@ -1066,7 +1099,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (GMCP.Room.Info.num == nmw.destination) {
                 nmw.pathing = false;
                 nmw.reset();
-                nexMap.display.notice(`Pathing complete. ${(new Date() - nmw.pathingStartTime) / 1000}s`);
+                nexMap.display.notice(`Pathing complete. ${(Date.now() - nmw.pathingStartTime) / 1000}s`);
                 return;
             }
         
@@ -1077,12 +1110,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (nexMap.logging) {console.log(nmw.stepCommand)};
             send_direct(`${nmw.stepCommand}`);
         },
+
         determinePath(s, t) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
             };
-            let source = s ? s : GMCP.Room.Info.num;
-            let target = t ? t : cy.$(':selected').data('id');
+
+            let source = s || GMCP.Room.Info.num;
+            let target = t || cy.$(':selected').data('id');
 
             if(source == target) {
                 nmw.pathing = false;
@@ -1102,22 +1137,29 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let astar = cy.elements().aStar({
                 root: `#${source}`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
             });
         
-            if (nexMap.logging)
-                console.log(astar);
+            if (nexMap.logging) { console.log(astar); };
         
             if (!astar.found) {
                 nexMap.display.notice(`No path to ${target} found.`);
                 return;
-            }
+            };
         
-            astar.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
-            astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
+            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
+            //astar.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
+            for(let e in astar.path.nodes()) {
+                nmw.pathRooms.push(e.data('id'));
+            };
+            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
+            //astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
+            for(let e in astar.path.edges()) {
+                nmw.pathCommands.push(e.data('command'));
+            };
         
             let gare = nmw.checkGare(astar, target);
             let universe = nmw.checkUniverse(astar, target);
@@ -1159,6 +1201,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 rawPath: nexMap.walker.pathRawCommands
             }
         },
+
         checkAirlord(optimalPath, target) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.checkAirlord(${optimalPath}, ${target})`)
@@ -1185,7 +1228,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             cloudPath.astar = cy.elements().aStar({
                 root: `#3885`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1195,7 +1238,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             highCloudPath.astar = cy.elements().aStar({
                 root: `#4882`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1205,7 +1248,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             stratospherePath.astar = cy.elements().aStar({
                 root: `#54173`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1233,6 +1276,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 distanceModifier: 12 //4 second balance
             }
         },
+
         checkGare(astar, target) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.gare(${astar}, ${target})`)
@@ -1248,6 +1292,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (gareRoomId == 0) {
                 return;
             }
+
             let nmw = nexMap.walker;
             let gareRooms = [...nmw.pathRooms];
             let gareCommands = [...nmw.pathCommands];
@@ -1257,7 +1302,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let garePath = cy.elements().aStar({
                 root: `#12695`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1280,6 +1325,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 distanceModifier: 10
             }
         },
+
         checkClouds(optimalPath, target) {
             if (nexMap.logging)
                 console.log(`nexMap: nexMap.walker.checkClouds()`);
@@ -1303,7 +1349,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let cloudPath = cy.elements().aStar({
                 root: `#3885`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1313,7 +1359,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 highCloudPath = cy.elements().aStar({
                     root: `#4882`,
                     goal: g,
-                    weight: function (edge) {
+                    weight: (edge)=>{
                         return edge.data('weight');
                     },
                     directed: true
@@ -1342,6 +1388,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 distanceModifier: 0
             }
         },
+
         checkUniverse(astar, target) {
             if (!nexMap.settings.userPreferences.useUniverse) {
                 return;
@@ -1363,7 +1410,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let universePath = cy.elements().aStar({
                 root: `#universe`,
                 goal: g,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1385,6 +1432,11 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 distanceModifier: 9 //3 second balance.
             }
         },
+
+        // hybridPath relies on using the in game "path track" speedwalking system. This function will find special exits
+        // breaking the path track into sections to use special exits. The in game path track system will return an "unable to 
+        // find a path" if there is a special exit. This will also break up paths that are greater than 100 steps away. The in 
+        // game path track will not path greater than 100 rooms.
         hybridPath() {
             if (nexMap.logging)
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
@@ -1434,6 +1486,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.pathCommands = [...hybCmds];
             nexMap.walker.pathRooms = [...hybRm];
         },
+
         // IN DEVELOPMENT Not currently used for anything
         checkGlide(path, target) {
             if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkDash(${cmd})`)};
@@ -1450,7 +1503,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let glidePath = cy.elements().aStar({
                 root: `#${firstOutdoorRoom}`,
                 goal: `#${firstIndoorRoom}`,
-                weight: function (edge) {
+                weight: (edge)=>{
                     return edge.data('weight');
                 },
                 directed: true
@@ -1485,6 +1538,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             //nexMap.walker.pathRooms = [...galRm];
         
         },
+
         reset() {
             if (nexMap.logging)
                 console.log('nexMap: nexMap.walker.reset()');
@@ -1499,6 +1553,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.delay = false;
             client.echo_input = nexMap.walker.clientEcho;
         },
+
         stop() {
             if (nexMap.logging)
                 console.log('nexMap: nexMap.walker.stop()');
