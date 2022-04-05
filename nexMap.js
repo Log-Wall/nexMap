@@ -1111,6 +1111,19 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             send_direct(`${nmw.stepCommand}`);
         },
 
+        aStar(source, target) {
+            let g = typeof target === 'object' ? target : `#${target}`
+            
+            return cy.elements().aStar({
+                root: `#${source}`,
+                goal: `#${target}`,
+                weight: (edge)=>{
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+        },
+
         determinePath(s, t) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
