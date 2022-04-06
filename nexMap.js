@@ -14,22 +14,36 @@ var nexMap = {
     wormholes: {},
     sewergrates: {},
     universeRooms: {
-        azdun: 1772,
-        bitterfork: 25093,
-        blackrock: 10573,
-        brasslantern: 30383,
-        caerwitrin: 17678,
-        genji: 10091,
-        manara: 9124,
-        mannaseh: 1745,
-        manusha: 8730,
-        mhojave: 39103,
-        newhope: 25581,
-        newthera: 20386,
-        shastaan: 2855,
-        thraasi: 35703
+        1772: 'azdun',
+        25093: 'bitterfork',
+        10573: 'blackrock',
+        30383: 'brasslantern',
+        17678: 'caerwitrin',
+        10091: 'genji',
+        9124: 'manara',
+        1745: 'mannaseh',
+        8730: 'manusha',
+        39103: 'mhojave',
+        25581: 'newhope',
+        20386: 'newthera',
+        2855: 'shastaan',
+        35703: 'thraasi'
     },
     shortDirs: {
+        e: 'east',
+        w: 'west',
+        s: 'south',
+        n: 'north',
+        ne: 'northeast',
+        nw: 'northwest',
+        se: 'southeast',
+        sw: 'southwest',
+        in: 'in',
+        out: 'out',
+        d: 'down',
+        up: 'up'
+    },
+    longDirs: {
         east: "e",
         west: "w",
         south: "s",
@@ -516,8 +530,8 @@ var nexMap = {
                 group: 'nodes',
                 data: {
                     id: 'universe',
-                    area: 'universe',
-                    areaName: 'universe',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
                     environment: 'Skies',
                     name: 'Universe Tarot',
                     continent: 'Main',
@@ -541,18 +555,128 @@ var nexMap = {
                         id: `universe-${nexMap.universeRooms[e]}`,
                         source: 'universe',
                         target: nexMap.universeRooms[e],
-                        weight: 6,
+                        weight: 9,
                         area: 'universe',
-                        command: `outd universe${nexMap.settings.userPreferences.commandSeparator}fling universe at ground`,
+                        command: 'fling universe at ground',
                         universe: e,
                         door: false,
                         z: 1
-                    },
-                    classes: ['sewergrate']
+                    }
                 }
                 nexGraph.push(newEdge);
             }
+
+            // Pierce the veil Node and Exit
+            newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'gare',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
+                    environment: 'Skies',
+                    name: 'Pierce the Veil',
+                    continent: 'Main',
+                    userData: {indoors: 'y'},
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            let newEdge = {
+                group: 'edges',
+                data: {
+                    id: 'gare-12695',
+                    source: 'gare',
+                    target: '12695',
+                    weight: 9,
+                    area: 'gare',
+                    command: 'pierce the veil',
+                    door: false,
+                    z: 1
+                }
+            }
+            nexGraph.push(newEdge);
     
+            // Duanathar Node and Exit
+            newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'duanathar',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
+                    environment: 'Skies',
+                    name: 'Duanathar',
+                    continent: 'Main',
+                    userData: {indoors: 'y'},
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            newEdge = {
+                group: 'edges',
+                data: {
+                    id: 'duanathar-3885',
+                    source: 'duanathar',
+                    target: '3885',
+                    weight: 1,
+                    area: 'imaginary',
+                    command: nexMap.settings.userPreferences.duanatharCommand,
+                    door: false,
+                    z: 1
+                }
+            }
+            nexGraph.push(newEdge);
+            
+            // Duanathar Node and Exit
+            newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'duanatharan',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
+                    environment: 'Skies',
+                    name: 'Duanatharan',
+                    continent: 'Main',
+                    userData: {indoors: 'y'},
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            newEdge = {
+                group: 'edges',
+                data: {
+                    id: 'duanatharan-4882',
+                    source: 'duanatharan',
+                    target: '4882',
+                    weight: 1,
+                    area: 'imaginary',
+                    command: nexMap.settings.userPreferences.duanatharanCommand,
+                    door: false,
+                    z: 1
+                }
+            }
+            nexGraph.push(newEdge);
+
             cy.batch( () => {
                 cy.add(nexGraph);
                 nexMap.wormholes = cy.$('.wormhole');
@@ -1123,11 +1247,13 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
         determinePathBeta(src, tar) {
             if (nexMap.logging) {
-                console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
+                console.log(`nexMap: nexMap.walker.determinePath(${src}, ${tar})`)
             };
 
             let nmw = nexMap.walker; // I prefer to use this style as opposed to "this" outside of Classes
 
+            nmw.pathCommands = [];
+            nmw.pathRooms = [];
             let source = src || GMCP.Room.Info.num;
             let target = tar || cy.$(':selected').data('id');
 
@@ -1140,29 +1266,20 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
 
             nmw.destination = target;
         
-            let astar = nmw.aStar(source, target)
+            let baseStar = nmw.aStar(source, target);
+            baseStar.type = 'base';
         
-            if (nexMap.logging) { console.log(astar); };
-        
-            if (!astar.found) {
-                nexMap.display.notice(`No path to ${target} found.`);
-                return;
-            };
-        
-            // Now that we have a path, create the baseline arrays for the rooms and the commands.
-            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
-            //astar.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
-            for(let e in astar.path.nodes()) {
-                nmw.pathRooms.push(e.data('id'));
-            };
-            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
-            //astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
-            for(let e in astar.path.edges()) {
-                nmw.pathCommands.push(e.data('command'));
-            };
-        
+            if (nexMap.logging) { console.log(baseStar); };
+                    
             // If the path is local to the area there is no need to check other fast travel options.
             if (cy.$(`#${source}`).data('area') == cy.$(`#${target}`).data('area')) {
+                for (let e of baseStar.path.nodes()) {
+                    nmw.pathRooms.push(e.data('id'));
+                };
+                for (let e of baseStar.path.edges()) {
+                    nmw.pathCommands.push(e.data('command'));
+                };
+
                 nmw.hybridPath();
         
                 return {
@@ -1171,41 +1288,32 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }
             }
             
+            let gare = nmw.checkGare(baseStar, target);
+            let universe = nmw.checkUniverse(baseStar, target);
+            let wings = nmw.checkClouds(baseStar, target);
 
-            let gare = nmw.checkGare(astar, target);
-            let universe = nmw.checkUniverse(astar, target);
-            let base = {
-                astar: astar,
-                rooms: nmw.pathRooms,
-                commands: nmw.pathCommands,
-                distanceModifier: 0
-            }
-
-            let optimalPath = [gare, universe, base].reduce((a, b) => {
-                if (typeof a == 'undefined') {return b};
-                if (typeof b == 'undefined') {return a};
-                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
+            // We include wings in the first round of checks for situations such as the 
+            // first outdoor room is 1 step away, but it could also be 100 steps away.
+            let optimalStar = [gare, universe, wings, baseStar].reduce((a, b) => {
+                if (!a) {return b};
+                if (!b) {return a};
+                return a.distance > b.distance ? b : a;
             });
 
-            // We are checking the clouds/air after the others. there are situations where the universe/gare
+            if (!optimalStar) {
+                nexMap.display.notice(`No path to ${target} found.`);
+                return;
+            };
+
+            // We need to check wings again. there are situations where the universe/gare
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
-            let cloud = nmw.checkClouds(optimalPath, target);
-            let cloudBase = nmw.checkClouds(base, target);
-            let air = nmw.checkAirlord(optimalPath, target);
-            optimalPath = [cloud, air, cloudBase, optimalPath].reduce((a, b) => {
-                if (typeof a == 'undefined') {return b};
-                if (typeof b == 'undefined') {return a};
-                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
-            });
+            if (['universe', 'gare'].includes(optimalStar.type)) {
+                wings = nmw.checkClouds(optimalStar, target);
+                optimalStar = wings.distance < optimalStar.distance ? wings : optimalStar;
+            }
 
-            nmw.pathRawCommands = [...nmw.pathCommands];
-            nmw.pathRawRooms = [...nmw.pathRooms];
-        
-            nmw.pathCommands = optimalPath.commands;
-            nmw.pathRooms = optimalPath.rooms;
-
-            nmw.hybridPath();
+            nmw.hybridPath(optimalStar);
         
             return {
                 path: nmw.pathCommands,
@@ -1271,7 +1379,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 distanceModifier: 0
             }
 
-            let optimalPath = [gare, universe, base].reduce((a, b) => {
+            let optimalStar = [gare, universe, base].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
                 return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
@@ -1280,10 +1388,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             // We are checking the clouds/air after the others. there are situations where the universe/gare
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
-            let cloud = nmw.checkClouds(optimalPath, target);
+            let cloud = nmw.checkClouds(optimalStar, target);
             let cloudBase = nmw.checkClouds(base, target);
-            let air = nmw.checkAirlord(optimalPath, target);
-            optimalPath = [cloud, air, cloudBase, optimalPath].reduce((a, b) => {
+            let air = nmw.checkAirlord(optimalStar, target);
+            optimalStar = [cloud, air, cloudBase, optimalStar].reduce((a, b) => {
                 if (typeof a == 'undefined') {return b};
                 if (typeof b == 'undefined') {return a};
                 return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
@@ -1292,8 +1400,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nmw.pathRawCommands = [...nmw.pathCommands];
             nmw.pathRawRooms = [...nmw.pathRooms];
         
-            nexMap.walker.pathCommands = optimalPath.commands;
-            nexMap.walker.pathRooms = optimalPath.rooms;
+            nexMap.walker.pathCommands = optimalStar.commands;
+            nexMap.walker.pathRooms = optimalStar.rooms;
 
             nmw.hybridPath();
         
@@ -1303,84 +1411,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         },
 
-        checkAirlord(optimalPath, target) {
-            if (nexMap.logging) {
-                console.log(`nexMap: nexMap.walker.checkAirlord(${optimalPath}, ${target})`)
-            };
-
-            if (!GMCP.Status.class.toLowerCase().includes('air')) {
-                return;
-            }
-        
-            let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
-            let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
-            
-            if (wingRoomId == 0) {
-                return;
-            }
-        
-            let cloudRooms = [...optimalPath.rooms];
-            let cloudCommands = [...optimalPath.commands];
-            let cloudPath = {astar: {}, command: ''};
-            let highCloudPath = {astar: {}, command: ''};
-            let stratospherePath = {astar: {}, command: ''};
-            let g = typeof target === 'object' ? target : `#${target}`
-        
-            cloudPath.astar = cy.elements().aStar({
-                root: `#3885`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-            cloudPath.command = 'aero soar low';
-        
-            highCloudPath.astar = cy.elements().aStar({
-                root: `#4882`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-            highCloudPath.command = 'aero soar high';
-        
-            stratospherePath.astar = cy.elements().aStar({
-                root: `#54173`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-            stratospherePath.command = 'aero soar stratosphere';
-        
-            let optimalCloud = [cloudPath, highCloudPath, stratospherePath].reduce((a, b) => {
-                return a?.astar?.distance < b?.astar?.distance ? a : b;
-            });
-        
-            // Added +12 to the comparison based on 4 seconds of balance at an assumed rate of 3 rooms per second.
-            if (optimalPath.astar.distance > cloudCommands.indexOf(wingRoomId) + optimalCloud.astar.distance + 15) {
-                cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 12);
-                cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
-                cloudCommands.push(optimalCloud.command);
-        
-                optimalCloud.astar.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
-                optimalCloud.astar.path.edges().forEach(e => cloudCommands.push(e.data('command')));
-            }
-        
-            return {
-                astar: optimalCloud,
-                rooms: cloudRooms,
-                commands: cloudCommands,
-                distanceModifier: 12 //4 second balance
-            }
-        },
-
         checkGare(astar, tar) {
             if (nexMap.logging) {
-                console.log(`nexMap: nexMap.walker.gare(${astar}, ${tar})`)
+                console.log(`nexMap: nexMap.walker.checkGare(${astar}, ${tar})`)
             };
 
             if (!GMCP.Status.class.includes('Dragon')) {
@@ -1389,20 +1422,19 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         
             // Where is the first room on the baseline path that we could use Gare?
             let firstGareRoomIndex = astar.path.nodes().findIndex(e => !nexMap.settings.userPreferences.antiGareAreas.includes(e.data('area')));
-        
-            if (firstGareRoomIndex == -1) {
-                return false;
-            }
-            
-            let target = typeof tar === 'object' ? tar : `#${tar}`
-        
+            if (firstGareRoomIndex == -1) { return false; }
+
             // Gare room is #12695
-            let gareStar = nmw.aStar(12695, target);
+            let gareStar = this.aStar('gare', tar);
             if (!gareStar) { return false; }
 
-            // Pierce the veil assumed at 3 seconds equilibrium at 3 rooms per second.
-            gareStar.distance += 10;
-                   
+            gareStar.distance += firstGareRoomIndex;
+            gareStar.type = 'gare';
+            gareStar.path = firstGareRoomIndex > 0 ? astar.path.slice(0,firstGareRoomIndex*2).merge(gareStar.path) : gareStar.path;
+
+            return gareStar
+
+            ///////////////////////////////////////////
             if (astar.distance > firstGareRoomIndex + gareStar.distance) {
                 gareRooms.splice(firstGareRoomIndex + 1);
                 gareCommands.splice(firstGareRoomIndex);
@@ -1415,70 +1447,11 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             return gareStar
         },
 
-        checkClouds(optimalPath, target) {
-            if (nexMap.logging)
-                console.log(`nexMap: nexMap.walker.checkClouds()`);
-        
-            if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan)
-                return;
-        
-            let firstOutdoorRoom = optimalPath.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
-            let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
-
-            if (wingRoomId == 0) {
-                return;
-            }
-        
-            let highCloudPath;
-            let cloudRooms = [...optimalPath.rooms];
-            let cloudCommands = [...optimalPath.commands];
-        
-            let g = typeof target === 'object' ? target : `#${target}`
-        
-            let cloudPath = cy.elements().aStar({
-                root: `#3885`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-        
-            if (nexMap.settings.userPreferences.useDuanatharan) {
-                highCloudPath = cy.elements().aStar({
-                    root: `#4882`,
-                    goal: g,
-                    weight: (edge)=>{
-                        return edge.data('weight');
-                    },
-                    directed: true
-                });
-            }
-        
-            let cloudType = function (cloud, cmd) {
-                if (optimalPath.astar.distance > cloudRooms.indexOf(wingRoomId) + cloud.distance) {
-                    cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 1);
-                    cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
-                    cloudCommands.push(cmd);
-        
-                    cloud.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
-                    cloud.path.edges().forEach(e => cloudCommands.push(e.data('command')));
-                }
-            }
-        
-            if (highCloudPath && cloudPath.distance > highCloudPath.distance)
-                cloudType(highCloudPath, nexMap.settings.userPreferences.duanatharanCommand);
-            else
-                cloudType(cloudPath, nexMap.settings.userPreferences.duanatharCommand);
-        
-            return {
-                rooms: cloudRooms,
-                commands: cloudCommands,
-                distanceModifier: 0
-            }
-        },
-
         checkUniverse(astar, target) {
+            if (nexMap.logging) {
+                console.log(`nexMap: nexMap.walker.checkUniverse(${astar}, ${target})`)
+            };
+
             if (!nexMap.settings.userPreferences.useUniverse) {
                 return;
             }
@@ -1486,32 +1459,26 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (!['Jester', 'Occultist'].includes(GMCP.Status.class)) {
                 return;
             }
+            
+            // Where is the first room on the baseline path that we could use universe?
+            let firstUniverseRoomIndex = astar.path.nodes().findIndex(e => !nexMap.settings.userPreferences.antiUniverseAreas.includes(e.data('area')));
+            if (firstUniverseRoomIndex == -1) { return; }
 
-            if (nexMap.settings.userPreferences.antiUniverseAreas.includes(nexMap.currentArea)) {
-                return;
-            }
+            let universeStar = this.aStar('universe', target)
+            if (!universeStar) { return false; }
 
-            let universeRooms = [];
-            let universeCommands = [];
+            universeStar.distance +=  firstUniverseRoomIndex;
+            universeStar.type = 'universe';
+            universeStar.path = firstUniverseRoomIndex > 0 ? astar.path.slice(0,firstUniverseRoomIndex*2).merge(universeStar.path) : universeStar.path;
+            nexMap.walker.universeTarget = nexMap.universeRooms[universeStar.path.nodes()[1].data('id')];
 
-            let g = typeof target === 'object' ? target : `#${target}`
+            return universeStar;
 
-            let universePath = cy.elements().aStar({
-                root: `#universe`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-            console.log(astar.distance);
-            console.log(universePath);
             if (astar.distance > universePath.distance + 9) {       
                 universePath.path.nodes().forEach(e => universeRooms.push(e.data('id')));
                 universePath.path.edges().forEach(e => universeCommands.push(e.data('command')));
                 universeRooms.shift();
                 universeRooms.unshift(GMCP.Room.Info.num);
-                nexMap.walker.universeTarget = Object.entries(nexMap.universeRooms).find(e => e[1] == universeRooms[1])[0];
             } else {return;}
             
             return {
@@ -1522,18 +1489,56 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         },
 
+        checkClouds(astar, target) {
+            if (nexMap.logging)
+                console.log(`nexMap: nexMap.walker.checkClouds()`);
+        
+            if (!nexMap.settings.userPreferences.useDuanathar && !nexMap.settings.userPreferences.useDuanatharan) {
+                return;
+            }
+        
+            let firstOutdoorRoomIndex = astar.path.nodes().findIndex(e => 
+                !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')) &&    
+                (e.data('userData').indoors != 'y' || e.data('userData').outdoors == 'y') 
+                );
+            if (firstOutdoorRoomIndex == -1) { return false; }
+        
+            let cloudStar = this.aStar('duanathar', target);
+            cloudStar.distance +=  firstOutdoorRoomIndex;
+            cloudStar.type = 'duanathar';
+            cloudStar.path = firstOutdoorRoomIndex > 0 ? astar.path.slice(0, firstOutdoorRoomIndex*2).merge(cloudStar.path) : cloudStar.path;
+
+            let highCloudStar = false;
+            if (nexMap.settings.userPreferences.useDuanatharan) {
+                highCloudStar = this.aStar('duanatharan', target);
+                highCloudStar.distance +=  firstOutdoorRoomIndex;
+                highCloudStar.type = 'duanatharan';
+                highCloudStar.path = firstOutdoorRoomIndex > 0 ? astar.path.slice(0, firstOutdoorRoomIndex*2).merge(highCloudStar.path) : highCloudStar.path;
+            }
+
+            return highCloudStar.distance < cloudStar.distance ? highCloudStar : cloudStar;
+        },
+
         // hybridPath relies on using the in game "path track" speedwalking system. This function will find special exits
         // breaking the path track into sections to use special exits. The in game path track system will return an "unable to 
         // find a path" if there is a special exit. This will also break up paths that are greater than 100 steps away. The in 
         // game path track will not path greater than 100 rooms.
-        hybridPath() {
+        hybridPath(optimalStar) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
             }
-        
-            let nmwpc = nexMap.walker.pathCommands;
-            let nmwpr = nexMap.walker.pathRooms;
-        
+
+            let nmw = nexMap.walker;
+
+            for (let e of optimalStar.path.nodes()) {
+                nmw.pathRooms.push(e.data('id'));
+            };
+            for (let e of optimalStar.path.edges()) {
+                nmw.pathCommands.push(e.data('command'));
+            };
+            // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number before them.
+            nmw.pathRooms = nmw.pathRooms.map((e, i) => parseInt(e) > 0 ? e : nmw.pathRooms[i-1])
+
             if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
                 console.log(nmwpc);
@@ -1575,6 +1580,81 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         
             nexMap.walker.pathCommands = [...hybCmds];
             nexMap.walker.pathRooms = [...hybRm];
+        },
+
+        checkAirlord(optimalStar, target) {
+            if (nexMap.logging) {
+                console.log(`nexMap: nexMap.walker.checkAirlord(${optimalStar}, ${target})`)
+            };
+
+            if (!GMCP.Status.class.toLowerCase().includes('air')) {
+                return;
+            }
+        
+            let firstOutdoorRoom = optimalStar.astar.path.nodes().find(e => e.data().userData.indoors != 'y' && !nexMap.settings.userPreferences.antiWingAreas.includes(e.data('area')));
+            let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data('id') : 0;
+            
+            if (wingRoomId == 0) {
+                return;
+            }
+        
+            let cloudRooms = [...optimalStar.rooms];
+            let cloudCommands = [...optimalStar.commands];
+            let cloudPath = {astar: {}, command: ''};
+            let highCloudPath = {astar: {}, command: ''};
+            let stratospherePath = {astar: {}, command: ''};
+            let g = typeof target === 'object' ? target : `#${target}`
+        
+            cloudPath.astar = cy.elements().aStar({
+                root: `#3885`,
+                goal: g,
+                weight: (edge)=>{
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+            cloudPath.command = 'aero soar low';
+        
+            highCloudPath.astar = cy.elements().aStar({
+                root: `#4882`,
+                goal: g,
+                weight: (edge)=>{
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+            highCloudPath.command = 'aero soar high';
+        
+            stratospherePath.astar = cy.elements().aStar({
+                root: `#54173`,
+                goal: g,
+                weight: (edge)=>{
+                    return edge.data('weight');
+                },
+                directed: true
+            });
+            stratospherePath.command = 'aero soar stratosphere';
+        
+            let optimalCloud = [cloudPath, highCloudPath, stratospherePath].reduce((a, b) => {
+                return a?.astar?.distance < b?.astar?.distance ? a : b;
+            });
+        
+            // Added +12 to the comparison based on 4 seconds of balance at an assumed rate of 3 rooms per second.
+            if (optimalStar.astar.distance > cloudCommands.indexOf(wingRoomId) + optimalCloud.astar.distance + 15) {
+                cloudRooms.splice(cloudRooms.indexOf(wingRoomId) + 12);
+                cloudCommands.splice(cloudRooms.indexOf(wingRoomId));
+                cloudCommands.push(optimalCloud.command);
+        
+                optimalCloud.astar.path.nodes().forEach(e => cloudRooms.push(e.data('id')));
+                optimalCloud.astar.path.edges().forEach(e => cloudCommands.push(e.data('command')));
+            }
+        
+            return {
+                astar: optimalCloud,
+                rooms: cloudRooms,
+                commands: cloudCommands,
+                distanceModifier: 12 //4 second balance
+            }
         },
 
         // IN DEVELOPMENT Not currently used for anything
