@@ -1006,7 +1006,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
 
         //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
         // The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
-        // this is a work around.
+        // this is a work around. Search for the first room in the path that matches the desired area.
         areaWalk(areaID) {
             let target = cy.elements().aStar({
                 root: `#${nexMap.currentRoom}`,
@@ -1112,8 +1112,6 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         },
 
         aStar(source, target) {
-            let g = typeof target === 'object' ? target : `#${target}`
-            
             return cy.elements().aStar({
                 root: `#${source}`,
                 goal: `#${target}`,
@@ -1123,7 +1121,97 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 directed: true
             });
         },
+        determinePathBeta(src, tar) {
+            if (nexMap.logging) {
+                console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
+            };
 
+            let nmw = nexMap.walker; // I prefer to use this style as opposed to "this" outside of Classes
+
+            let source = src || GMCP.Room.Info.num;
+            let target = tar || cy.$(':selected').data('id');
+
+            if(source == target) {
+                nmw.pathing = false;
+                nmw.reset();
+                nexMap.display.notice(`Pathing complete. You're already there!`);
+                return;
+            }
+
+            nmw.destination = target;
+        
+            let astar = nmw.aStar(source, target)
+        
+            if (nexMap.logging) { console.log(astar); };
+        
+            if (!astar.found) {
+                nexMap.display.notice(`No path to ${target} found.`);
+                return;
+            };
+        
+            // Now that we have a path, create the baseline arrays for the rooms and the commands.
+            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
+            //astar.path.nodes().forEach(e => nmw.pathRooms.push(e.data('id')));
+            for(let e in astar.path.nodes()) {
+                nmw.pathRooms.push(e.data('id'));
+            };
+            // General consensus seems to be that for...of is computationally faster than the .forEach() Array function
+            //astar.path.edges().forEach(e => nmw.pathCommands.push(e.data('command')));
+            for(let e in astar.path.edges()) {
+                nmw.pathCommands.push(e.data('command'));
+            };
+        
+            // If the path is local to the area there is no need to check other fast travel options.
+            if (cy.$(`#${source}`).data('area') == cy.$(`#${target}`).data('area')) {
+                nmw.hybridPath();
+        
+                return {
+                    path: nmw.pathCommands,
+                    rawPath: nmw.pathRawCommands
+                }
+            }
+            
+
+            let gare = nmw.checkGare(astar, target);
+            let universe = nmw.checkUniverse(astar, target);
+            let base = {
+                astar: astar,
+                rooms: nmw.pathRooms,
+                commands: nmw.pathCommands,
+                distanceModifier: 0
+            }
+
+            let optimalPath = [gare, universe, base].reduce((a, b) => {
+                if (typeof a == 'undefined') {return b};
+                if (typeof b == 'undefined') {return a};
+                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
+            });
+
+            // We are checking the clouds/air after the others. there are situations where the universe/gare
+            // path would provide a quicker outdoor exit that the clouds could then utilize. An example
+            // is deep in azdun, the universe+cloud combo typically is faster.
+            let cloud = nmw.checkClouds(optimalPath, target);
+            let cloudBase = nmw.checkClouds(base, target);
+            let air = nmw.checkAirlord(optimalPath, target);
+            optimalPath = [cloud, air, cloudBase, optimalPath].reduce((a, b) => {
+                if (typeof a == 'undefined') {return b};
+                if (typeof b == 'undefined') {return a};
+                return (a?.commands?.length + a?.distanceModifier) < (b?.commands?.length + b?.distanceModifier) ? a : b;
+            });
+
+            nmw.pathRawCommands = [...nmw.pathCommands];
+            nmw.pathRawRooms = [...nmw.pathRooms];
+        
+            nmw.pathCommands = optimalPath.commands;
+            nmw.pathRooms = optimalPath.rooms;
+
+            nmw.hybridPath();
+        
+            return {
+                path: nmw.pathCommands,
+                rawPath: nmw.pathRawCommands
+            }
+        },
         determinePath(s, t) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.determinePath(${s}, ${t})`)
@@ -1290,53 +1378,41 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
         },
 
-        checkGare(astar, target) {
+        checkGare(astar, tar) {
             if (nexMap.logging) {
-                console.log(`nexMap: nexMap.walker.gare(${astar}, ${target})`)
+                console.log(`nexMap: nexMap.walker.gare(${astar}, ${tar})`)
             };
 
             if (!GMCP.Status.class.includes('Dragon')) {
-                return;
+                return false;
             }
         
-            let firstGareRoom = astar.path.nodes().find(e => !nexMap.settings.userPreferences.antiGareAreas.includes(e.data('area')));
-            let gareRoomId = firstGareRoom ? firstGareRoom.data('id') : 0;
+            // Where is the first room on the baseline path that we could use Gare?
+            let firstGareRoomIndex = astar.path.nodes().findIndex(e => !nexMap.settings.userPreferences.antiGareAreas.includes(e.data('area')));
         
-            if (gareRoomId == 0) {
-                return;
-            }
-
-            let nmw = nexMap.walker;
-            let gareRooms = [...nmw.pathRooms];
-            let gareCommands = [...nmw.pathCommands];
-        
-            let g = typeof target === 'object' ? target : `#${target}`
-        
-            let garePath = cy.elements().aStar({
-                root: `#12695`,
-                goal: g,
-                weight: (edge)=>{
-                    return edge.data('weight');
-                },
-                directed: true
-            });
-        
-            // Pierce the veil assumed at 3 seconds equilibrium at 3 rooms per second.
-            if (astar.distance > gareCommands.indexOf(gareRoomId) + garePath.distance + 10) {
-                gareRooms.splice(gareRooms.indexOf(gareRoomId) + 1);
-                gareCommands.splice(gareRooms.indexOf(gareRoomId));
-                gareCommands.push('pierce the veil');
-        
-                garePath.path.nodes().forEach(e => gareRooms.push(e.data('id')));
-                garePath.path.edges().forEach(e => gareCommands.push(e.data('command')));
+            if (firstGareRoomIndex == -1) {
+                return false;
             }
             
-            return {
-                astar: garePath,
-                rooms: gareRooms,
-                commands: gareCommands,
-                distanceModifier: 10
+            let target = typeof tar === 'object' ? tar : `#${tar}`
+        
+            // Gare room is #12695
+            let gareStar = nmw.aStar(12695, target);
+            if (!gareStar) { return false; }
+
+            // Pierce the veil assumed at 3 seconds equilibrium at 3 rooms per second.
+            gareStar.distance += 10;
+                   
+            if (astar.distance > firstGareRoomIndex + gareStar.distance) {
+                gareRooms.splice(firstGareRoomIndex + 1);
+                gareCommands.splice(firstGareRoomIndex);
+                gareCommands.push('pierce the veil');
+        
+                gareStar.path.nodes().forEach(e => gareRooms.push(e.data('id')));
+                gareStar.path.edges().forEach(e => gareCommands.push(e.data('command')));
             }
+            
+            return gareStar
         },
 
         checkClouds(optimalPath, target) {
@@ -1451,8 +1527,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         // find a path" if there is a special exit. This will also break up paths that are greater than 100 steps away. The in 
         // game path track will not path greater than 100 rooms.
         hybridPath() {
-            if (nexMap.logging)
+            if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
+            }
         
             let nmwpc = nexMap.walker.pathCommands;
             let nmwpr = nexMap.walker.pathRooms;
