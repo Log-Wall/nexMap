@@ -1,7 +1,7 @@
 'use strict';
-var cy = {};
-var nexMap = {
-    version: '2.2.3',
+const cy = {};
+const nexMap = {
+    version: '3.0.1',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -344,6 +344,7 @@ var nexMap = {
             console.log(`nexMap: nexMap.changeArea(${area} ${z})`);
     
         if (area == nexMap.currentArea && z == nexMap.currentZ && !override) {
+            if (nexMap.logging) { console.log(`nexMap: nexMap.changeArea() returned`); }
             return;
         }
     
@@ -449,7 +450,7 @@ var nexMap = {
                         let xt;
                         let newEdge;
                         room.exits.forEach(exit => {
-                            xt = nexMap.shortDirs[exit.name] ? nexMap.shortDirs[exit.name] : exit.name;
+                            xt = nexMap.longDirs[exit.name] ? nexMap.longDirs[exit.name] : exit.name;
                             if (cy.$(`#${room.id}-${exit.exitId}`).length == 0) {
                                 newEdge = {
                                     group: 'edges',
@@ -562,11 +563,11 @@ var nexMap = {
                     data: {
                         id: `universe-${nexMap.universeRooms.main[e]}`,
                         source: 'universe',
-                        target: nexMap.universeRooms.main[e],
+                        target: e,
                         weight: 9,
                         area: 'universe',
                         command: 'fling universe at ground',
-                        universe: e,
+                        universe: nexMap.universeRooms.main[e],
                         door: false,
                         z: 1
                     }
@@ -603,11 +604,11 @@ var nexMap = {
                     data: {
                         id: `universeMeropis-${nexMap.universeRooms.meropis[e]}`,
                         source: 'universeMeropis',
-                        target: nexMap.universeRooms.meropis[e],
+                        target: e,
                         weight: 9,
                         area: 'universe',
                         command: 'fling universe at ground',
-                        universe: e,
+                        universe: nexMap.universeRooms.meropis[e],
                         door: false,
                         z: 1
                     }
@@ -833,7 +834,8 @@ var nexMap = {
                     global: false,
                     //url: 'https://cdn.jsdelivr.net/gh/IRE-Mudlet-Mapping/AchaeaCrowdmap/Map/map_mini.json',
                     //url: 'https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/mudletmap-min.json',
-                    url: "https://cdn.jsdelivr.net/gh/IRE-Mudlet-Mapping/AchaeaCrowdmap@gh-pages/Map/map_mini.json",
+                    //url: "https://cdn.jsdelivr.net/gh/IRE-Mudlet-Mapping/AchaeaCrowdmap@gh-pages/Map/map_mini.json",
+                    url: "https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json",
                     dataType: "json",
                     success: function (data) {
                         nexMap.mudmap = data;
@@ -1281,7 +1283,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 nmw.stepCommand = nmw.pathCommands[index];
             }
             if (nexMap.logging) {console.log(nmw.stepCommand)};
-            //send_direct(`${nmw.stepCommand}`);
+            send_direct(`${nmw.stepCommand}`);
         },
 
         aStar(source, target) {
@@ -1474,15 +1476,15 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 console.log(nmwpr);
             }
 
-            // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number before them.
-            nmwpr = nmwpr.map((e, i) => parseInt(e) > 0 ? e : nmwpr[i-1] || GMCP.Room.Info.num)
+            // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number after them.
+            nmwpr = nmwpr.map((e, i) => parseInt(e) > 0 ? e : nmwpr[i+1] || GMCP.Room.Info.num)
 
             let hybCmds = [];
             let hybRm = [nmwpr[0]];
             let pathTrackDistance = 0;
 
             if (!nexMap.shortDirs[nmwpc[0]]) {
-                hybRm.push(nmwpr[1]);
+                hybRm.push(nexMap.currentRoom);
                 hybCmds.push(nmwpc[0]);
             }
             for (let i = 1; i < nmwpc.length; i++) {
