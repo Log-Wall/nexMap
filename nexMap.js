@@ -690,7 +690,7 @@ const nexMap = {
             }
             nexGraph.push(newEdge);
             
-            // Duanathar Node and Exit
+            // Duanatharan Node and Exit
             newNode = {
                 group: 'nodes',
                 data: {
@@ -716,6 +716,80 @@ const nexMap = {
                 group: 'edges',
                 data: {
                     id: 'duanatharan-4882',
+                    source: 'duanatharan',
+                    target: '4882',
+                    weight: 1,
+                    area: 'imaginary',
+                    command: nexMap.settings.userPreferences.duanatharanCommand,
+                    door: false,
+                    z: 1
+                }
+            }
+            nexGraph.push(newEdge);
+
+            // Duanathar MEROPIS Node and Exit
+            newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'duanatharMeropis',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
+                    environment: 'Skies',
+                    name: 'Duanathar',
+                    continent: 'Main',
+                    userData: {indoors: 'y'},
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            newEdge = {
+                group: 'edges',
+                data: {
+                    id: 'duanatharMeropis-3885',
+                    source: 'duanathar',
+                    target: '3885',
+                    weight: 1,
+                    area: 'imaginary',
+                    command: nexMap.settings.userPreferences.duanatharCommand,
+                    door: false,
+                    z: 1
+                }
+            }
+            nexGraph.push(newEdge);
+            
+            // Duanatharan MEROPIS Node and Exit
+            newNode = {
+                group: 'nodes',
+                data: {
+                    id: 'duanatharanMeropis',
+                    area: 'imaginary',
+                    areaName: 'imaginary',
+                    environment: 'Skies',
+                    name: 'Duanatharan',
+                    continent: 'Main',
+                    userData: {indoors: 'y'},
+                    z: 1,
+                },
+                position: {
+                    x: 1 * 20,
+                    y: 1 * -20,
+                    z: 1
+                },
+                classes: [`environmentskies`],
+                locked: true,
+            }
+            nexGraph.push(newNode);
+            newEdge = {
+                group: 'edges',
+                data: {
+                    id: 'duanatharanMeropis-4882',
                     source: 'duanatharan',
                     target: '4882',
                     weight: 1,
@@ -1396,18 +1470,25 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (!['Jester', 'Occultist'].includes(GMCP.Status.class)) {
                 return;
             }
+
+            let meropis = false;
+            if (nexMap.areaContinents.Meropis.includes(nexMap.currentArea)) {
+                meropis = 'Meropis';
+            }
             
             // Where is the first room on the baseline path that we could use universe?
             let firstUniverseRoomIndex = astar.path.nodes().findIndex(e => !nexMap.settings.userPreferences.antiUniverseAreas.includes(e.data('area')));
             if (firstUniverseRoomIndex == -1) { return; }
-
+            if (nexMap.logging) {
+                console.log(`firstUniverseRoomIndex`, firstUniverseRoomIndex);
+            };
             let universeStar = this.aStar('universe', target)
             if (!universeStar) { return false; }
 
             universeStar.distance +=  firstUniverseRoomIndex;
             universeStar.type = 'universe';
             universeStar.path = firstUniverseRoomIndex > 0 ? astar.path.slice(0, (firstUniverseRoomIndex * 2) + 1).merge(universeStar.path) : universeStar.path;
-            nexMap.walker.universeTarget = nexMap.universeRooms[universeStar.path.nodes()[1].data('id')];
+            nexMap.walker.universeTarget = nexMap.universeRooms[meropis ? 'meropis' : 'main'][universeStar.path.nodes()[1].data('id')];
 
             return universeStar;
         },
@@ -1460,55 +1541,61 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
             }
 
-            let nmwpc = nexMap.walker.pathCommands;
-            let nmwpr = nexMap.walker.pathRooms;
+            let baseCmds = [];
+            let baseRooms = [];
 
             for (let e of optimalStar.path.nodes()) {
-                nmwpr.push(e.data('id'));
+                baseRooms.push(e.data('id'));
             };
             for (let e of optimalStar.path.edges()) {
-                nmwpc.push(e.data('command'));
+                baseCmds.push(e.data('command'));
             };
-            
+    
             if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
-                console.log(nmwpc);
-                console.log(nmwpr);
+                console.log(baseCmds);
+                console.log(baseRooms);
             }
 
             // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number after them.
-            nmwpr = nmwpr.map((e, i) => parseInt(e) > 0 ? e : nmwpr[i+1] || GMCP.Room.Info.num)
+            baseRooms = baseRooms.map((e, i) => parseInt(e) > 0 ? e : baseRooms[i+1] || GMCP.Room.Info.num)
 
             let hybCmds = [];
-            let hybRm = [nmwpr[0]];
+            let hybRm = [nexMap.currentRoom];
             let pathTrackDistance = 0;
 
-            if (!nexMap.shortDirs[nmwpc[0]]) {
-                hybRm.push(nexMap.currentRoom);
-                hybCmds.push(nmwpc[0]);
+            if (!nexMap.shortDirs[baseCmds[0]]) {
+                hybRm.push(baseRooms[1]);
+                hybCmds.push(baseCmds[0]);
             }
-            for (let i = 1; i < nmwpc.length; i++) {
-                if (!nexMap.shortDirs[nmwpc[i]]) {
-                    hybRm.push(nmwpr[i]);
-                    hybCmds.push(`path track ${nmwpr[i]}`);
+    
+            for (let i = 1; i < baseCmds.length-1; i++) {
+                ++pathTrackDistance;
 
-                    hybRm.push(nmwpr[i+1]);
-                    hybCmds.push(nmwpc[i]);
+                if (!nexMap.shortDirs[baseCmds[i]]) {
+                    hybRm.push(baseRooms[i+1]);
+                    hybCmds.push(baseCmds[i]);
+                    continue;
+                }
+                
+                if (nexMap.shortDirs[baseCmds[i]] && !nexMap.shortDirs[baseCmds[i+1]]) {
+                    hybRm.push(baseRooms[i+1]);
+                    hybCmds.push(`path track ${baseRooms[i+1]}`);
 
                     pathTrackDistance = 0;
-                } else {
-                    ++pathTrackDistance;
+                    continue;
                 }
 
                 if (pathTrackDistance > 90) {
-                    hybRm.push(nmwpr[i]);
-                    hybCmds.push(`path track ${nmwpr[i]}`);
+                    hybRm.push(baseRooms[i]);
+                    hybCmds.push(`path track ${baseRooms[i]}`);
                     pathTrackDistance = 0;
                 }
             }
-            if (nexMap.shortDirs[nmwpc[nmwpc.length-1]]) {
-                hybRm.push(nmwpr[nmwpr.length-1]);
-                hybCmds.push(`path track ${nmwpr[nmwpr.length-1]}`);
+    
+            if (nexMap.shortDirs[baseCmds[baseCmds.length-1]]) {
+                hybRm.push(baseRooms[baseRooms.length-1]);
+                hybCmds.push(`path track ${baseRooms[baseRooms.length-1]}`);
             }
 
             if (nexMap.logging) {
@@ -1519,6 +1606,12 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         
             nexMap.walker.pathCommands = [...hybCmds];
             nexMap.walker.pathRooms = [...hybRm];
+
+            if (nexMap.logging) {
+                console.log('FINAL nexMap.walker.hybridPath() nmwpc, nmwpr');
+                console.log(nexMap.walker.pathCommands);
+                console.log(nexMap.walker.pathRooms);
+            }
         },
 
         checkAirlord(optimalStar, target) {
@@ -1675,6 +1768,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.reset();
         }
     },
+
     display: {
         pageBreak: 20,
         pageIndex: 0,
@@ -2537,6 +2631,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             });
         }
     },
+    
     aliases: {
         call: function (alias, args = false) {
             if (!Object.keys(nexMap.aliases).includes(alias)) {
