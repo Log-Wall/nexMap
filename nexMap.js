@@ -752,9 +752,9 @@ const nexMap = {
             newEdge = {
                 group: 'edges',
                 data: {
-                    id: 'duanatharMeropis-3885',
+                    id: 'duanatharMeropis-51188',
                     source: 'duanathar',
-                    target: '3885',
+                    target: '51188',
                     weight: 1,
                     area: 'imaginary',
                     command: nexMap.settings.userPreferences.duanatharCommand,
@@ -789,9 +789,9 @@ const nexMap = {
             newEdge = {
                 group: 'edges',
                 data: {
-                    id: 'duanatharanMeropis-4882',
+                    id: 'duanatharanMeropis-51603',
                     source: 'duanatharan',
-                    target: '4882',
+                    target: '51603',
                     weight: 1,
                     area: 'imaginary',
                     command: nexMap.settings.userPreferences.duanatharanCommand,
