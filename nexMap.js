@@ -148,7 +148,7 @@ const nexMap = {
                     cy.center();
                 }
 
-                nexMap.changeRoom(GMCP.Room.Info.num);
+                await nexMap.changeRoom(GMCP.Room.Info.num);
                 
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
                     this.mongo.collect();
@@ -803,6 +803,11 @@ const nexMap = {
 
             cy.batch( () => {
                 cy.add(nexGraph);
+
+                // Add a class for dynamic Nur exits. This is a clunky place/way to do it.
+                cy.$('#45182-55588').addClass('nurRift');
+                cy.$('#55588-45182').addClass('nurRift');
+
                 nexMap.wormholes = cy.$('.wormhole');
                 nexMap.sewergrates = cy.$('.sewergrate');
                 nexMap.settings.toggleWormholes();
@@ -1222,8 +1227,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 return;
             }
             setTimeout(function(){
-                nexMap.changeRoom(nexMap.currentRoom);
-                nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+                await Promise.all([
+                    nexMap.changeRoom(nexMap.currentRoom),
+                    nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
+                ])
             }, 500);  
         },
         stylesheet: []
@@ -1241,7 +1248,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         universeTarget: false,
         clientEcho: client.echo_input,
 
-        speedWalk(s, t) {
+        async speedWalk(s, t) {
             if (nexMap.logging) {
                 console.log('nexMap: nexMap.walker.speedwalk()')
             };
@@ -1249,7 +1256,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             nexMap.walker.pathingStartTime = Date.now();
             nexMap.walker.clientEcho = client.echo_input;
             client.echo_input = false;
-            nexMap.walker.determinePath(s, t);
+            await nexMap.walker.determinePath(s, t);
             nexMap.walker.step();
         },
 
@@ -1360,7 +1367,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             send_direct(`${nmw.stepCommand}`);
         },
 
-        aStar(source, target) {
+        async aStar(source, target) {
             return cy.elements().aStar({
                 root: `#${source}`,
                 goal: `#${target}`,
@@ -1371,7 +1378,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             });
         },
 
-        determinePath(src, tar) {
+        async determinePath(src, tar) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.determinePath(${src}, ${tar})`)
             };
@@ -1392,7 +1399,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
 
             nmw.destination = target;
         
-            let baseStar = nmw.aStar(source, target);
+            let baseStar = await nmw.aStar(source, target);
             baseStar.type = 'base';
         
             if (nexMap.logging) { console.log(baseStar); };
@@ -1404,10 +1411,15 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 return true;
             }
             
-            let gare = nmw.checkGare(baseStar, target);
-            let universe = nmw.checkUniverse(baseStar, target);
-            let wings = nmw.checkClouds(baseStar, target);
-
+            //let gare = nmw.checkGare(baseStar, target);
+            //let universe = nmw.checkUniverse(baseStar, target);
+            //let wings = nmw.checkClouds(baseStar, target);
+            let gare, universe, wings;
+            [gare, universe, wings] = await Promise.all([
+                nmw.checkGare(baseStar, target), 
+                nmw.checkUniverse(baseStar, target),
+                nmw.checkClouds(baseStar, target)
+            ])
             // We include wings in the first round of checks for situations such as the 
             // first outdoor room is 1 step away, but it could also be 100 steps away.
             let optimalStar = [gare, universe, wings, baseStar].reduce((a, b) => {
@@ -1425,16 +1437,16 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
             if (['universe', 'gare'].includes(optimalStar.type)) {
-                wings = nmw.checkClouds(optimalStar, target);
+                wings = await nmw.checkClouds(optimalStar, target);
                 optimalStar = wings.distance < optimalStar.distance ? wings : optimalStar;
             }
 
-            nmw.hybridPath(optimalStar);
+            await nmw.hybridPath(optimalStar);
         
             return true
         },
 
-        checkGare(astar, tar) {
+        async checkGare(astar, tar) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.checkGare(${astar}, ${tar})`)
             };
@@ -1448,7 +1460,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (firstGareRoomIndex == -1) { return false; }
 
             // Gare room is #12695
-            let gareStar = this.aStar('gare', tar);
+            let gareStar = await this.aStar('gare', tar);
             if (!gareStar) { return false; }
 
             gareStar.distance += firstGareRoomIndex;
@@ -1458,7 +1470,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             return gareStar
         },
 
-        checkUniverse(astar, target) {
+        async checkUniverse(astar, target) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.checkUniverse(${astar}, ${target})`)
             };
@@ -1482,7 +1494,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (nexMap.logging) {
                 console.log(`firstUniverseRoomIndex`, firstUniverseRoomIndex);
             };
-            let universeStar = this.aStar('universe', target)
+            let universeStar = await this.aStar('universe', target)
             if (!universeStar) { return false; }
 
             universeStar.distance +=  firstUniverseRoomIndex;
@@ -1493,7 +1505,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             return universeStar;
         },
 
-        checkClouds(astar, target) {
+        async checkClouds(astar, target) {
             // Clouds 3885
             // High clouds 4882
             // Meropis clouds room 51188
@@ -1516,14 +1528,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 );
             if (firstOutdoorRoomIndex == -1) { return false; }
         
-            let cloudStar = this.aStar('duanathar'+meropis, target);
+            let cloudStar = await this.aStar('duanathar'+meropis, target);
             cloudStar.distance +=  firstOutdoorRoomIndex;
             cloudStar.type = 'duanathar';
             cloudStar.path = firstOutdoorRoomIndex > 0 ? astar.path.slice(0, (firstOutdoorRoomIndex * 2) + 1).merge(cloudStar.path) : cloudStar.path;
 
             let highCloudStar = false;
             if (nexMap.settings.userPreferences.useDuanatharan) {
-                highCloudStar = this.aStar('duanatharan'+meropis, target);
+                highCloudStar = await this.aStar('duanatharan'+meropis, target);
                 highCloudStar.distance +=  firstOutdoorRoomIndex;
                 highCloudStar.type = 'duanatharan';
                 highCloudStar.path = firstOutdoorRoomIndex > 0 ? astar.path.slice(0, (firstOutdoorRoomIndex * 2) + 2).merge(highCloudStar.path) : highCloudStar.path;
@@ -1536,7 +1548,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         // breaking the path track into sections to use special exits. The in game path track system will return an "unable to 
         // find a path" if there is a special exit. This will also break up paths that are greater than 100 steps away. The in 
         // game path track will not path greater than 100 rooms.
-        hybridPath(optimalStar) {
+        async hybridPath(optimalStar) {
             if (nexMap.logging) {
                 console.log(`nexMap: nexMap.walker.hybridPath()`);
             }
@@ -1563,13 +1575,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let hybCmds = [];
             let hybRm = [nexMap.currentRoom];
             let pathTrackDistance = 0;
-
-            if (!nexMap.shortDirs[baseCmds[0]]) {
-                hybRm.push(baseRooms[1]);
-                hybCmds.push(baseCmds[0]);
-            }
-    
-            for (let i = 1; i < baseCmds.length-1; i++) {
+            
+            for (let i = 0; i < baseCmds.length; i++) {
                 ++pathTrackDistance;
 
                 if (!nexMap.shortDirs[baseCmds[i]]) {
@@ -1592,11 +1599,6 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     pathTrackDistance = 0;
                 }
             }
-    
-            if (nexMap.shortDirs[baseCmds[baseCmds.length-1]]) {
-                hybRm.push(baseRooms[baseRooms.length-1]);
-                hybCmds.push(`path track ${baseRooms[baseRooms.length-1]}`);
-            }
 
             if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() hybCmds, hybRm');
@@ -1612,6 +1614,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 console.log(nexMap.walker.pathCommands);
                 console.log(nexMap.walker.pathRooms);
             }
+
+            return true;
         },
 
         checkAirlord(optimalStar, target) {
@@ -3381,7 +3385,8 @@ let stylesheet = [
 nexMap.styles.stylesheet = stylesheet;
 
 /* PUSHING UPDATES TO THE NXS FILE DIRECTLY
-reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
+reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `
+GMCP.Room = {};
 GMCP.Char = {
     Items: {}
 };
@@ -3389,7 +3394,8 @@ $.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
 $.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
 console.log('called nexMap CDN');
 reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
-reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
+reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));
+`
 
 reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],null,'trigger','nexmap')
 
