@@ -153,7 +153,7 @@ const nexMap = {
                 await nexMap.changeRoom(GMCP.Room.Info.num);
                 
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
-                    this.mongo.collect();
+                    await this.mongo.collect();
                 }
 
                 if(nexMap.walker.pathing)
@@ -994,7 +994,7 @@ const nexMap = {
 GMCP.Char = {
     Items: {}
 };
-$.getScript("https://unpkg.com/realm-web@1.2.0/dist/bundle.iife.js");
+$.getScript("https://unpkg.com/realm-web/dist/bundle.iife.js");
 $.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
 console.log('called nexMap CDN');
 reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
@@ -1247,6 +1247,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             client.echo_input = false;
             await nexMap.walker.determinePath(s, t);
             nexMap.walker.step();
+            console.log("Path calculations: " + (Date.now() - nexMap.walker.pathingStartTime)/1000)
         },
 
         //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
@@ -2733,45 +2734,26 @@ if (nexMap.logging) {
 
     mongo: {
         entries: [],
-        collect() {
+        async collect() {
             //Area filter
-            if (GMCP.CurrentArea.id == null) {return;}
+            if (GMCP.CurrentArea.id == null) { return; }
+
             // Get all denizens in the current room
             let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib == 'm' && !this.ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
+            if (roomDenizens.length == 0) { return; }
+            
             let newDenizens = [];
             let roamers = [];
             let curRoom = GMCP.Room.Info.num;
 
-            if(roomDenizens.length>0) {
-                for(let denizen of roomDenizens) {
-                    denizen.room = [curRoom];
-                    denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
-                    denizen.time = client.Date();
-                    denizen.user = {
-                        id: this.user.id,
-                        name: GMCP.Status.name
-                    }
-                    //this.entries.push(denizen);
-                    this.db.updateOne({'id':denizen.id}, denizen);
-                }
-            }
-            /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
-                the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
-                the correct room number as they are found. This will erase all roamers room numbers. At some point
-                in the future we will reenable roaming room collection.
+            // Remove any denizens that are already in the entries
+            newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
+            if (this.logging) {console.log('newDenizens:');console.log(newDenizens);}
             
-            if(roomDenizens.length>0) {
-                // Remove any denizens that are already in the entries
-                newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
-                if (this.logging) {console.log('newDenizens:');console.log(newDenizens);}
-                // Find denizens that already have entries, but are in a new room.
-                roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(curRoom)));
-                if (this.logging) {console.log('roamers:');console.log(roamers);}
-            }
-            else
-                return;
-    
-            // Add room number and area to each denizen object
+            // Find denizens that already have entries, but are in a new room.
+            roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(curRoom)));
+            if (this.logging) {console.log('roamers:');console.log(roamers);}
+
             for(let denizen of newDenizens) {
                 denizen.room = [curRoom];
                 denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
@@ -2781,16 +2763,23 @@ if (nexMap.logging) {
                     name: GMCP.Status.name
                 }
                 this.entries.push(denizen);
-                this.db.insertOne(denizen);           
+                await this.db.insertOne(denizen);           
             }
     
+            for(let denizen of roamers) {
+                await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom]}})
+            }   
+            /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
+                the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
+                the correct room number as they are found. This will erase all roamers room numbers. At some point
+                in the future we will reenable roaming room collection.
             for(let denizen of roamers) {
                 let denizenUpdate = this.entries.find(x => x.id == denizen.id)
                 denizenUpdate.room.push(curRoom);
                 this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
-            }   
-            */
+            } */   
         },
+
         async startUp() {
             console.log('Mongo startup called');
 
