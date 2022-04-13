@@ -19,3 +19,19 @@ function fn2workerURL(fn) {
     let blob = new Blob(['('+fn.toString()+')()'], {type: 'text/javascript'})
     return URL.createObjectURL(blob)
   }
+
+console.table(await nexMap.mongo.db.aggregate([
+    {
+        $group: {
+            _id: "$user.name",
+            total: {
+                $sum: 1
+            }
+        }
+    },
+    {
+        $sort: {
+            total: -1
+        }
+    }
+]))
