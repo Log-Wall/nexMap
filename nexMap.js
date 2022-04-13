@@ -132,7 +132,9 @@ const nexMap = {
         nexMap.mudmap.areas.find(e=>e.name == 'Ghezavat Commune').rooms.push(JSON.parse('{"coordinates":[4,3,-1],"environment":2,"exits":[{"exitId":58881,"name":"southwest"}],"id":58306,"name":"A landscape of shifting sand","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
     },
     
-    onGMCP(method, args) {
+    // This should be removed and integrated into a global onGMCP eventHandler.
+    // I don't like having a separate onGMCP function for every package.
+    async onGMCP(method, args) {
         switch(method) {
             case 'Room.Info':
                 GMCP.Room.Info = args;
@@ -147,7 +149,7 @@ const nexMap = {
                     nexMap.styles.refresh();
                     cy.center();
                 }
-
+                
                 await nexMap.changeRoom(GMCP.Room.Info.num);
                 
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
@@ -535,7 +537,7 @@ const nexMap = {
             });
 
             // Universe Tarot Node and Exits
-            let newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'universe',
@@ -554,11 +556,11 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
+            })
+
             for(let e of Object.keys(nexMap.universeRooms.main))
             {
-                let newEdge = {
+                nexGraph.push({
                     group: 'edges',
                     data: {
                         id: `universe-${nexMap.universeRooms.main[e]}`,
@@ -571,12 +573,11 @@ const nexMap = {
                         door: false,
                         z: 1
                     }
-                }
-                nexGraph.push(newEdge);
+                });
             }
 
             // Universe Meropis Tarot Node and Exits
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'universeMeropis',
@@ -595,11 +596,10 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
+            });
             for(let e of Object.keys(nexMap.universeRooms.meropis))
             {
-                let newEdge = {
+                nexGraph.push({
                     group: 'edges',
                     data: {
                         id: `universeMeropis-${nexMap.universeRooms.meropis[e]}`,
@@ -612,12 +612,11 @@ const nexMap = {
                         door: false,
                         z: 1
                     }
-                }
-                nexGraph.push(newEdge);
+                });
             }
 
             // Pierce the veil Node and Exit
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'gare',
@@ -636,9 +635,8 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
-            let newEdge = {
+            });
+            nexGraph.push({
                 group: 'edges',
                 data: {
                     id: 'gare-12695',
@@ -650,11 +648,10 @@ const nexMap = {
                     door: false,
                     z: 1
                 }
-            }
-            nexGraph.push(newEdge);
+            });
     
             // Duanathar Node and Exit
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'duanathar',
@@ -673,9 +670,8 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
-            newEdge = {
+            });
+            nexGraph.push({
                 group: 'edges',
                 data: {
                     id: 'duanathar-3885',
@@ -687,11 +683,10 @@ const nexMap = {
                     door: false,
                     z: 1
                 }
-            }
-            nexGraph.push(newEdge);
+            });
             
             // Duanatharan Node and Exit
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'duanatharan',
@@ -710,9 +705,8 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
-            newEdge = {
+            });
+            nexGraph.push({
                 group: 'edges',
                 data: {
                     id: 'duanatharan-4882',
@@ -724,11 +718,10 @@ const nexMap = {
                     door: false,
                     z: 1
                 }
-            }
-            nexGraph.push(newEdge);
+            });
 
             // Duanathar MEROPIS Node and Exit
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'duanatharMeropis',
@@ -747,13 +740,12 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
-            newEdge = {
+            });
+            nexGraph.push({
                 group: 'edges',
                 data: {
                     id: 'duanatharMeropis-51188',
-                    source: 'duanathar',
+                    source: 'duanatharMeropis',
                     target: '51188',
                     weight: 1,
                     area: 'imaginary',
@@ -761,11 +753,10 @@ const nexMap = {
                     door: false,
                     z: 1
                 }
-            }
-            nexGraph.push(newEdge);
+            });
             
             // Duanatharan MEROPIS Node and Exit
-            newNode = {
+            nexGraph.push({
                 group: 'nodes',
                 data: {
                     id: 'duanatharanMeropis',
@@ -784,13 +775,12 @@ const nexMap = {
                 },
                 classes: [`environmentskies`],
                 locked: true,
-            }
-            nexGraph.push(newNode);
-            newEdge = {
+            });
+            nexGraph.push({
                 group: 'edges',
                 data: {
                     id: 'duanatharanMeropis-51603',
-                    source: 'duanatharan',
+                    source: 'duanatharanMeropis',
                     target: '51603',
                     weight: 1,
                     area: 'imaginary',
@@ -798,8 +788,7 @@ const nexMap = {
                     door: false,
                     z: 1
                 }
-            }
-            nexGraph.push(newEdge);
+            });
 
             cy.batch( () => {
                 cy.add(nexGraph);
@@ -1226,7 +1215,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 nexMap.display.notice(`nexMap not loaded. Please run "nm load".`);
                 return;
             }
-            setTimeout(function(){
+            setTimeout(async function(){
                 await Promise.all([
                     nexMap.changeRoom(nexMap.currentRoom),
                     nexMap.changeArea(nexMap.currentArea, nexMap.currentZ, true)
@@ -1562,7 +1551,10 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             for (let e of optimalStar.path.edges()) {
                 baseCmds.push(e.data('command'));
             };
-    
+
+    if (!nexMap.shortDirs[baseCmds[0]]) {
+        baseRooms.unshift(GMCP.Room.Info.num);
+    }
             if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
                 console.log(baseCmds);
@@ -1570,8 +1562,13 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
 
             // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number after them.
-            baseRooms = baseRooms.map((e, i) => parseInt(e) > 0 ? e : baseRooms[i+1] || GMCP.Room.Info.num)
-
+            //baseRooms = baseRooms.map((e, i) => parseInt(e) > 0 ? e : baseRooms[i+1] || GMCP.Room.Info.num)
+    baseRooms = baseRooms.filter(e => parseInt(e) > 0)
+if (nexMap.logging) {
+                console.log('nexMap.walker.hybridPath() SCRUBBED');
+                console.log(baseCmds);
+                console.log(baseRooms);
+            }
             let hybCmds = [];
             let hybRm = [nexMap.currentRoom];
             let pathTrackDistance = 0;
@@ -1586,6 +1583,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 }
                 
                 if (nexMap.shortDirs[baseCmds[i]] && !nexMap.shortDirs[baseCmds[i+1]]) {
+                    console.log({i})
                     hybRm.push(baseRooms[i+1]);
                     hybCmds.push(`path track ${baseRooms[i+1]}`);
 
