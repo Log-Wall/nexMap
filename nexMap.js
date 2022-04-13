@@ -147,7 +147,7 @@ const nexMap = {
                 } else if (!nexMap_tab.active) {
                     nexMap_tab.activate();
                     nexMap.styles.refresh();
-                    cy.center();
+                    cy.center(`#${GMCP.Room.Info.num}`);
                 }
                 
                 await nexMap.changeRoom(GMCP.Room.Info.num);
@@ -2755,6 +2755,7 @@ if (nexMap.logging) {
             if (this.logging) {console.log('roamers:');console.log(roamers);}
 
             for(let denizen of newDenizens) {
+                denizen.id = parseInt(denizen.id);
                 denizen.room = [curRoom];
                 denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
                 denizen.time = client.Date();
