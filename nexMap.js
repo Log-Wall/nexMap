@@ -1133,7 +1133,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             };
             $('#cy').css({
                 id: 'cy',
-                'background-image': ' url(/includes/images/windows/map-background.jpg)',
+                //'background-image': ' url(/includes/images/windows/map-background.jpg)',
                 width: '100%',
                 height: 'calc(100% - 44px)',
                 position: 'absolute',
@@ -1234,6 +1234,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
         delay: false,
         destination: 0,
         stepCommand: '',
+        placeHolderRooms: ['duanathar', 'duanatharMeropis', 'universe', 'universeMeropis', 'gare'],
         universeTarget: false,
         clientEcho: client.echo_input,
 
@@ -1553,9 +1554,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 baseCmds.push(e.data('command'));
             };
 
-    if (!nexMap.shortDirs[baseCmds[0]]) {
-        baseRooms.unshift(GMCP.Room.Info.num);
-    }
+            if (!nexMap.shortDirs[baseCmds[0]] && !parseInt(baseRooms[0])) {
+                baseRooms.unshift(GMCP.Room.Info.num);
+            }
             if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
                 console.log(baseCmds);
@@ -1564,14 +1565,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
 
             // This will overwrite the imaginary rooms like "Universe" "Gare" with the room number after them.
             //baseRooms = baseRooms.map((e, i) => parseInt(e) > 0 ? e : baseRooms[i+1] || GMCP.Room.Info.num)
-    baseRooms = baseRooms.filter(e => parseInt(e) > 0)
-if (nexMap.logging) {
+            baseRooms = baseRooms.filter(e => parseInt(e) > 0)
+            if (nexMap.logging) {
                 console.log('nexMap.walker.hybridPath() SCRUBBED');
                 console.log(baseCmds);
                 console.log(baseRooms);
             }
             let hybCmds = [];
-            let hybRm = [nexMap.currentRoom];
+            let hybRm = [GMCP.Room.Info.num];
             let pathTrackDistance = 0;
             
             for (let i = 0; i < baseCmds.length; i++) {
@@ -1584,7 +1585,6 @@ if (nexMap.logging) {
                 }
                 
                 if (nexMap.shortDirs[baseCmds[i]] && !nexMap.shortDirs[baseCmds[i+1]]) {
-                    console.log({i})
                     hybRm.push(baseRooms[i+1]);
                     hybCmds.push(`path track ${baseRooms[i+1]}`);
 
@@ -2769,7 +2769,7 @@ if (nexMap.logging) {
     
             for(let denizen of roamers) {
                 console.log('roamer', denizen);
-                await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom]}})
+                await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom], id:parseInt(denize)}})
             }   
             /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
                 the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
