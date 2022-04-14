@@ -2768,6 +2768,7 @@ if (nexMap.logging) {
             }
     
             for(let denizen of roamers) {
+                console.log('roamer', denizen);
                 await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom]}})
             }   
             /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
