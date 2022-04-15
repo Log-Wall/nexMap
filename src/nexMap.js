@@ -153,7 +153,8 @@ const nexMap = {
                 await nexMap.changeRoom(GMCP.Room.Info.num);
                 
                 if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
-                    await this.mongo.collect();
+                    await this.mongo.collectDenizens();
+                    await this.mongo.collectShrines();
                 }
 
                 if(nexMap.walker.pathing)
@@ -2734,7 +2735,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
 
     mongo: {
         entries: [],
-        async collect() {
+        async collectDenizens() {
             //Area filter
             if (GMCP.CurrentArea.id == null) { return; }
 
@@ -2775,11 +2776,32 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                 the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
                 the correct room number as they are found. This will erase all roamers room numbers. At some point
                 in the future we will reenable roaming room collection.
-            for(let denizen of roamers) {
-                let denizenUpdate = this.entries.find(x => x.id == denizen.id)
-                denizenUpdate.room.push(curRoom);
-                this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
+                for(let denizen of roamers) {
+                    let denizenUpdate = this.entries.find(x => x.id == denizen.id)
+                    denizenUpdate.room.push(curRoom);
+                    this.db.updateOne({id:denizenUpdate.id}, {$set:{room:denizenUpdate.room}})
+                }
             } */   
+        },
+
+        async collectShrines() {
+            //Area filter
+            if (GMCP.CurrentArea.id == null) { return; }
+
+            // Get all denizens in the current room
+            let roomShrine = GMCP.Char.Items.List.items.find(x => x.icon == 'shrine');
+            if (!roomShrine) { return; }
+
+            roomShrine.id = parseInt(roomShrine.id);
+            roomShrine.room = GMCP.Room.Info.num;
+            roomShrine.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
+            roomShrine.time = client.Date();
+            roomShrine.user = {
+                id: this.user.id,
+                name: GMCP.Status.name
+            }
+
+            await this.db.insertOne(roomShrine);  
         },
 
         async startUp() {
