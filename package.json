@@ -1,0 +1,20 @@
+{
+  "name": "nexmap",
+  "version": "1.0.0",
+  "description": "nexMap provides access to the Achaea crowd map while using the Nexus client.",
+  "main": "SCRATCH.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Log-Wall/nexMap.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Log-Wall/nexMap/issues"
+  },
+  "homepage": "https://github.com/Log-Wall/nexMap#readme"
+}
