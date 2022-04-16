@@ -1,6 +1,6 @@
 'use strict';
-const cy = {};
-const nexMap = {
+cy = cy || {};
+nexMap = {
     version: '3.0.0',
     nxsVersion: '3.0.0',
     logging: false,
@@ -2872,7 +2872,7 @@ const nexMap = {
 };
 // Had to populate stylesheet array outside of the nexMap object. Using the object properties as
 // part of the array was causing issues with how Javascript loads Objects on declaration.
-let stylesheet = [
+nexMap.styles.stylesheet = [
     {
         'selector': 'node',
         'style': {
@@ -3408,7 +3408,6 @@ let stylesheet = [
         }
     }
 ];
-nexMap.styles.stylesheet = stylesheet;
 
 /* PUSHING UPDATES TO THE NXS FILE DIRECTLY
 reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `

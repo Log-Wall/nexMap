@@ -5,6 +5,12 @@
     <title>nexMap</title>
   </head>
   <body>
-    <script src="main.js"></script>
+    <script>
+      window.GMCP = {};
+      window.get_variable = function() { return false; }
+      window.run_function = function() { return false; }
+      window.client = window;
+    </script>
+    <script src="bundle.js"></script>
   </body>
 </html>
