@@ -1,8 +1,8 @@
 'use strict';
-cy = cy || {};
-nexMap = {
-    version: '3.0.0',
-    nxsVersion: '3.0.0',
+window.cy = {};
+window.nexMap = {
+    version: '3.0.4',
+    nxsVersion: '3.0.4',
     logging: false,
     loggingTime: '',
     mudmap: {},
