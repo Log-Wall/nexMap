@@ -2734,7 +2734,8 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
     },
 
     mongo: {
-        entries: [],
+        denizenEntries: [],
+        shrineEntries: [],
         async collectDenizens() {
             //Area filter
             if (GMCP.CurrentArea.id == null) { return; }
@@ -2748,13 +2749,14 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             let curRoom = GMCP.Room.Info.num;
 
             // Remove any denizens that are already in the entries
-            newDenizens = roomDenizens.filter(x => !this.entries.find(y => x.id == y.id));
-            if (this.logging) {console.log('newDenizens:');console.log(newDenizens);}
+            newDenizens = roomDenizens.filter(x => !this.denizenEntries.find(y => x.id == y.id));
+            if (this.logging) { console.log('newDenizens:');console.log(newDenizens); }
             
             // Find denizens that already have entries, but are in a new room.
-            roamers = roomDenizens.filter(x => this.entries.find(y => x.id == y.id && !y.room.includes(curRoom)));
-            if (this.logging) {console.log('roamers:');console.log(roamers);}
+            roamers = roomDenizens.filter(x => this.denizenEntries.find(y => x.id == y.id && !y.room.includes(curRoom)));
+            if (this.logging) { console.log('roamers:');console.log(roamers); }
 
+            this.db.collectionName = 'denizens';
             for(let denizen of newDenizens) {
                 denizen.id = parseInt(denizen.id);
                 denizen.room = [curRoom];
@@ -2764,12 +2766,13 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
                     id: this.user.id,
                     name: GMCP.Status.name
                 }
-                this.entries.push(denizen);
+                this.denizenEntries.push(denizen);
                 await this.db.insertOne(denizen);           
             }
     
             for(let denizen of roamers) {
                 console.log('roamer', denizen);
+                this.denizenEntries.find(e => e.id == denizen.id).rooom = [curRoom];
                 await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom], id:parseInt(denizen.id)}})
             }   
             /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
@@ -2788,20 +2791,40 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             //Area filter
             if (GMCP.CurrentArea.id == null) { return; }
 
+            // Set to work with the shrines collection
+            this.db.collectionName = 'shrines';
+
             // Get all denizens in the current room
             let roomShrine = GMCP.Char.Items.List.items.find(x => x.icon == 'shrine');
+            let existingShrine = this.shrineEntries.find(e => e.room == GMCP.Room.Info.num);
+            
+            // There used to be a shrine here, but now it is gone.
+            if (existingShrine && !roomShrine) {
+                await this.db.deleteOne({"room": existingShrine.room});
+                return;
+            }
+
+            // There is no shrine here, and there never was.
             if (!roomShrine) { return; }
+
+            // The shrine already on record is still here. Nothing to do here.
+            if (existingShrine.id == roomShrine.id) { return; }
 
             roomShrine.id = parseInt(roomShrine.id);
             roomShrine.room = GMCP.Room.Info.num;
-            roomShrine.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
+            roomShrine.area = {name: GMCP.Room.Info.area, id: parseInt(GMCP.CurrentArea.id)};
             roomShrine.time = client.Date();
             roomShrine.user = {
                 id: this.user.id,
                 name: GMCP.Status.name
             }
 
-            await this.db.insertOne(roomShrine);  
+            // There used to be a shrine here, but it was replaced with a different one
+            if (existingShrine.id != roomShrine.id) {
+                await this.db.updateOne({"room": GMCP.Room.Info.num}, roomShrine);  
+            } else {
+                await this.db.insertOne(roomShrine);  
+            }    
         },
 
         async startUp() {
@@ -2819,7 +2842,9 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             this.user.id === this.app.currentUser.id;
             this.mongodb = this.app.currentUser.mongoClient("mongodb-atlas");
             this.db = this.mongodb.db('nexMap').collection('denizens')
-            this.entries = await this.db.find({}, {projection: {area:1, attrib:1, icon:1, id:1, name:1, room:1}});
+            this.denizenEntries = await this.db.find({}, {projection: {id:1, room:1}});
+            this.db.collectionName = 'shrines';
+            this.shrineEntries = await this.db.find({project: {id: 1, room: 1}});
             console.log('MongoDB loaded');
             nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
         },

@@ -4,11 +4,10 @@
 // Use Ctrl+Space inside a snippet or a string literal to trigger completions.
 
 // Select the database to use.
-use('nexCDB');
+use('nexMap');
 
 
 
-db.characters.update({name: 'Khaseem'}, {$set: {level: '114'}})
+//db.characters.updateOne({name: 'Khaseem'}, {$set: {level: '114'}})
 
-db.characters.find({'name': 'Khaseem'})
-
+db.shrines.deleteMany({})

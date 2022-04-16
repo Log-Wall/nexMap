@@ -8,6 +8,6 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [new ESLintPlugin({
-    extensions: [ '.tsx', '.ts', '.js', '.jsx' ]
+    extensions: ['.tsx', '.ts', '.js', '.jsx']
   })],
 };
