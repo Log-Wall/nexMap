@@ -2,7 +2,7 @@
 const cy = {};
 const nexMap = {
     version: '3.0.0',
-    nxsVersion: 1.4,
+    nxsVersion: '3.0.0',
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -152,7 +152,7 @@ const nexMap = {
                 
                 await nexMap.changeRoom(GMCP.Room.Info.num);
                 
-                if (this.mongo.entries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
+                if (this.mongo.denizenEntries.length > 0 && typeof Realm != 'undefined' && GMCP.Char.Items.List.location == "room" && GMCP.Char.Items.List.items.length > 0) {
                     await this.mongo.collectDenizens();
                     await this.mongo.collectShrines();
                 }
@@ -361,7 +361,7 @@ const nexMap = {
         );
         x.addClass('areaDisplay');
         nexMap.generateExits();
-        cy.center(`#${GMCP.Room.Info.num}`);
+        cy.center(`#${GMCP?.Room?.Info?.num || 436}`);
         return true;
     },
 
@@ -982,11 +982,7 @@ const nexMap = {
     },
 
     nxsUpdates() {
-        $.getJSON('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.nxs')
-            .done(function(data) {
-                packages[packages.findIndex(e=>e.name=='nexmap')] = data;
-                gmcp_save_system(false)
-            })
+        
     },
 
     startUp() {
@@ -1019,7 +1015,7 @@ const nexMap = {
                 nexMap.display.notice(`Use "nm" for summary of user commands`);
     
                 cy.once('render', () => {
-                    nexMap.display.notice(`nexMap ${nexMap.version} loaded and ready for use. ${nexMap.stopWatch()}s`);
+                    nexMap.display.notice(`nexMap loaded and ready for use. ${nexMap.stopWatch()}s`);
                     print($('<img></img>', {
                         src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
                         width: "35%"
@@ -1236,7 +1232,6 @@ const nexMap = {
             client.echo_input = false;
             await nexMap.walker.determinePath(s, t);
             nexMap.walker.step();
-            console.log("Path calculations: " + (Date.now() - nexMap.walker.pathingStartTime)/1000)
         },
 
         //nexMap.walker.speedWalk(nexMap.currentRoom, cy.$(`[area = ${id}]`))
@@ -1317,33 +1312,31 @@ const nexMap = {
         },
 
         step() {
-            let nmw = nexMap.walker;
-        
             if (nexMap.logging) 
                 console.log('nexMap: nexMap.walker.step()');
         
-            if (nmw.pathCommands.length == 0) {
+            if (this.pathCommands.length == 0) {
                 if (nexMap.logging) {
                     console.log('nexMap: nexMap.walker.step RETURN')
                 };
                 return;
             }
         
-            let index = nmw.pathRooms.indexOf(GMCP.Room.Info.num.toString());
+            let index = this.pathRooms.indexOf(GMCP.Room.Info.num.toString());
         
-            if (GMCP.Room.Info.num == nmw.destination) {
-                nmw.pathing = false;
-                nmw.reset();
-                nexMap.display.notice(`Pathing complete. ${(Date.now() - nmw.pathingStartTime) / 1000}s`);
+            if (GMCP.Room.Info.num == this.destination) {
+                this.pathing = false;
+                this.reset();
+                nexMap.display.notice(`Pathing complete. ${(Date.now() - this.pathingStartTime) / 1000}s`);
                 return;
             }
         
             if (index >= 0) {
-                nmw.pathing = true;
-                nmw.stepCommand = nmw.pathCommands[index];
+                this.pathing = true;
+                this.stepCommand = this.pathCommands[index];
             }
-            if (nexMap.logging) {console.log(nmw.stepCommand)};
-            send_direct(`${nmw.stepCommand}`);
+            if (nexMap.logging) {console.log(this.stepCommand)};
+            send_direct(`${this.stepCommand}`);
         },
 
         async aStar(source, target) {
@@ -1362,42 +1355,40 @@ const nexMap = {
                 console.log(`nexMap: nexMap.walker.determinePath(${src}, ${tar})`)
             };
 
-            let nmw = nexMap.walker; // I prefer to use this style as opposed to "this" outside of Classes
-
-            nmw.pathCommands = [];
-            nmw.pathRooms = [];
+            this.pathCommands = [];
+            this.pathRooms = [];
             let source = src || GMCP.Room.Info.num;
             let target = tar || cy.$(':selected').data('id');
 
             if(source == target) {
-                nmw.pathing = false;
-                nmw.reset();
+                this.pathing = false;
+                this.reset();
                 nexMap.display.notice(`Pathing complete. You're already there!`);
                 return;
             }
 
-            nmw.destination = target;
+            this.destination = target;
         
-            let baseStar = await nmw.aStar(source, target);
+            let baseStar = await this.aStar(source, target);
             baseStar.type = 'base';
         
             if (nexMap.logging) { console.log(baseStar); };
                     
             // If the path is local to the area there is no need to check other fast travel options.
             if (cy.$(`#${source}`).data('area') == cy.$(`#${target}`).data('area')) {
-                nmw.hybridPath(baseStar);
+                this.hybridPath(baseStar);
         
                 return true;
             }
             
-            //let gare = nmw.checkGare(baseStar, target);
-            //let universe = nmw.checkUniverse(baseStar, target);
-            //let wings = nmw.checkClouds(baseStar, target);
+            //let gare = this.checkGare(baseStar, target);
+            //let universe = this.checkUniverse(baseStar, target);
+            //let wings = this.checkClouds(baseStar, target);
             let gare, universe, wings;
             [gare, universe, wings] = await Promise.all([
-                nmw.checkGare(baseStar, target), 
-                nmw.checkUniverse(baseStar, target),
-                nmw.checkClouds(baseStar, target)
+                this.checkGare(baseStar, target), 
+                this.checkUniverse(baseStar, target),
+                this.checkClouds(baseStar, target)
             ])
             // We include wings in the first round of checks for situations such as the 
             // first outdoor room is 1 step away, but it could also be 100 steps away.
@@ -1416,11 +1407,11 @@ const nexMap = {
             // path would provide a quicker outdoor exit that the clouds could then utilize. An example
             // is deep in azdun, the universe+cloud combo typically is faster.
             if (['universe', 'gare'].includes(optimalStar.type)) {
-                wings = await nmw.checkClouds(optimalStar, target);
+                wings = await this.checkClouds(optimalStar, target);
                 optimalStar = wings.distance < optimalStar.distance ? wings : optimalStar;
             }
 
-            await nmw.hybridPath(optimalStar);
+            await this.hybridPath(optimalStar);
         
             return true
         },
@@ -1546,7 +1537,7 @@ const nexMap = {
                 baseRooms.unshift(GMCP.Room.Info.num);
             }
             if (nexMap.logging) {
-                console.log('nexMap.walker.hybridPath() nmwpc, nmwpr');
+                console.log('nexMap.walker.hybridPath() thispc, thispr');
                 console.log(baseCmds);
                 console.log(baseRooms);
             }
@@ -1597,7 +1588,7 @@ const nexMap = {
             nexMap.walker.pathRooms = [...hybRm];
 
             if (nexMap.logging) {
-                console.log('FINAL nexMap.walker.hybridPath() nmwpc, nmwpr');
+                console.log('FINAL nexMap.walker.hybridPath() thispc, thispr');
                 console.log(nexMap.walker.pathCommands);
                 console.log(nexMap.walker.pathRooms);
             }
@@ -1793,15 +1784,16 @@ const nexMap = {
         },
         versionNotice(ver) {
             if (nexMap.nxsVersion == ver) {
+                nexMap.display.notice('You are running the latest .nxs package for nexMap.')
                 return;
             }
             
             let msg = $("<span></span>", {
                 style: 'color:GoldenRod'
-            }).text(`Download the newest version ${nexMap.nxsVersion} `);
-            $("<a></a>", {
-                href: 'https://sites.google.com/view/nexmap/home',
-                target: '_blank',
+            }).text(`Click `)
+            $("<span></span>", {
+                id: 'nexMapUpdate',
+                onclick: `nexMap.aliases.update();`,
                 style: 'color:white;text-decoration:underline'
             }).text(`HERE`)
                 .appendTo(msg);
@@ -1809,10 +1801,11 @@ const nexMap = {
                 style: 'color:GoldenRod'
             }).text(` for the latest features/fixes.`)
                 .appendTo(msg);
-    
-            nexMap.display.notice(`You are running nxs package version ${ver}.`);
+            nexMap.display.notice(`You are running .nxs package version ${nexMap.nxsVersion}.`);
+            nexMap.display.notice(`There is an update available to your nexMap .nxs package.`);
             nexMap.display.notice(msg, true);
         },
+
         generateTable(table, entries = false, caption = false) {
             nexMap.display.pageIndex = 0;
             /*if (table == 'displayTable') {
@@ -2717,6 +2710,14 @@ const nexMap = {
                 nexMap.display.generateTable('denizenTable', results, qry);
             }
             table(qry);
+        },
+        update: function(arg) {
+            $.getJSON('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs')
+                .done(function(data) {
+                    packages[packages.findIndex(e=>e.name=='nexmap')] = data;
+                    gmcp_save_system(false);
+                    nexMap.display.notice('Latest .nxs nexMap package loaded.');
+                })
         }
     },
 
@@ -2753,12 +2754,11 @@ const nexMap = {
                     id: this.user.id,
                     name: GMCP.Status.name
                 }
-                this.denizenEntries.push(denizen);
+                this.denizenEntries.push({id: denizen.id, room: denizen.room});
                 await this.db.insertOne(denizen);           
             }
     
             for(let denizen of roamers) {
-                console.log('roamer', denizen);
                 this.denizenEntries.find(e => e.id == denizen.id).rooom = [curRoom];
                 await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom], id:parseInt(denizen.id)}})
             }   
@@ -2836,7 +2836,7 @@ const nexMap = {
             this.db.collectionName = 'shrines';
             this.shrineEntries = await this.db.find({project: {id: 1, room: 1}});
             console.log('MongoDB loaded');
-            nexMap.display.notice(`Denizen database loaded with ${this.entries.length} NPC entries.`);
+            nexMap.display.notice(`Denizen database loaded with ${this.denizenEntries.length} NPC entries.`);
         },
         ignoreList: [
             /a dervish/,
