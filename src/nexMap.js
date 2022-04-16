@@ -1,7 +1,7 @@
 'use strict';
 const cy = {};
 const nexMap = {
-    version: '3.0.1',
+    version: '3.0.0',
     nxsVersion: 1.4,
     logging: false,
     loggingTime: '',
@@ -2797,7 +2797,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             // Get all denizens in the current room
             let roomShrine = GMCP.Char.Items.List.items.find(x => x.icon == 'shrine');
             let existingShrine = this.shrineEntries.find(e => e.room == GMCP.Room.Info.num);
-            
+    
             // There used to be a shrine here, but now it is gone.
             if (existingShrine && !roomShrine) {
                 await this.db.deleteOne({"room": existingShrine.room});
@@ -2808,7 +2808,7 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             if (!roomShrine) { return; }
 
             // The shrine already on record is still here. Nothing to do here.
-            if (existingShrine.id == roomShrine.id) { return; }
+            if (existingShrine?.id == roomShrine.id) { return; }
 
             roomShrine.id = parseInt(roomShrine.id);
             roomShrine.room = GMCP.Room.Info.num;
@@ -2820,9 +2820,12 @@ reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexM
             }
 
             // There used to be a shrine here, but it was replaced with a different one
-            if (existingShrine.id != roomShrine.id) {
+            if (existingShrine && existingShrine?.id != roomShrine.id) {
+                existingShrine.id = roomShrine.id;
+                existingShrine.room = roomShrine.room;
                 await this.db.updateOne({"room": GMCP.Room.Info.num}, roomShrine);  
             } else {
+                this.shrineEntries.push({id: roomShrine.id, room: roomShrine.room});
                 await this.db.insertOne(roomShrine);  
             }    
         },

@@ -1,13 +1,28 @@
 const path = require('path');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/nexMap.js',
   output: {
-    filename: 'main.js',
+    filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    //clean: true
   },
-  plugins: [new ESLintPlugin({
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          mangle: false,
+          keep_fnames: true,
+          toplevel: false,
+          keep_classnames: true,
+        },
+      }),
+    ],
+  },
+  /*plugins: [new ESLintPlugin({
     extensions: ['.tsx', '.ts', '.js', '.jsx']
-  })],
+  })],*/
 };

@@ -10,4 +10,5 @@ use('nexMap');
 
 //db.characters.updateOne({name: 'Khaseem'}, {$set: {level: '114'}})
 
-db.shrines.deleteMany({})
+//db.shrines.find({})
+db.shrines.count();
