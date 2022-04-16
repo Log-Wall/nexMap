@@ -982,24 +982,11 @@ const nexMap = {
     },
 
     nxsUpdates() {
-        if (typeof reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap") === 'undefined') {
-            reflex_create(client.packages[client.packages.findIndex(e => e.name == 'nexmap')].items[5],'New Tarot','trigger','nexmap');
-            Object.assign(reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap"), {
-                matching: 'exact',
-                text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
-                actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
-            });
-        }
-
-        reflex_find_by_name('function', 'onLoad', false, false, 'nexMap').code = `GMCP.Room = {};
-GMCP.Char = {
-    Items: {}
-};
-$.getScript("https://unpkg.com/realm-web/dist/bundle.iife.js");
-$.getScript('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.min.js');
-console.log('called nexMap CDN');
-reflex_disable(reflex_find_by_name(\"group\", \"Aliases\", false, false, \"nexMap\"));
-reflex_disable(reflex_find_by_name(\"group\", \"Triggers\", false, false, \"nexMap\"));`
+        $.getJSON('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/nexMap.nxs')
+            .done(function(data) {
+                packages[packages.findIndex(e=>e.name=='nexmap')] = data;
+                gmcp_save_system(false)
+            })
     },
 
     startUp() {
