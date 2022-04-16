@@ -1,8 +1,8 @@
 'use strict';
 window.cy = {};
 window.nexMap = {
-    version: '3.0.4',
-    nxsVersion: '3.0.4',
+    version: '3.0.5',
+    nxsVersion: '3.0.5',
     logging: false,
     loggingTime: '',
     mudmap: {},
@@ -997,7 +997,7 @@ window.nexMap = {
         nexMap.stopWatch();
         nexMap.display.notice('Loading mapper modules. May take up to 10 seconds.');
         print($('<p></p>', {style:'color:cyan'}).text(
-            'nexMap default location does not place well with nexGui. If you wish to use nexMap with nexGui you must change the tab location in Functions>customTabs to "container_1".'
+            'nexMap has received a substantial update. Please contact me (Khaseem) either in game or via Discord if you encounter any bugs.'
             )[0].outerHTML);
         
         nexMap.loadDependencies().then(() => {
@@ -1794,7 +1794,7 @@ window.nexMap = {
             $("<span></span>", {
                 id: 'nexMapUpdate',
                 onclick: `nexMap.aliases.update();`,
-                style: 'color:white;text-decoration:underline'
+                style: 'color:white;text-decoration:underline;cursor:pointer'
             }).text(`HERE`)
                 .appendTo(msg);
             $("<span></span>", {
