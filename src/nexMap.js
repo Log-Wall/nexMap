@@ -1,8 +1,8 @@
 'use strict';
 window.cy = {};
 window.nexMap = {
-    version: '3.0.5',
-    nxsVersion: '3.0.5',
+    version: '3.0.7',
+    nxsVersion: '3.0.7',
     logging: false,
     loggingTime: '',
     mudmap: {},
