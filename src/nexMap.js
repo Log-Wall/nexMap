@@ -2706,6 +2706,7 @@ window.nexMap = {
             let qry = text.toLowerCase();
             let table = async function(rr) {
                 let re = new RegExp(`${rr}`, 'i');
+                nexMap.mongo.db.collectionName = 'denizens';
                 let results = await nexMap.mongo.db.aggregate([{$match: {name:re}}, {$sort: {name:1,area:1}}]);
                 nexMap.display.generateTable('denizenTable', results, qry);
             }
@@ -2778,21 +2779,21 @@ window.nexMap = {
             //Area filter
             if (GMCP.CurrentArea.id == null) { return; }
 
-            // Set to work with the shrines collection
-            this.db.collectionName = 'shrines';
-
             // Get all denizens in the current room
             let roomShrine = GMCP.Char.Items.List.items.find(x => x.icon == 'shrine');
             let existingShrine = this.shrineEntries.find(e => e.room == GMCP.Room.Info.num);
     
+            // There is no shrine here, and there never was.
+            if (!roomShrine && !roomShrine) { return; }
+            
+            // Set to work with the shrines collection. All other conditions will interact with Mongo.
+            this.db.collectionName = 'shrines';
+
             // There used to be a shrine here, but now it is gone.
             if (existingShrine && !roomShrine) {
                 await this.db.deleteOne({"room": existingShrine.room});
                 return;
             }
-
-            // There is no shrine here, and there never was.
-            if (!roomShrine) { return; }
 
             // The shrine already on record is still here. Nothing to do here.
             if (existingShrine?.id == roomShrine.id) { return; }
@@ -2806,15 +2807,17 @@ window.nexMap = {
                 name: GMCP.Status.name
             }
 
-            // There used to be a shrine here, but it was replaced with a different one
+            // There used to be a shrine here, but it was replaced with a different one.
+            // Update local entry with the new ID or add a new entry to the local array. 
             if (existingShrine && existingShrine?.id != roomShrine.id) {
                 existingShrine.id = roomShrine.id;
-                existingShrine.room = roomShrine.room;
-                await this.db.updateOne({"room": GMCP.Room.Info.num}, roomShrine);  
             } else {
                 this.shrineEntries.push({id: roomShrine.id, room: roomShrine.room});
-                await this.db.insertOne(roomShrine);  
-            }    
+            }
+
+            // We know there is either a new shrine to be added, or the existing shrine changed. Upsert to mongo.
+            await this.db.updateOne({"room": GMCP.Room.Info.num}, roomShrine, {upsert:true});  
+            return true;   
         },
 
         async startUp() {
