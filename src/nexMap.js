@@ -2712,7 +2712,7 @@ window.nexMap = {
             }
             table(qry);
         },
-        update: function(arg) {
+        update: function() {
             $.getJSON('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs')
                 .done(function(data) {
                     packages[packages.findIndex(e=>e.name=='nexmap')] = data;
