@@ -1,6 +1,6 @@
 'use strict';
-window.cy = {};
-window.nexMap = {
+var cy = {};
+var nexMap = {
     version: '3.0.7',
     nxsVersion: '3.0.7',
     logging: false,
@@ -2712,13 +2712,11 @@ window.nexMap = {
             }
             table(qry);
         },
-        update: function() {
-            $.getJSON('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs')
-                .done(function(data) {
-                    packages[packages.findIndex(e=>e.name=='nexmap')] = data;
-                    gmcp_save_system(false);
-                    nexMap.display.notice('Latest .nxs nexMap package loaded.');
-                })
+        update: async function() {
+            let response = await fetch('https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs', {cache: "no-store"});
+            let data = await response.json();
+            packages[packages.findIndex(e=>e.name=='nexmap')] = data;
+            gmcp_save_system(false);
         }
     },
 
