@@ -2833,9 +2833,9 @@ var nexMap = {
             this.user.id === this.app.currentUser.id;
             this.mongodb = this.app.currentUser.mongoClient("mongodb-atlas");
             this.db = this.mongodb.db('nexMap').collection('denizens')
-            this.denizenEntries = await this.db.find({}, {projection: {id:1, room:1}});
+            this.denizenEntries = await this.db.find({}, {projection: {_id: 0, id: 1, room: 1}});
             this.db.collectionName = 'shrines';
-            this.shrineEntries = await this.db.find({project: {id: 1, room: 1}});
+            this.shrineEntries = await this.db.find({}, {projection: {_id: 0, id: 1, room: 1}});
             console.log('MongoDB loaded');
             nexMap.display.notice(`Denizen database loaded with ${this.denizenEntries.length} NPC entries.`);
         },
@@ -2867,7 +2867,12 @@ var nexMap = {
             /shipmate/,
             /a squad of/,
             /swashbuckler/,
-            /a red admiral butterfly/
+            /a red admiral butterfly/,
+            /a baby rat/,
+            /a young rat/,
+            /a rat/,
+            /an old rat/,
+            /a black rat/
         ]
     }
 };
