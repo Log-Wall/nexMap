@@ -1,3 +1,4 @@
+/*global GMCP, $, nexMap_tab, send_direct, get_variable, run_function, client, set_variable, Realm, gmcp_save_system, packages, cytoscape*/
 'use strict';
 var cy = {};
 var nexMap = {
@@ -1672,6 +1673,7 @@ var nexMap = {
         },
 
         // IN DEVELOPMENT Not currently used for anything
+        /*
         checkGlide(path, target) {
             if (nexMap.logging) {console.log(`nexMap: nexMap.walker.checkDash(${cmd})`)};
         
@@ -1722,6 +1724,7 @@ var nexMap = {
             //nexMap.walker.pathRooms = [...galRm];
         
         },
+        */
 
         reset() {
             if (nexMap.logging)

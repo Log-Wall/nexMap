@@ -30,7 +30,7 @@ module.exports = {
       }),
     ],
   },
-  /*plugins: [new ESLintPlugin({
+  plugins: [new ESLintPlugin({
     extensions: ['.tsx', '.ts', '.js', '.jsx']
-  })],*/
+  })]
 };
