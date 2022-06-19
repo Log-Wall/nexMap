@@ -2,6 +2,8 @@
 import { nexmap } from './nexmap.js';
 import { notice, generateTable } from './display.js';
 
+const get_variable = () => { return false; }
+
 export const userPreferences = {
   intialConfiguration: get_variable('nexMapConfigs')?.initialConfiguration || 0,
   commandSeparator: get_variable('nexMapConfigs')?.commandSeparator || '\\',

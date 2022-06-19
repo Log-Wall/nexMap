@@ -56,7 +56,7 @@ export const farseeLocal = async (target, room) => {
     .nodes()
     .find((n) => n.data("name") === room)
     .data("id");
-  let path = determinePath(nexmap.currentRoom, tar);
+  //let path = determinePath(nexmap.currentRoom, tar);
   let msg = document.createElement('span');
   msg.setAttribute('id', 'farsee');
 
@@ -203,10 +203,10 @@ export const findAreas = async (search) => {
 };
 
 export const changeArea = async (area, z, override = false) => {
-  if (this.logging) console.log(` changeArea(${area} ${z})`);
+  if (nexmap.logging) console.log(` changeArea(${area} ${z})`);
 
   if (area === nexmap.currentArea && z === nexmap.currentZ && !override) {
-    if (this.logging) {
+    if (nexmap.logging) {
       console.log(` changeArea() returned`);
     }
     return;
@@ -242,7 +242,7 @@ export const changeRoom = async (id) => {
   cy.$(".currentRoom").removeClass("currentRoom"); //remove the class from the previous room.
   room.addClass("currentRoom");
 
-  await this.changeArea(cy.$id(id).data("area"), cy.$id(id).position().z);
+  await changeArea(cy.$id(id).data("area"), cy.$id(id).position().z);
   cy.endBatch();
 
   cy.center(`#${id}`);

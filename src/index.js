@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './components/App';
 import { nexmap } from './base/nexmap';
+import { changeRoom } from './base/navigation';
 import reportWebVitals from './reportWebVitals';
 //import "https://cdn.jsdelivr.net/npm/cytoscape@3.21.0/dist/cytoscape.min.js";
 
@@ -28,7 +29,7 @@ fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json")
   })
   .then(() => {
     window.cy.mount(document.getElementById('cy'))
-    nexmap.changeRoom(6534)
+    changeRoom(6534)
   })
 
 

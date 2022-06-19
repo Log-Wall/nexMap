@@ -1,5 +1,6 @@
 /* global cy, GMCP, send_direct */
 import { nexmap } from "./nexmap.js";
+import { userPreferences } from "./settings.js";
 
 export let pathing = false;
 let pathRooms = [];
@@ -60,7 +61,7 @@ export const goto = (str) => {
     return;
   }
   console.log(`str: ${str}`);
-  let findMark = nexmap.settings.userPreferences.landmarks.find(
+  let findMark = userPreferences.landmarks.find(
     (e) => e.name.toLowerCase() === str.toLowerCase()
   );
   if (findMark) {
@@ -73,7 +74,7 @@ export const goto = (str) => {
   if (areas.length === 0) {
     let findAreas = nexmap.findAreas(str);
     console.log(findAreas);
-    let findMarks = nexmap.settings.userPreferences.landmarks.filter((e) =>
+    let findMarks = userPreferences.landmarks.filter((e) =>
       e.name.toLowerCase().includes(str.toLowerCase())
     );
     if (findAreas.length) {
@@ -122,32 +123,32 @@ export const goto = (str) => {
 export const step = () => {
   if (nexmap.logging) console.log("nexMap: step()");
 
-  if (this.pathCommands.length === 0) {
+  if (pathCommands.length === 0) {
     if (nexmap.logging) {
       console.log("nexMap: step RETURN");
     }
     return;
   }
 
-  let index = this.pathRooms.indexOf(GMCP.Room.Info.num.toString());
+  let index = pathRooms.indexOf(GMCP.Room.Info.num.toString());
 
-  if (GMCP.Room.Info.num === this.destination) {
-    this.pathing = false;
-    this.reset();
+  if (GMCP.Room.Info.num === destination) {
+    pathing = false;
+    reset();
     nexmap.display.notice(
-      `Pathing complete. ${(Date.now() - this.pathingStartTime) / 1000}s`
+      `Pathing complete. ${(Date.now() - pathingStartTime) / 1000}s`
     );
     return;
   }
 
   if (index >= 0) {
-    this.pathing = true;
-    this.stepCommand = this.pathCommands[index];
+    pathing = true;
+    stepCommand = pathCommands[index];
   }
   if (nexmap.logging) {
-    console.log(this.stepCommand);
+    console.log(stepCommand);
   }
-  send_direct(`${this.stepCommand}`);
+  send_direct(`${stepCommand}`);
 };
 
 export const aStar = async (source, target) => {
@@ -166,21 +167,21 @@ export const determinePath = async (src, tar) => {
     console.log(`nexMap: determinePath(${src}, ${tar})`);
   }
 
-  this.pathCommands = [];
-  this.pathRooms = [];
+  pathCommands = [];
+  pathRooms = [];
   let source = src || GMCP.Room.Info.num;
   let target = tar || cy.$(":selected").data("id");
 
   if (source === target) {
-    this.pathing = false;
-    this.reset();
+    pathing = false;
+    reset();
     nexmap.display.notice(`Pathing complete. You're already there!`);
     return;
   }
 
-  this.destination = target;
+  destination = target;
 
-  let baseStar = await this.aStar(source, target);
+  let baseStar = await aStar(source, target);
   baseStar.type = "base";
 
   if (nexmap.logging) {
@@ -189,19 +190,19 @@ export const determinePath = async (src, tar) => {
 
   // If the path is local to the area there is no need to check other fast travel options.
   if (cy.$(`#${source}`).data("area") === cy.$(`#${target}`).data("area")) {
-    this.hybridPath(baseStar);
+    hybridPath(baseStar);
 
     return true;
   }
 
-  //let gare = this.checkGare(baseStar, target);
-  //let universe = this.checkUniverse(baseStar, target);
-  //let wings = this.checkClouds(baseStar, target);
+  //let gare = checkGare(baseStar, target);
+  //let universe = checkUniverse(baseStar, target);
+  //let wings = checkClouds(baseStar, target);
   let gare, universe, wings;
   [gare, universe, wings] = await Promise.all([
-    this.checkGare(baseStar, target),
-    this.checkUniverse(baseStar, target),
-    this.checkClouds(baseStar, target),
+    checkGare(baseStar, target),
+    checkUniverse(baseStar, target),
+    checkClouds(baseStar, target),
   ]);
   // We include wings in the first round of checks for situations such as the
   // first outdoor room is 1 step away, but it could also be 100 steps away.
@@ -224,11 +225,11 @@ export const determinePath = async (src, tar) => {
   // path would provide a quicker outdoor exit that the clouds could then utilize. An example
   // is deep in azdun, the universe+cloud combo typically is faster.
   if (["universe", "gare"].includes(optimalStar.type)) {
-    wings = await this.checkClouds(optimalStar, target);
+    wings = await checkClouds(optimalStar, target);
     optimalStar = wings.distance < optimalStar.distance ? wings : optimalStar;
   }
 
-  await this.hybridPath(optimalStar);
+  await hybridPath(optimalStar);
 
   return true;
 };
@@ -247,14 +248,14 @@ export const checkGare = async (astar, tar) => {
     .nodes()
     .findIndex(
       (e) =>
-        !nexmap.settings.userPreferences.antiGareAreas.includes(e.data("area"))
+        !userPreferences.antiGareAreas.includes(e.data("area"))
     );
   if (firstGareRoomIndex === -1) {
     return false;
   }
 
   // Gare room is #12695
-  let gareStar = await this.aStar("gare", tar);
+  let gareStar = await aStar("gare", tar);
   if (!gareStar) {
     return false;
   }
@@ -274,7 +275,7 @@ export const checkUniverse = async (astar, target) => {
     console.log(`nexMap: checkUniverse(${astar}, ${target})`);
   }
 
-  if (!nexmap.settings.userPreferences.useUniverse) {
+  if (!userPreferences.useUniverse) {
     return;
   }
 
@@ -292,7 +293,7 @@ export const checkUniverse = async (astar, target) => {
     .nodes()
     .findIndex(
       (e) =>
-        !nexmap.settings.userPreferences.antiUniverseAreas.includes(
+        !userPreferences.antiUniverseAreas.includes(
           e.data("area")
         )
     );
@@ -302,7 +303,7 @@ export const checkUniverse = async (astar, target) => {
   if (nexmap.logging) {
     console.log(`firstUniverseRoomIndex`, firstUniverseRoomIndex);
   }
-  let universeStar = await this.aStar("universe", target);
+  let universeStar = await aStar("universe", target);
   if (!universeStar) {
     return false;
   }
@@ -331,8 +332,8 @@ export const checkClouds = async (astar, target) => {
   if (nexmap.logging) console.log(`nexMap: checkClouds()`);
 
   if (
-    !nexmap.settings.userPreferences.useDuanathar &&
-    !nexmap.settings.userPreferences.useDuanatharan
+    !userPreferences.useDuanathar &&
+    !userPreferences.useDuanatharan
   ) {
     return;
   }
@@ -346,7 +347,7 @@ export const checkClouds = async (astar, target) => {
     .nodes()
     .findIndex(
       (e) =>
-        !nexmap.settings.userPreferences.antiWingAreas.includes(
+        !userPreferences.antiWingAreas.includes(
           e.data("area")
         ) &&
         (e.data("userData").indoors !== "y" ||
@@ -356,7 +357,7 @@ export const checkClouds = async (astar, target) => {
     return false;
   }
 
-  let cloudStar = await this.aStar("duanathar" + meropis, target);
+  let cloudStar = await aStar("duanathar" + meropis, target);
   cloudStar.distance += firstOutdoorRoomIndex;
   cloudStar.type = "duanathar";
   cloudStar.path =
@@ -365,8 +366,8 @@ export const checkClouds = async (astar, target) => {
       : cloudStar.path;
 
   let highCloudStar = false;
-  if (nexmap.settings.userPreferences.useDuanatharan) {
-    highCloudStar = await this.aStar("duanatharan" + meropis, target);
+  if (userPreferences.useDuanatharan) {
+    highCloudStar = await aStar("duanatharan" + meropis, target);
     highCloudStar.distance += firstOutdoorRoomIndex;
     highCloudStar.type = "duanatharan";
     highCloudStar.path =
@@ -478,7 +479,7 @@ export const checkAirlord = async (optimalStar, target) => {
     .find(
       (e) =>
         e.data().userData.indoors !== "y" &&
-        !nexmap.settings.userPreferences.antiWingAreas.includes(e.data("area"))
+        !userPreferences.antiWingAreas.includes(e.data("area"))
     );
   let wingRoomId = firstOutdoorRoom ? firstOutdoorRoom.data("id") : 0;
 
@@ -559,7 +560,7 @@ export const checkAirlord = async (optimalStar, target) => {
 checkGlide(path, target) {
     if (nexmap.logging) {console.log(`nexMap: checkDash(${cmd})`)};
 
-    let firstOutdoorRoom = path.rooms.find(e => cy.$id(e).data('userData').indoors != 'y' && !nexmap.settings.userPreferences.antiWingAreas.includes(cy.$id(e).data('area')));
+    let firstOutdoorRoom = path.rooms.find(e => cy.$id(e).data('userData').indoors != 'y' && !userPreferences.antiWingAreas.includes(cy.$id(e).data('area')));
     let firstIndoorRoom = path.rooms.slice(path.rooms.indexOf(firstOutdoorRoom)).find(e => cy.$id(e).data().userData.indoors == 'y');
     let galCmds = [];
     let galRm = [path.rooms[0]];

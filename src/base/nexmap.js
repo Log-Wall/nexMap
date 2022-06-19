@@ -1,4 +1,3 @@
-/* global cy, GMCP */
 import { generateGraph } from "./graph";
 import { db } from "./mongo";
 
