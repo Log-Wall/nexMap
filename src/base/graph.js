@@ -1,7 +1,27 @@
 import { longDirs } from "./helpertables";
 import { generateSVG } from "./styles";
+import { stylesheet } from './styles';
+import cytoscape from 'cytoscape';
 
-export const generateGraph = (graph) => {
+/* global cy */
+window.cy = cytoscape({
+    container: undefined,//document.getElementById('cy'),
+    layout: 'grid',
+    style: stylesheet,
+    zoom: 1.25,
+    minZoom: 0.2,
+    maxZoom: 3,
+    wheelSensitivity: 0.5,
+    boxSelectionEnabled: false,
+    selectionType: 'single',
+  
+    hideEdgesOnViewport: true,
+    textureOnViewport: true,
+    motionBlur: true,
+    pixelRatio: 'auto',
+  });
+
+export const generateGraph = async (graph) => {
     /** Generate nodes */
     let graphModel =  [];
     for (const area of graph.areas) {
@@ -125,4 +145,87 @@ const addExitClasses = (data) => {
     }
 
     return classes;
+}
+
+export const generateExits = (currentArea, currentZ) => {
+    let exitIndex = 0;
+
+    let createExit = function (position, cmd, tar) {
+        let pos = {
+            ...position
+        }
+        switch (cmd) {
+            case 's':
+                pos.y += 20;
+                break;
+            case 'n':
+                pos.y += 20;
+                break;
+            case 'e':
+                pos.x += 20;
+                break;
+            case 'w':
+                pos.x += -20;
+                break;
+            case 'se':
+                pos.x += 20;
+                pos.y += 20;
+                break;
+            case 'sw':
+                pos.x += -20;
+                pos.y += 20;
+                break;
+            case 'ne':
+                pos.x += 20;
+                pos.y += -20;
+                break;
+            case 'nw':
+                pos.x += -20;
+                pos.y += -20;
+                break;
+            default:
+                break;
+        }
+
+        let newNode = {
+            group: 'nodes',
+            data: {
+                id: `pseudo${exitIndex}`,
+            },
+            position: {
+                x: pos.x,
+                y: pos.y,
+                z: pos.z
+            },
+            classes: ['pseudo', tar ? 'areaAdjacent' : `pseudo-${cmd}`],
+        };
+
+        cy.add(newNode);
+
+        if (tar) {
+            cy.add({
+                group: 'edges',
+                data: {
+                    id: `pseudoE${exitIndex}`,
+                    source: tar,
+                    target: newNode.data.id,
+                    weight: 1
+                },
+                classes: ['pseudo', 'areaAdjacentExit'],
+            });
+        }
+        exitIndex++;
+    }
+
+    let x = cy.edges().filter(e =>
+        e.data('area') === currentArea && e.data('z') === currentZ
+    );
+
+    x.filter(e => ['up', 'd', 'in', 'out'].includes(e.data('command')))
+        .forEach(e => createExit(e.source().position(), e.data('command')));
+
+    let xe = x.filter(e => ['s', 'n', 'e', 'w', 'ne', 'nw', 'se', 'sw'].includes(e.data('command')));
+    xe = xe.filter(e => e.target().data('area') !== currentArea || e.target().data('z') !== currentZ);
+
+    xe.forEach(e => createExit(e.source().position(), e.data('command'), e.data('source')));
 }

@@ -1,3 +1,73 @@
+/* global cy */
+import { stop, speedWalk } from './walker.js';
+import { notice } from './display.js';
+import { changeRoom, changeArea } from './navigation';
+import { nexmap } from './nexmap.js';
+
+export const style = () => {
+    if (nexmap.logging) {
+        console.log('nexMap: nexMap.style()')
+    };
+
+    cy.on('mouseout', 'node', evt => {
+        evt.target.removeClass('displayLabel');
+    }); // Pop up labels on mouseover
+    cy.on('mouseover', 'node', evt => {
+        evt.target.flashClass('displayLabel', 3000)
+    }); // Pop up labels on mouseover
+    cy.on('zoom', evt => {
+        cy.style().selector('.displayLabel').style({
+            'font-size': `${12 * (1 / cy.zoom())}px`
+        })
+    }) //Increases the size of the label based on the zoom level.
+    cy.on('unselect', 'node', evt => {
+        stop()
+    });
+    cy.on('select', 'node', evt => {
+        speedWalk()
+    });
+
+    let generateStyle = function () {
+        let inject = function (rule) {
+            document.body.appendChild('<div class="client_nexmap-rules">&shy;<style>' + rule + '</style></div>');
+        };
+
+        if (document.querySelector('.client_nexmap-ruless')) {
+            document.querySelector('.client_nexmap-ruless').remove();
+        }
+        
+        let nexMapCSS = '.nexswitch {position: relative;display: inline-block;width: 38px;height: 22px;}' +
+            'cy {width: 100%;height: calc(100% - 44px);position: absolute;overflow: hidden;top: 0px;left: 0px;margin-top: 22px;margin-bottom: 22px}' +
+            '.nexswitch input {opacity: 0;width: 0;height: 0;}' +
+            '.nexslider {position: absolute;cursor: pointer;top: 0;left: 0;right: 0;bottom: 0;background-color: #555555;-webkit-transition: .4s;transition: .4s;border-radius: 24px;}' +
+            '.nexslider:before {position: absolute;content: "";height: 16px;width: 16px;left: 3px;bottom: 3px;background-color: white;-webkit-transition: .4s;transition: .4s;border-radius: 50%;}' +
+            'input:checked + .nexslider {background-color: #2196F3;}' +
+            'input:focus + .nexslider {box-shadow: 0 0 1px #2196F3;}' +
+            'input:checked + .nexslider:before {-webkit-transform: translateX(16px);-ms-transform: translateX(16px);transform: translateX(16px);}' +
+            '.nexcontainer   { display: flex; }' +
+            '.nexfixed    { width: 200px; }' +
+            '.nexflex-item    { flex-grow: 1; }';
+        if (window.css_style !== 'standard')
+            nexMapCSS += '#tab_nexmap_map::before {content: "\\f2ae";}';
+
+        inject(nexMapCSS);
+    };
+    generateStyle();
+}
+
+export const refresh = () => {
+    if (typeof cy.unmount !== 'function') {
+        notice(`nexMap not loaded. Please run "nm load".`);
+        return;
+    }
+    setTimeout(async function(){
+        await Promise.all([
+            changeRoom(nexmap.currentRoom),
+            changeArea(nexmap.currentArea, nexmap.currentZ, true)
+        ])
+    }, 500);  
+}
+
 export const generateSVG = (txt) => {
   let svg_pin = document.createElement('svg');
   svg_pin.setAttribute('width',"100");
