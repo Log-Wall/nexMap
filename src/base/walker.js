@@ -151,17 +151,6 @@ export const step = () => {
   send_direct(`${stepCommand}`);
 };
 
-export const aStar = async (source, target) => {
-  return cy.elements().aStar({
-    root: `#${source}`,
-    goal: `#${target}`,
-    weight: (edge) => {
-      return edge.data("weight");
-    },
-    directed: true,
-  });
-};
-
 export const determinePath = async (src, tar) => {
   if (nexmap.logging) {
     console.log(`nexMap: determinePath(${src}, ${tar})`);
@@ -234,7 +223,18 @@ export const determinePath = async (src, tar) => {
   return true;
 };
 
-export const checkGare = async (astar, tar) => {
+const aStar = async (source, target) => {
+  return cy.elements().aStar({
+    root: `#${source}`,
+    goal: `#${target}`,
+    weight: (edge) => {
+      return edge.data("weight");
+    },
+    directed: true,
+  });
+};
+
+const checkGare = async (astar, tar) => {
   if (nexmap.logging) {
     console.log(`nexMap: checkGare(${astar}, ${tar})`);
   }
@@ -246,10 +246,7 @@ export const checkGare = async (astar, tar) => {
   // Where is the first room on the baseline path that we could use Gare?
   let firstGareRoomIndex = astar.path
     .nodes()
-    .findIndex(
-      (e) =>
-        !userPreferences.antiGareAreas.includes(e.data("area"))
-    );
+    .findIndex((e) => !userPreferences.antiGareAreas.includes(e.data("area")));
   if (firstGareRoomIndex === -1) {
     return false;
   }
@@ -270,7 +267,7 @@ export const checkGare = async (astar, tar) => {
   return gareStar;
 };
 
-export const checkUniverse = async (astar, target) => {
+const checkUniverse = async (astar, target) => {
   if (nexmap.logging) {
     console.log(`nexMap: checkUniverse(${astar}, ${target})`);
   }
@@ -292,10 +289,7 @@ export const checkUniverse = async (astar, target) => {
   let firstUniverseRoomIndex = astar.path
     .nodes()
     .findIndex(
-      (e) =>
-        !userPreferences.antiUniverseAreas.includes(
-          e.data("area")
-        )
+      (e) => !userPreferences.antiUniverseAreas.includes(e.data("area"))
     );
   if (firstUniverseRoomIndex === -1) {
     return;
@@ -324,17 +318,14 @@ export const checkUniverse = async (astar, target) => {
   return universeStar;
 };
 
-export const checkClouds = async (astar, target) => {
+const checkClouds = async (astar, target) => {
   // Clouds 3885
   // High clouds 4882
   // Meropis clouds room 51188
   // Meropis high clouds room 51603
   if (nexmap.logging) console.log(`nexMap: checkClouds()`);
 
-  if (
-    !userPreferences.useDuanathar &&
-    !userPreferences.useDuanatharan
-  ) {
+  if (!userPreferences.useDuanathar && !userPreferences.useDuanatharan) {
     return;
   }
 
@@ -347,9 +338,7 @@ export const checkClouds = async (astar, target) => {
     .nodes()
     .findIndex(
       (e) =>
-        !userPreferences.antiWingAreas.includes(
-          e.data("area")
-        ) &&
+        !userPreferences.antiWingAreas.includes(e.data("area")) &&
         (e.data("userData").indoors !== "y" ||
           e.data("userData").outdoors === "y")
     );
@@ -387,7 +376,7 @@ export const checkClouds = async (astar, target) => {
 // breaking the path track into sections to use special exits. The in game path track system will return an "unable to
 // find a path" if there is a special exit. This will also break up paths that are greater than 100 steps away. The in
 // game path track will not path greater than 100 rooms.
-export const hybridPath = async (optimalStar) => {
+const hybridPath = async (optimalStar) => {
   if (nexmap.logging) {
     console.log(`nexMap: hybridPath()`);
   }
@@ -465,7 +454,7 @@ export const hybridPath = async (optimalStar) => {
   return true;
 };
 
-export const checkAirlord = async (optimalStar, target) => {
+const checkAirlord = async (optimalStar, target) => {
   if (nexmap.logging) {
     console.log(`nexMap: checkAirlord(${optimalStar}, ${target})`);
   }
@@ -609,7 +598,7 @@ checkGlide(path, target) {
 },
 */
 
-export const reset = () => {
+const reset = () => {
   if (nexmap.logging) console.log("nexMap: reset()");
 
   universeTarget = false;

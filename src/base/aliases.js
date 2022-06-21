@@ -1,5 +1,5 @@
 /* global GMCP, cy, printHTML, gmcp_save_system, packages */
-import { notice, configDialog, generateTable } from "./display";
+import { notice, generateTable } from "./display";
 import { findRooms, findAreas } from "./navigation";
 import { goto, stop } from "./walker";
 import { toggle, save, addMark } from "./settings";
@@ -16,7 +16,7 @@ export const aliases = {
     aliases[alias](args);
   },
   config: function () {
-    configDialog();
+    //configDialog();
   },
   save: function () {
     save();
