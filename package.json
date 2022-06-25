@@ -1,7 +1,8 @@
 {
+  "main": "src/base/nexmap.js",
+  "module": "src/base/nexmap.js",
   "name": "nexmap",
   "version": "0.1.0",
-  "private": true,
   "homepage": "https://log-wall.github.io/nexMap/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -16,10 +17,12 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "distribute": "set NODE_ENV=production&&babel src --out-dir dist --copy-files --ignore spec.js,test.js --source-maps",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:bundle": "webpack --config webpack.config.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -40,5 +43,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.18.5",
+    "@babel/preset-env": "^7.18.2",
+    "webpack-cli": "^4.10.0"
   }
 }
