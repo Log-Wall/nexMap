@@ -16,7 +16,6 @@ module.exports = {
           cacheDirectory: true,
           presets: [
             '@babel/preset-env',
-            ['@babel/preset-react', { runtime: 'automatic' }],
           ],
         },
         loader: 'babel-loader',
@@ -25,6 +24,15 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin()],
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          mangle: false,
+          keep_fnames: true,
+          toplevel: false,
+          keep_classnames: true,
+        },
+      }),
+    ],
   },
 };

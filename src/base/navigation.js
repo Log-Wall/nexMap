@@ -1,7 +1,7 @@
-/* global GMCP, cy, tab, printHTML */
+/* global GMCP, cy, nexMap_tab, printHTML */
 import { toggle, userPreferences } from "./settings.js";
 import { pathing, step, determinePath } from "./walker.js";
-import { refresh } from "./styles.js";
+import { styles } from "./styles.js";
 import { notice, generateTable } from "./display.js";
 import { generateExits } from "./graph.js";
 import { nexmap } from "./nexmap.js";
@@ -14,12 +14,13 @@ export const onGMCP = async (method, args) => {
 
       // If we are in the wilderness or sailing. Hide the tab and display the default
       // Nexus map window for map display.
+      // nexMap_tab is from the custom tab package.
       if (args.ohmap) {
-        tab.deactivate();
+        nexMap_tab.deactivate();
         return;
-      } else if (!tab.active) {
-        tab.activate();
-        refresh();
+      } else if (!nexMap_tab.active) {
+        nexMap_tab.activate();
+        styles.refresh();
         cy.center(`#${GMCP.Room.Info.num}`);
       }
 

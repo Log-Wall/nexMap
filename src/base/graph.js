@@ -1,13 +1,12 @@
 import { longDirs } from "./helpertables";
-import { generateSVG } from "./styles";
-import { stylesheet } from './styles';
+import { styles } from "./styles";
 import cytoscape from 'cytoscape';
 
 /* global cy */
 window.cy = cytoscape({
     container: undefined,//document.getElementById('cy'),
     layout: 'grid',
-    style: stylesheet,
+    style: styles.stylesheet,
     zoom: 1.25,
     minZoom: 0.2,
     maxZoom: 3,
@@ -63,7 +62,7 @@ const createRooms = (area) => {
     
     if (room?.symbol?.text && ['S', 'F', 'G', 'C', 'N', 'M', '$', 'L', 'H', 'W', 'A', 'P', 'B'].includes(room.symbol.text)) {
       node.classes.push('backgroundImageRoom');
-      node.data.image = generateSVG(room.symbol.text);
+      node.data.image = styles.generateSVG(room.symbol.text);
     }
 
     graph.push(node);

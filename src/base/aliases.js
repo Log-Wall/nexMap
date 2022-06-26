@@ -3,7 +3,7 @@ import { notice, generateTable } from "./display";
 import { findRooms, findAreas } from "./navigation";
 import { goto, stop } from "./walker";
 import { toggle, save, addMark } from "./settings";
-import { refresh } from "./styles";
+import { styles } from "./styles";
 import { nexmap } from "./nexmap";
 
 export const aliases = {
@@ -81,7 +81,7 @@ export const aliases = {
     cy.fit();
   },
   refresh: function () {
-    refresh();
+    styles.refresh();
   },
   wormholes: function () {
     toggle("useWormholes");

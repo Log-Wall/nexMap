@@ -1,0 +1,11 @@
+{
+  "name": "nexmap",
+  "version": "1.0.0",
+  "description": "nexmap for nexus",
+  "main": "bundle.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Khaseem",
+  "license": "ISC"
+}
