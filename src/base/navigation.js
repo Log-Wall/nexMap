@@ -1,8 +1,8 @@
-/* global GMCP, cy, nexMap_tab, printHTML */
+/* global GMCP, cy, nexMap_tab */
 import { toggle, userPreferences } from "./settings.js";
 import { pathing, step, determinePath } from "./walker.js";
 import { styles } from "./styles.js";
-import { notice, generateTable } from "./display.js";
+import { notice, generateTable, printHTML } from "./display.js";
 import { generateExits } from "./graph.js";
 import { nexmap } from "./nexmap.js";
 import { denizenEntries, collectDenizens, collectShrines } from './mongo.js';

@@ -7,40 +7,52 @@ import { nexmap } from './nexmap.js';
 
 export const styles = {
     style: () => {
-    if (nexmap.logging) {
-        console.log('nexMap: nexMap.style()')
-    };
-    const cydiv = document.getElementById('cy');
-    cydiv.style.width = '100%';
-    cydiv.style.height = 'calc(100% - 55px)';
-    cydiv.style.position = 'absolute';
-    cydiv.style.overflow = 'hidden';
-    cydiv.style.top = '0px';
-    cydiv.style.left = '0px';
-    cydiv.style['margin-top'] = '22px';
-    cydiv.style['margin-bottom'] = '22px';
+        if (nexmap.logging) {
+            console.log('nexMap: nexMap.style()')
+        };
+        const cydiv = document.getElementById('cy');
+        cydiv.style.width = '100%';
+        cydiv.style.height = 'calc(100% - 44px)';
+        cydiv.style.position = 'absolute';
+        cydiv.style.overflow = 'hidden';
+        cydiv.style.top = '0px';
+        cydiv.style.left = '0px';
+        cydiv.style['margin-top'] = '22px';
+        cydiv.style['margin-bottom'] = '22px';
 
-    cy.on('mouseout', 'node', evt => {
-        evt.target.removeClass('displayLabel');
-    }); // Pop up labels on mouseover
-    cy.on('mouseover', 'node', evt => {
-        evt.target.flashClass('displayLabel', 3000)
-    }); // Pop up labels on mouseover
-    cy.on('zoom', evt => {
-        cy.style().selector('.displayLabel').style({
-            'font-size': `${12 * (1 / cy.zoom())}px`
-        })
-    }) //Increases the size of the label based on the zoom level.
-    cy.on('unselect', 'node', evt => {
-        stop()
-    });
-    cy.on('select', 'node', evt => {
-        speedWalk()
-    });
+        cy.on('mouseout', 'node', evt => {
+            evt.target.removeClass('displayLabel');
+        }); // Pop up labels on mouseover
+        cy.on('mouseover', 'node', evt => {
+            evt.target.flashClass('displayLabel', 3000)
+        }); // Pop up labels on mouseover
+        cy.on('zoom', evt => {
+            cy.style().selector('.displayLabel').style({
+                'font-size': `${12 * (1 / cy.zoom())}px`
+            })
+        }) //Increases the size of the label based on the zoom level.
+        cy.on('unselect', 'node', evt => {
+            stop()
+        });
+        cy.on('select', 'node', evt => {
+            speedWalk()
+        });
 
-    let generateStyle = function () {
+        styles.generateStyle();
+    },
+
+    generateStyle: () => {
         let inject = function (rule) {
-            document.body.appendChild('<div class="client_nexmap-rules">&shy;<style>' + rule + '</style></div>');
+            let rules = document.createElement('div');
+            rules.innerHTML = '&shy;';
+            rules.setAttribute('class', 'client_nexmap-rules');
+            
+            let css = document.createElement('style');
+            css.innerHTML = rule;
+            
+            rules.appendChild(css);
+        
+            document.body.appendChild(rules);
         };
 
         if (document.querySelector('.client_nexmap-ruless')) {
@@ -62,8 +74,6 @@ export const styles = {
             nexMapCSS += '#tab_nexmap_map::before {content: "\\f2ae";}';
 
         inject(nexMapCSS);
-    };
-    generateStyle();
     },
 
     refresh: () => {

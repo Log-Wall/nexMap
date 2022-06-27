@@ -5,13 +5,15 @@ import * as Realm from "realm-web";
 export let denizenEntries = [];
 export let shrineEntries = [];
 export let db = {};
+let user = {};
+const logging = false;
 
 export const collectDenizens = async () => {
     //Area filter
     if (GMCP.CurrentArea.id == null) { return; }
 
     // Get all denizens in the current room
-    let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib === 'm' && !this.ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
+    let roomDenizens = GMCP.Char.Items.List.items.filter(x => x.attrib === 'm' && !ignoreList.some(rx => rx.test(x.name)));// || x.attrib == 'mx');
     if (roomDenizens.length === 0) { return; }
     
     let newDenizens = [];
@@ -19,30 +21,30 @@ export const collectDenizens = async () => {
     let curRoom = GMCP.Room.Info.num;
 
     // Remove any denizens that are already in the entries
-    newDenizens = roomDenizens.filter(x => !this.denizenEntries.find(y => x.id === y.id));
-    if (this.logging) { console.log('newDenizens:');console.log(newDenizens); }
+    newDenizens = roomDenizens.filter(x => !denizenEntries.find(y => x.id === y.id));
+    if (logging) { console.log('newDenizens:');console.log(newDenizens); }
     
     // Find denizens that already have entries, but are in a new room.
-    roamers = roomDenizens.filter(x => this.denizenEntries.find(y => x.id === y.id && !y.room.includes(curRoom)));
-    if (this.logging) { console.log('roamers:');console.log(roamers); }
+    roamers = roomDenizens.filter(x => denizenEntries.find(y => x.id === y.id && !y.room.includes(curRoom)));
+    if (logging) { console.log('roamers:');console.log(roamers); }
 
-    this.db.collectionName = 'denizens';
+    db.collectionName = 'denizens';
     for(let denizen of newDenizens) {
         denizen.id = parseInt(denizen.id);
         denizen.room = [curRoom];
         denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
         denizen.time = window.Date();
         denizen.user = {
-            id: this.user.id,
+            id: user.id,
             name: GMCP.Status.name
         }
-        this.denizenEntries.push({id: denizen.id, room: denizen.room});
-        await this.db.insertOne(denizen);           
+        denizenEntries.push({id: denizen.id, room: denizen.room});
+        await db.insertOne(denizen);           
     }
 
     for(let denizen of roamers) {
-        this.denizenEntries.find(e => e.id === denizen.id).rooom = [curRoom];
-        await this.db.updateOne({id:denizen.id}, {$set:{room:[curRoom], id:parseInt(denizen.id)}})
+        denizenEntries.find(e => e.id === denizen.id).rooom = [curRoom];
+        await db.updateOne({id:denizen.id}, {$set:{room:[curRoom], id:parseInt(denizen.id)}})
     }   
     /*  ORIGINAL CODE FOR TRACKING ROAMERS. Commented out after I proved I am not smart and collected
         the wrong room numbers for all 15k entries. Work around will now be to UPDATE all entries with
@@ -62,17 +64,17 @@ export const collectShrines = async () => {
 
     // Get all denizens in the current room
     let roomShrine = GMCP.Char.Items.List.items.find(x => x.icon === 'shrine');
-    let existingShrine = this.shrineEntries.find(e => e.room === GMCP.Room.Info.num);
+    let existingShrine = shrineEntries.find(e => e.room === GMCP.Room.Info.num);
 
     // There is no shrine here, and there never was.
     if (!roomShrine && !roomShrine) { return; }
     
     // Set to work with the shrines collection. All other conditions will interact with Mongo.
-    this.db.collectionName = 'shrines';
+    db.collectionName = 'shrines';
 
     // There used to be a shrine here, but now it is gone.
     if (existingShrine && !roomShrine) {
-        await this.db.deleteOne({"room": existingShrine.room});
+        await db.deleteOne({"room": existingShrine.room});
         return;
     }
 
@@ -84,7 +86,7 @@ export const collectShrines = async () => {
     roomShrine.area = {name: GMCP.Room.Info.area, id: parseInt(GMCP.CurrentArea.id)};
     roomShrine.time = window.Date();
     roomShrine.user = {
-        id: this.user.id,
+        id: user.id,
         name: GMCP.Status.name
     }
 
@@ -93,15 +95,15 @@ export const collectShrines = async () => {
     if (existingShrine && existingShrine?.id !== roomShrine.id) {
         existingShrine.id = roomShrine.id;
     } else {
-        this.shrineEntries.push({id: roomShrine.id, room: roomShrine.room});
+        shrineEntries.push({id: roomShrine.id, room: roomShrine.room});
     }
 
     // We know there is either a new shrine to be added, or the existing shrine changed. Upsert to mongo.
-    await this.db.updateOne({"room": GMCP.Room.Info.num}, roomShrine, {upsert:true});  
+    await db.updateOne({"room": GMCP.Room.Info.num}, roomShrine, {upsert:true});  
     return true;   
 }
 
-export const startUp = async () => {
+export const initialize = async () => {
     console.log('Mongo startup called');
 
     if (!Realm) {
@@ -112,7 +114,7 @@ export const startUp = async () => {
     const app = new Realm.App({ id: "nexmap-izeal" });
     const apiKey = "pE7xABGhoWjv2XvSLvON4D2oOSF8WcmEwXkLoKzE2bqlIX1HpkxQIJTLUbr0qhPw"; // Provided API key
     const credentials = await Realm.Credentials.apiKey(apiKey);
-    const user = await this.app.logIn(credentials)
+    user = await app.logIn(credentials)
     user.id = app.currentUser.id;
     const mongodb = app.currentUser.mongoClient("mongodb-atlas");
     db = mongodb.db('nexMap').collection('denizens')

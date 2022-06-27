@@ -1,4 +1,4 @@
-/* global cy, printHTML */
+/* global cy */
 import { nexmap } from "./nexmap.js";
 import { areaWalk } from './walker.js';
 
@@ -6,6 +6,10 @@ let pageBreak = 20;
 let pageIndex = 0;
 let displayCap = {};
 let displayEntries = {};
+
+export const printHTML = (html) => {
+  window.print(html)
+};
 
 export const notice = (txt, html = false) => {
   let msg = document.createElement('span');
@@ -21,7 +25,7 @@ export const notice = (txt, html = false) => {
     msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: txt}));
   }
 
-  printHTML(msg[0].outerHTML);
+  printHTML(msg.outerHTML);
 };
 
 export const versionNotice = (ver) => {

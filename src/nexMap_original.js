@@ -876,7 +876,7 @@ var nexMap = {
             throw new Error('Unable to copy object! Type not supported.')
         }
     
-        // Nexus overwrite the Array constructor Map to use for their own mapping. This is an essential function of Javascript
+        // Nexus overwrites the Array constructor Map to use for their own mapping. This is an essential function of Javascript
         // Tysandr solution to create an iframe to get the default Map and clone it back into the Nexus window.
         let restoreMap = function () {
             $('body')

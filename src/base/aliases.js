@@ -1,5 +1,5 @@
-/* global GMCP, cy, printHTML, gmcp_save_system, packages */
-import { notice, generateTable } from "./display";
+/* global GMCP, cy, gmcp_save_system, packages */
+import { notice, generateTable, printHTML } from "./display";
 import { findRooms, findAreas } from "./navigation";
 import { goto, stop } from "./walker";
 import { toggle, save, addMark } from "./settings";
