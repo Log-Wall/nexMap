@@ -4,6 +4,8 @@ import { db, initialize } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
 
+window.get_variable = () => { return false; }
+
 export const nexmap = {
   version: '3.0.7',
   nxsVersion: '3.0.7',

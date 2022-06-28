@@ -19,6 +19,7 @@ export const styles = {
         cydiv.style.left = '0px';
         cydiv.style['margin-top'] = '22px';
         cydiv.style['margin-bottom'] = '22px';
+        cy.once('render', () => {cy.center();});
 
         cy.on('mouseout', 'node', evt => {
             evt.target.removeClass('displayLabel');
