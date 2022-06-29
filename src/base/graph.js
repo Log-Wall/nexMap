@@ -1,6 +1,8 @@
-import { longDirs } from "./helpertables";
+import { longDirs, areaContinents } from "./helpertables";
 import { styles } from "./styles";
 import cytoscape from 'cytoscape';
+import { userPreferences } from './settings';
+import { nexmap } from './nexmap';
 
 /* global cy */
 window.cy = cytoscape({
@@ -20,7 +22,30 @@ window.cy = cytoscape({
     pixelRatio: 'auto',
   });
 
+const crowdMapRevisions = (mudmap) => {
+    //Snippet to add the continent to each area. Useful for determining wings and limiting pathfinding scope.
+    mudmap.areas.forEach(e=>{
+        let continent = Object.keys(areaContinents).find(c=>areaContinents[c].includes(e.id));
+        e['continent'] = typeof continent == 'undefined' ? '' : continent;
+    })
+
+    mudmap.areas.find(e=>e.name === 'Shamtota Hills, the (West)').rooms.find(e=>e.id === 1450).exits.find(e=>e.exitId === 15398).name = `say Chrysantha${userPreferences.commandSeparator}push knob`;
+    
+    mudmap.areas.find(e=>e.name === 'Battlesite of Mourning Pass').rooms.find(e=>e.id === 29081).exits.find(e=>e.exitId === 30864).name = `pull rubble${userPreferences.commandSeparator}east`;
+    mudmap.areas.find(e=>e.name === 'Battlesite of Mourning Pass').rooms.find(e=>e.id === 30136).exits.find(e=>e.exitId === 30469).name = `push bones${userPreferences.commandSeparator}east`;
+    mudmap.areas.find(e=>e.name === 'Battlesite of Mourning Pass').rooms.find(e=>e.id === 30469).exits.find(e=>e.exitId === 30437).name = `pull shield81739${userPreferences.commandSeparator}northeast`;
+    mudmap.areas.find(e=>e.name === 'Battlesite of Mourning Pass').rooms.find(e=>e.id === 30523).exits.find(e=>e.exitId === 30631).name = `pull roots${userPreferences.commandSeparator}south`;
+    mudmap.areas.find(e=>e.name === 'Battlesite of Mourning Pass').rooms.find(e=>e.id === 31099).exits.find(e=>e.exitId === 23239).name = `pull mucus${userPreferences.commandSeparator}northeast`;
+
+    mudmap.areas.find(e=>e.name === 'Ghezavat Commune').rooms.find(e=>e.id === 58509).exits.push({exitId:58881,name:"northeast"})
+    mudmap.areas.find(e=>e.name === 'Ghezavat Commune').rooms.push(JSON.parse('{"coordinates":[3,2,-1],"environment":2,"exits":[{"exitId":58509,"name":"west"},{"exitId":58306,"name":"northeast"}],"id":58881,"name":"A narrow, sandy tunnel","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
+    mudmap.areas.find(e=>e.name === 'Ghezavat Commune').rooms.push(JSON.parse('{"coordinates":[4,3,-1],"environment":2,"exits":[{"exitId":58881,"name":"southwest"}],"id":58306,"name":"A landscape of shifting sand","userData":{"Game Area":"the Ghezavat Commune","indoors":"y"}}'));
+
+    return mudmap;
+}
+
 export const generateGraph = async (graph) => {
+    nexmap.mudmap = crowdMapRevisions(graph);
     /** Generate nodes */
     let graphModel =  [];
     for (const area of graph.areas) {
@@ -99,7 +124,7 @@ const createExits = (room, areaId) => {
     if (command.includes('sendAll') && !xt.includes('if')) {
         command = command.substr(command.indexOf("(")+1, command.indexOf(")") - command.indexOf("(") - 1)
                 .replace(/["']/g, '')
-                    .replace(/,\s?/g, nexMap.settings.userPreferences.commandSeparator);
+                    .replace(/,\s?/g, userPreferences.commandSeparator);
     } else if (command.includes('send(') && !command.includes('if')) {
         command = command.substr(command.indexOf("(")+1, command.indexOf(")") - command.indexOf("(") - 1)
                 .replace(/["']/g, '');

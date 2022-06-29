@@ -1,5 +1,5 @@
 import { aliases } from "./aliases";
-import { generateGraph } from "./graph";
+import { generateGraph, crowdMapRevisions } from "./graph";
 import { db, initialize } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
