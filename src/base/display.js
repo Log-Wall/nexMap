@@ -8,7 +8,7 @@ let displayCap = {};
 let displayEntries = {};
 
 export const printHTML = (html) => {
-  window.print(html)
+  //window.print(html)
 };
 
 export const notice = (txt, html = false) => {

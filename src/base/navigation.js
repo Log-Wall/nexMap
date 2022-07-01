@@ -5,7 +5,7 @@ import { styles } from "./styles.js";
 import { notice, generateTable, printHTML } from "./display.js";
 import { generateExits } from "./graph.js";
 import { nexmap } from "./nexmap.js";
-import { denizenEntries, collectDenizens, collectShrines } from './mongo.js';
+import { mongo } from './mongo.js';
 
 export const onGMCP = async (method, args) => {
   switch (method) {
@@ -27,13 +27,13 @@ export const onGMCP = async (method, args) => {
       await changeRoom(GMCP.Room.Info.num);
 
       if (
-        denizenEntries.length > 0 &&
+        mongo.denizenEntries.length > 0 &&
         typeof Realm != "undefined" &&
         GMCP.Char.Items.List.location === "room" &&
         GMCP.Char.Items.List.items.length > 0
       ) {
-        await collectDenizens();
-        await collectShrines();
+        await mongo.collectDenizens();
+        await mongo.collectShrines();
       }
 
       if (pathing) step();

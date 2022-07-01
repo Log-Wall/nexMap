@@ -1,6 +1,6 @@
 import { aliases } from "./aliases";
-import { generateGraph, crowdMapRevisions } from "./graph";
-import { db, initialize } from "./mongo";
+import { generateGraph } from "./graph";
+import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
 
@@ -11,7 +11,6 @@ export const nexmap = {
   nxsVersion: '3.0.7',
   logging: false,
   loggingTime: '',
-  mudmap: {},
   cytoscapeLoaded: false,
   mudletMapLoaded: false,
   currentRoom: -99,
@@ -28,7 +27,7 @@ export const nexmap = {
   onGMCP: onGMCP,
   styles: styles,
   aliases: aliases,
-  db: db,
+  mongo: mongo,
 
   startup() {
     document.getElementById('cy')?.remove();
@@ -42,12 +41,10 @@ export const nexmap = {
     fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json")
       .then(response => response.json())
       .then(async data => {
-        nexmap.mudmap = data;
-        let graph = await nexmap.generateGraph(data);
+        let graph = await generateGraph(data);
         window.cy.add(graph)
       })
       .then(() => {
-        initialize();
         window.cy.mount(document.getElementById('cy'))
         nexmap.changeRoom(6534)
       })
