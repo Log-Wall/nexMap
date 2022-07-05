@@ -10,15 +10,15 @@ export const styles = {
         if (nexmap.logging) {
             console.log('nexMap: nexMap.style()')
         };
-        const cydiv = document.getElementById('cy');
-        cydiv.style.width = '100%';
-        cydiv.style.height = 'calc(100% - 44px)';
-        cydiv.style.position = 'absolute';
-        cydiv.style.overflow = 'hidden';
-        cydiv.style.top = '0px';
-        cydiv.style.left = '0px';
-        cydiv.style['margin-top'] = '22px';
-        cydiv.style['margin-bottom'] = '22px';
+        // const cydiv = document.getElementById('cy');
+        // cydiv.style.width = '100%';
+        // cydiv.style.height = 'calc(100% - 44px)';
+        // cydiv.style.position = 'absolute';
+        // cydiv.style.overflow = 'hidden';
+        // cydiv.style.top = '0px';
+        // cydiv.style.left = '0px';
+        // cydiv.style['margin-top'] = '22px';
+        // cydiv.style['margin-bottom'] = '22px';
         cy.once('render', () => {cy.center();});
 
         cy.on('mouseout', 'node', evt => {

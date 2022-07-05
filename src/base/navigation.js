@@ -1,4 +1,4 @@
-/* global GMCP, cy, nexMap_tab */
+/* global GMCP, cy, nexusclient */
 import { toggle, userPreferences } from "./settings.js";
 import { pathing, step, determinePath } from "./walker.js";
 import { styles } from "./styles.js";
@@ -16,10 +16,10 @@ export const onGMCP = async (method, args) => {
       // Nexus map window for map display.
       // nexMap_tab is from the custom tab package.
       if (args.ohmap) {
-        nexMap_tab.deactivate();
+        nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "map"}, type: "FlexLayout_SelectTab"})
         return;
-      } else if (!nexMap_tab.active) {
-        nexMap_tab.activate();
+      } else {
+        nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "nexmap"}, type: "FlexLayout_SelectTab"})
         styles.refresh();
         cy.center(`#${GMCP.Room.Info.num}`);
       }
@@ -249,7 +249,7 @@ export const changeRoom = async (id) => {
   cy.center(`#${id}`);
   document.getElementById("currentRoomLabel").innerHTML = `${room.data(
     "areaName"
-  )}: ${room.data("name")} (${GMCP.Room.Info.num})`;
+  )}: ${room.data("name")} (${id})`;
   document.getElementById("currentExitsLabel").innerHTML = `Exits: ${room
     .data("exits")
     .join(", ")}`;

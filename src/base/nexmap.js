@@ -1,10 +1,18 @@
+/* 
+  Breaking changes from 2.0 to 3.0:
+    GMCP > nexusclient.datahandler().GMCP
+    get_variable > nexusclient.variables().get()
+    set_variable > nexusclient.variables().set()
+    run_function > nexusclient.reflexes().run_function()
+    $
+*/
+
+
 import { aliases } from "./aliases";
 import { generateGraph } from "./graph";
 import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
-
-window.get_variable = () => { return false; }
 
 export const nexmap = {
   version: '3.0.7',

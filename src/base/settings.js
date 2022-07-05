@@ -1,33 +1,43 @@
-/* global cy, get_variable, set_variable */
+/* global cy, nexusclient, set_variable */
 import { nexmap } from './nexmap.js';
 import { notice, generateTable } from './display.js';
 
-const get_variable = () => { return false; }
+if (typeof nexusclient === 'undefined') {
+  window.nexusclient = {
+    _variables: {
+      get: () => { return false; }
+    },
+    variables() {
+      return this._variables;
+    }
+  }
+}
+
 
 export const userPreferences = {
-  intialConfiguration: get_variable('nexMapConfigs')?.initialConfiguration || 0,
-  commandSeparator: get_variable('nexMapConfigs')?.commandSeparator || '\\',
-  useDuanathar: get_variable('nexMapConfigs')?.useDuanathar || false,
-  useDuanatharan: get_variable('nexMapConfigs')?.useDuanatharan || false,
-  duanatharCommand: get_variable('nexMapConfigs')?.duanatharCommand || 'say duanathar',
-  duanatharanCommand: get_variable('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
-  useSewergrates: get_variable('nexMapConfigs')?.useSewergrates || false,
-  useWormholes: get_variable('nexMapConfigs')?.useWormholes || false,
-  useUniverse: get_variable('nexMapConfigs')?.useUniverse || false,
-  vibratingStick: get_variable('nexMapConfigs')?.vibratingStick || false,
-  displayWormholes: get_variable('nexMapConfigs')?.displayWormholes || false,
-  currentRoomShape: get_variable('nexMapConfigs')?.currentRoomShape || 'rectangle',
-  currentRoomColor: get_variable('nexMapConfigs')?.currentRoomColor || '#ff1493',
-  labelDisplay: get_variable('nexMapConfigs')?.labelDisplay || 'name',
-  landmarks: get_variable('nexMapConfigs')?.landmarks || [],
-  antiWingAreas: get_variable('nexMapConfigs')?.antiWingAreas || [],
-  antiGareAreas: get_variable('nexMapConfigs')?.antiGareAreas || [],
-  antiUniverseAreas: get_variable('nexMapConfigs')?.antiUniverseAreas || []
+  intialConfiguration: nexusclient.variables().get('nexMapConfigs')?.initialConfiguration || 0,
+  commandSeparator: nexusclient.variables().get('nexMapConfigs')?.commandSeparator || '\\',
+  useDuanathar: nexusclient.variables().get('nexMapConfigs')?.useDuanathar || false,
+  useDuanatharan: nexusclient.variables().get('nexMapConfigs')?.useDuanatharan || false,
+  duanatharCommand: nexusclient.variables().get('nexMapConfigs')?.duanatharCommand || 'say duanathar',
+  duanatharanCommand: nexusclient.variables().get('nexMapConfigs')?.duanatharanCommand || 'say duanatharan',
+  useSewergrates: nexusclient.variables().get('nexMapConfigs')?.useSewergrates || false,
+  useWormholes: nexusclient.variables().get('nexMapConfigs')?.useWormholes || false,
+  useUniverse: nexusclient.variables().get('nexMapConfigs')?.useUniverse || false,
+  vibratingStick: nexusclient.variables().get('nexMapConfigs')?.vibratingStick || false,
+  displayWormholes: nexusclient.variables().get('nexMapConfigs')?.displayWormholes || false,
+  currentRoomShape: nexusclient.variables().get('nexMapConfigs')?.currentRoomShape || 'rectangle',
+  currentRoomColor: nexusclient.variables().get('nexMapConfigs')?.currentRoomColor || '#ff1493',
+  labelDisplay: nexusclient.variables().get('nexMapConfigs')?.labelDisplay || 'name',
+  landmarks: nexusclient.variables().get('nexMapConfigs')?.landmarks || [],
+  antiWingAreas: nexusclient.variables().get('nexMapConfigs')?.antiWingAreas || [],
+  antiGareAreas: nexusclient.variables().get('nexMapConfigs')?.antiGareAreas || [],
+  antiUniverseAreas: nexusclient.variables().get('nexMapConfigs')?.antiUniverseAreas || []
 }
 
 export const save = () => {
   userPreferences.initialConfiguration = nexmap.version;
-  set_variable('nexMapConfigs', userPreferences);
+  nexusclient.variables().set('nexMapConfigs', userPreferences);
 }
 
 export const toggleWormholes= () => {

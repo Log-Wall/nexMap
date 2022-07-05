@@ -53,6 +53,17 @@ export const generateGraph = async (graph) => {
         graphModel = graphModel.concat(createRooms(area));
     }
 
+    cy.batch( () => {
+        cy.add(graphModel);
+
+        // Add a class for dynamic Nur exits. This is a clunky place/way to do it.
+        cy.$('#45182-55588').addClass('nurRift');
+        cy.$('#55588-45182').addClass('nurRift');
+
+        nexmap.wormholes = cy.$('.wormhole');
+        nexmap.sewergrates = cy.$('.sewergrate');
+    });
+
     return graphModel;
 }
 
@@ -116,9 +127,11 @@ const createExits = (room, areaId) => {
           command: command,
           door: exit.door ? exit.door : false,
           z: room.coordinates[2]
-      }
+      },
+      classes: []
     }
-    edge.data.classes = addExitClasses(edge.data);
+    edge.classes = addExitClasses(edge.data);
+    edge.data.weight = edge.classes.includes('wormhole') ? 12 : 1;
 
     /*
     if (command.includes('sendAll') && !xt.includes('if')) {

@@ -19,7 +19,7 @@ export const mongo = {
         
         let newDenizens = [];
         let roamers = [];
-        let curRoom = GMCP.Room.Info.num;
+        let curRoom = GMCP.Location.id;
 
         // Remove any denizens that are already in the entries
         newDenizens = roomDenizens.filter(x => !mongo.denizenEntries.find(y => x.id === y.id));
@@ -33,7 +33,7 @@ export const mongo = {
         for(let denizen of newDenizens) {
             denizen.id = parseInt(denizen.id);
             denizen.room = [curRoom];
-            denizen.area = {name: GMCP.Room.Info.area, id: GMCP.CurrentArea.id};
+            denizen.area = {name: GMCP.Room.Info.area, id: GMCP.Location.areaid};
             denizen.time = window.Date();
             denizen.user = {
                 id: mongo.user.id,
