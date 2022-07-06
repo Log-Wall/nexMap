@@ -333,7 +333,7 @@ var nexMap = {
         cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
             $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
                 .text(`${e}`)
-                .on('click', function() {send_direct(this.innerText)})
+                .on('click', function() {nexusclient.send_commands(this.innerText)})
                 .appendTo('#currentExitsLabel');
             $('<span></span>', {class: 'clickableExitSpace'})
                 .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
@@ -1021,7 +1021,7 @@ var nexMap = {
                         src: 'https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif',
                         width: "35%"
                     })[0].outerHTML);
-                    send_direct('ql');
+                    nexusclient.send_commands('ql');
                     nexMap.styles.refresh();
                     if (get_variable('nexMapConfigs')?.initialConfiguration != nexMap.version) {
                         this.nxsUpdates();
@@ -1029,7 +1029,7 @@ var nexMap = {
                         console.log(get_variable('nexMapConfigs')?.initialConfiguration);
                         console.log(nexMap.settings.userPreferences.initialConfiguration);
                         console.log(nexMap.version);
-                        send_direct('nm config');
+                        nexusclient.send_commands('nm config');
                     }
                 });
             });
@@ -1337,7 +1337,7 @@ var nexMap = {
                 this.stepCommand = this.pathCommands[index];
             }
             if (nexMap.logging) {console.log(this.stepCommand)};
-            send_direct(`${this.stepCommand}`);
+            nexusclient.send_commands(`${this.stepCommand}`);
         },
 
         async aStar(source, target) {
@@ -1747,7 +1747,7 @@ var nexMap = {
         
             if (nexMap.walker.pathing === true) {
                 nexMap.display.notice('Pathing canceled');
-                send_direct('path stop');
+                nexusclient.send_commands('path stop');
             }
         
             nexMap.walker.reset();
@@ -3441,10 +3441,10 @@ if (typeof reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap") =
     Object.assign(reflex_find_by_name("trigger", "New Tarot", false, false, "nexMap"), {
         matching: 'exact',
         text: 'A shimmering, translucent image rises up before you, its glittering surface displaying the verdant grasslands, soaring mountains, sprawling settlements and deep blue seas of Sapience.',
-        actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+        actions: [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
     });
 }
 reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").matching = 'exact';
-reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").actions = [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
-"{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tsend_direct(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}"
+reflex_find_by_name("trigger", "Universe Tarot", false, false, "nexMap").actions = [JSON.parse("{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}")]
+"{\"action\":\"script\",\"script\":\"if (nexMap.walker.universeTarget) {\\n\\tnexusclient.send_commands(`queue addclear eqbal touch ${nexMap.walker.universeTarget}`);\\n    nexMap.walker.universeTarget = false;\\n}\"}"
 */

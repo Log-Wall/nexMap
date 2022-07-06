@@ -1,13 +1,14 @@
-/* global cy, GMCP, send_direct */
+/* global cy, GMCP, window.nexusclient */
 import { nexmap } from "./nexmap.js";
 import { userPreferences } from "./settings.js";
+import { shortDirs, areaContinents, universeRooms } from "./helpertables.js";
 
 export let pathing = false;
 let pathRooms = [];
 let pathCommands = [];
+let pathRawRooms = [];
 let pathRawCommands = [];
 let pathingStartTime = Date.now();
-let pathRawRooms = [];
 let delay = false;
 let destination = 0;
 let stepCommand = "";
@@ -19,7 +20,7 @@ let placeHolderRooms = [
   "gare",
 ];
 let universeTarget = false;
-let clientEcho = window.echo_input;
+let clientEcho = window.nexusclient.settings().echo_input;
 
 export const speedWalk = async (s, t) => {
   if (nexmap.logging) {
@@ -27,8 +28,8 @@ export const speedWalk = async (s, t) => {
   }
 
   pathingStartTime = Date.now();
-  clientEcho = window.echo_input;
-  window.echo_input = false;
+  clientEcho = window.nexusclient.settings().echo_input;
+  window.nexusclient.settings().echo_input = false;
   await determinePath(s, t);
   step();
 };
@@ -148,7 +149,7 @@ export const step = () => {
   if (nexmap.logging) {
     console.log(stepCommand);
   }
-  send_direct(`${stepCommand}`);
+  window.nexusclient.send_commands(`${stepCommand}`);
 };
 
 export const determinePath = async (src, tar) => {
@@ -175,6 +176,7 @@ export const determinePath = async (src, tar) => {
 
   if (nexmap.logging) {
     console.log(baseStar);
+    window.baseStar = baseStar;
   }
 
   // If the path is local to the area there is no need to check other fast travel options.
@@ -281,7 +283,7 @@ const checkUniverse = async (astar, target) => {
   }
 
   let meropis = false;
-  if (nexmap.areaContinents.Meropis.includes(nexmap.currentArea)) {
+  if (areaContinents.Meropis.includes(nexmap.currentArea)) {
     meropis = "Meropis";
   }
 
@@ -311,7 +313,7 @@ const checkUniverse = async (astar, target) => {
           .merge(universeStar.path)
       : universeStar.path;
   universeTarget =
-    nexmap.universeRooms[meropis ? "meropis" : "main"][
+    universeRooms[meropis ? "meropis" : "main"][
       universeStar.path.nodes()[1].data("id")
     ];
 
@@ -330,7 +332,7 @@ const checkClouds = async (astar, target) => {
   }
 
   let meropis = "";
-  if (nexmap.areaContinents.Meropis.includes(nexmap.currentArea)) {
+  if (areaContinents.Meropis.includes(nexmap.currentArea)) {
     meropis = "Meropis";
   }
 
@@ -391,7 +393,7 @@ const hybridPath = async (optimalStar) => {
     baseCmds.push(e.data("command"));
   }
 
-  if (!nexmap.shortDirs[baseCmds[0]] && !parseInt(baseRooms[0])) {
+  if (!shortDirs[baseCmds[0]] && !parseInt(baseRooms[0])) {
     baseRooms.unshift(GMCP.Room.Info.num);
   }
   if (nexmap.logging) {
@@ -415,13 +417,13 @@ const hybridPath = async (optimalStar) => {
   for (let i = 0; i < baseCmds.length; i++) {
     ++pathTrackDistance;
 
-    if (!nexmap.shortDirs[baseCmds[i]]) {
+    if (!shortDirs[baseCmds[i]]) {
       hybRm.push(baseRooms[i + 1]);
       hybCmds.push(baseCmds[i]);
       continue;
     }
 
-    if (nexmap.shortDirs[baseCmds[i]] && !nexmap.shortDirs[baseCmds[i + 1]]) {
+    if (shortDirs[baseCmds[i]] && !shortDirs[baseCmds[i + 1]]) {
       hybRm.push(baseRooms[i + 1]);
       hybCmds.push(`path track ${baseRooms[i + 1]}`);
 
@@ -609,7 +611,7 @@ const reset = () => {
   destination = 0;
   stepCommand = "";
   delay = false;
-  window.echo_input = clientEcho;
+  window.nexusclient.settings().echo_input = clientEcho;
 };
 
 export const stop = () => {
@@ -617,7 +619,7 @@ export const stop = () => {
 
   if (pathing === true) {
     nexmap.display.notice("Pathing canceled");
-    send_direct("path stop");
+    window.nexusclient.send_commands("path stop");
   }
 
   reset();

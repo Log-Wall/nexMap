@@ -13,8 +13,10 @@ import { generateGraph } from "./graph";
 import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
+import { speedWalk } from "./walker";
 
 export const nexmap = {
+  speedwalk: speedWalk,
   version: '3.0.7',
   nxsVersion: '3.0.7',
   logging: false,

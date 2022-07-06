@@ -1,4 +1,4 @@
-/* global cy, nexusclient, set_variable */
+/* global cy, nexusclient */
 import { nexmap } from './nexmap.js';
 import { notice, generateTable } from './display.js';
 
@@ -9,7 +9,13 @@ if (typeof nexusclient === 'undefined') {
     },
     variables() {
       return this._variables;
+    },
+    settings() {
+      return {
+        echo_input: true
+      }
     }
+
   }
 }
 

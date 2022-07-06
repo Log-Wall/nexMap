@@ -259,7 +259,7 @@ export const changeRoom = async (id) => {
   cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
       $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
           .text(`${e}`)
-          .on('click', function() {send_direct(this.innerText)})
+          .on('click', function() {nexusclient.send_commands(this.innerText)})
           .appendTo('#currentExitsLabel');
       $('<span></span>', {class: 'clickableExitSpace'})
           .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
