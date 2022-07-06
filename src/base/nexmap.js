@@ -13,10 +13,9 @@ import { generateGraph } from "./graph";
 import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
-import { speedWalk } from "./walker";
+import { pathing, speedWalk, stop } from "./walker";
 
 export const nexmap = {
-  speedwalk: speedWalk,
   version: '3.0.7',
   nxsVersion: '3.0.7',
   logging: false,
@@ -38,6 +37,14 @@ export const nexmap = {
   styles: styles,
   aliases: aliases,
   mongo: mongo,
+
+  walker: {
+    pathing: pathing,
+    speedwalk: speedWalk,
+    stop: stop
+  },
+
+  
 
   startup() {
     document.getElementById('cy')?.remove();

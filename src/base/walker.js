@@ -1,4 +1,4 @@
-/* global cy, GMCP, window.nexusclient */
+/* global cy, GMCP */
 import { nexmap } from "./nexmap.js";
 import { userPreferences } from "./settings.js";
 import { shortDirs, areaContinents, universeRooms } from "./helpertables.js";
@@ -394,7 +394,7 @@ const hybridPath = async (optimalStar) => {
   }
 
   if (!shortDirs[baseCmds[0]] && !parseInt(baseRooms[0])) {
-    baseRooms.unshift(GMCP.Room.Info.num);
+    baseRooms.unshift(GMCP.Room.Info.num.toString());
   }
   if (nexmap.logging) {
     console.log("hybridPath() thispc, thispr");
@@ -411,7 +411,7 @@ const hybridPath = async (optimalStar) => {
     console.log(baseRooms);
   }
   let hybCmds = [];
-  let hybRm = [GMCP.Room.Info.num];
+  let hybRm = [GMCP.Room.Info.num.toString()];
   let pathTrackDistance = 0;
 
   for (let i = 0; i < baseCmds.length; i++) {

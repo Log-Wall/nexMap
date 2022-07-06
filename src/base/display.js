@@ -8,7 +8,7 @@ let displayCap = {};
 let displayEntries = {};
 
 export const printHTML = (html) => {
-  //window.print(html)
+  window.nexusclient.add_html_line(html)
 };
 
 export const notice = (txt, html = false) => {
