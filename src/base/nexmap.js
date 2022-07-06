@@ -13,7 +13,7 @@ import { generateGraph } from "./graph";
 import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
-import { pathing, speedWalk, stop } from "./walker";
+import { walker } from "./walker";
 
 export const nexmap = {
   version: '3.0.7',
@@ -34,15 +34,11 @@ export const nexmap = {
   farseeArea: farseeArea,
   changeRoom: changeRoom,
   onGMCP: onGMCP,
+  
   styles: styles,
   aliases: aliases,
   mongo: mongo,
-
-  walker: {
-    pathing: pathing,
-    speedwalk: speedWalk,
-    stop: stop
-  },
+  walker: walker,
 
   
 

@@ -14,8 +14,13 @@ if (typeof nexusclient === 'undefined') {
       return {
         echo_input: true
       }
+    },
+    add_html_line(args) {
+      console.log(`add_html_line(): ${args}`)
+    },
+    send_commands(args) {
+      console.log(`send_commands(): ${args}`)
     }
-
   }
 }
 

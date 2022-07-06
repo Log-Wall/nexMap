@@ -1,5 +1,5 @@
 /* global cy */
-import { stop, speedWalk } from './walker.js';
+import { walker } from './walker.js';
 import { notice } from './display.js';
 import { changeRoom, changeArea } from './navigation';
 import { nexmap } from './nexmap.js';
@@ -33,10 +33,10 @@ export const styles = {
             })
         }) //Increases the size of the label based on the zoom level.
         cy.on('unselect', 'node', evt => {
-            stop()
+            walker.stop()
         });
         cy.on('select', 'node', evt => {
-            speedWalk()
+            walker.speedWalk()
         });
 
         styles.generateStyle();

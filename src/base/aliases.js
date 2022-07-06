@@ -1,7 +1,7 @@
-/* global GMCP, cy, gmcp_save_system, packages */
+/* global GMCP, cy */
 import { notice, generateTable, printHTML } from "./display";
 import { findRooms, findAreas } from "./navigation";
-import { goto, stop } from "./walker";
+import { walker } from "./walker";
 import { toggle, save, addMark } from "./settings";
 import { styles } from "./styles";
 import { nexmap } from "./nexmap";
@@ -21,14 +21,14 @@ export const aliases = {
   save: function () {
     save();
   },
-  find: function (args) {
+  find: async function (args) {
     if (!/^[a-zA-z\s]+$/g.test(args)) {
       return;
     }
 
     generateTable(
       "displayTable",
-      findRooms(args),
+      await findRooms(args),
       args.toLowerCase()
     );
   },
@@ -54,7 +54,7 @@ export const aliases = {
       cy.$(":selected").unselect();
       cy.$(`#${args}`).select();
     } else if (/^[a-zA-z'-\s]+$/g.test(args)) {
-      goto(args);
+      walker.goto(args);
     }
   },
   mark: function (args) {
@@ -67,7 +67,7 @@ export const aliases = {
     generateTable("landmarkTable");
   },
   stop: function () {
-    stop();
+    walker.stop();
   },
   zoom: function (args) {
     if (!/^\d(?:.\d\d?)?$/g.test(args)) {
@@ -95,8 +95,8 @@ export const aliases = {
     let qry = text.toLowerCase();
     let table = async function (rr) {
       let re = new RegExp(`${rr}`, "i");
-      nexmap.db.collectionName = "denizens";
-      let results = await nexmap.db.aggregate([
+      nexmap.mongo.db.collectionName = "denizens";
+      let results = await nexmap.mongo.db.aggregate([
         { $match: { name: re } },
         { $sort: { name: 1, area: 1 } },
       ]);
@@ -105,12 +105,12 @@ export const aliases = {
     table(qry);
   },
   update: async function () {
-    let response = await fetch(
-      "https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs",
-      { cache: "no-store" }
-    );
-    let data = await response.json();
-    packages[packages.findIndex((e) => e.name === "nexmap")] = data;
-    gmcp_save_system(false);
+    // let response = await fetch(
+    //   "https://cdn.jsdelivr.net/gh/Log-Wall/nexMap/dist/nexMap.nxs",
+    //   { cache: "no-store" }
+    // );
+    // let data = await response.json();
+    // packages[packages.findIndex((e) => e.name === "nexmap")] = data;
+    // gmcp_save_system(false);
   },
 };

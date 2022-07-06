@@ -1,11 +1,12 @@
 /* global GMCP, cy, nexusclient */
 import { toggle, userPreferences } from "./settings.js";
-import { pathing, step, determinePath } from "./walker.js";
+import { step, determinePath } from "./walker.js";
 import { styles } from "./styles.js";
 import { notice, generateTable, printHTML } from "./display.js";
 import { generateExits } from "./graph.js";
 import { nexmap } from "./nexmap.js";
 import { mongo } from './mongo.js';
+import { walker } from './walker.js'
 
 export const onGMCP = async (method, args) => {
   switch (method) {
@@ -36,7 +37,7 @@ export const onGMCP = async (method, args) => {
         await mongo.collectShrines();
       }
 
-      if (pathing) step();
+      if (walker.pathing) step();
       break;
 
     case "Char.Items.List":
@@ -154,9 +155,11 @@ export const findRooms = async (search) => {
     if (
       e.data("name") &&
       e.data("name").toLowerCase().includes(search.trim().toLowerCase())
-    )
+    ) {
       return true;
-    else return false;
+    } else {
+      return false;
+    }
   });
 
   if (typeof qry === "undefined") {

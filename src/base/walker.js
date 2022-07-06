@@ -2,37 +2,118 @@
 import { nexmap } from "./nexmap.js";
 import { userPreferences } from "./settings.js";
 import { shortDirs, areaContinents, universeRooms } from "./helpertables.js";
+import { notice } from "./display.js";
 
-export let pathing = false;
-let pathRooms = [];
-let pathCommands = [];
-let pathRawRooms = [];
-let pathRawCommands = [];
-let pathingStartTime = Date.now();
-let delay = false;
-let destination = 0;
-let stepCommand = "";
-let placeHolderRooms = [
-  "duanathar",
-  "duanatharMeropis",
-  "universe",
-  "universeMeropis",
-  "gare",
-];
+export const walker = {
+  pathing: false,
+  pathRooms: [],
+  pathCommands: [],
+  pathRawRooms: [],
+  pathRawCommands: [],
+  pathingStartTime: Date.now(),
+  delay: false,
+  destination: 0,
+  stepCommand: "",
+  placeHolderRooms: [
+    "duanathar",
+    "duanatharMeropis",
+    "universe",
+    "universeMeropis",
+    "gare",
+  ],
+
+  speedWalk: async (s, t) => {
+    if (nexmap.logging) {
+      console.log("nexMap: speedwalk()");
+    }
+  
+    walker.pathingStartTime = Date.now();
+    clientEcho = window.nexusclient.settings().echo_input;
+    window.nexusclient.settings().echo_input = false;
+    await determinePath(s, t);
+    step();
+  },
+
+  stop: () => {
+    if (nexmap.logging) console.log("nexMap: stop()");
+  
+    if (walker.pathing === true) {
+      notice("Pathing canceled");
+      window.nexusclient.send_commands("path stop");
+    }
+  
+    reset();
+  },
+
+  goto: (str) => {
+    if (typeof str === "number") {
+      str = str.toString();
+    } else if (typeof str !== "string") {
+      return;
+    }
+    console.log(`str: ${str}`);
+    let findMark = userPreferences.landmarks.find(
+      (e) => e.name.toLowerCase() === str.toLowerCase()
+    );
+    if (findMark) {
+      walker.speedWalk(nexmap.currentRoom, findMark.roomID);
+      return;
+    }
+    console.log(`findMark: ${findMark}`);
+    let areas = nexmap.findArea(str);
+    console.log(`areas: ${areas}`);
+    if (areas.length === 0) {
+      let findAreas = nexmap.findAreas(str);
+      console.log(findAreas);
+      let findMarks = userPreferences.landmarks.filter((e) =>
+        e.name.toLowerCase().includes(str.toLowerCase())
+      );
+      if (findAreas.length) {
+        nexmap.display.generateTable("areaTable", findAreas, str);
+      }
+      if (findMarks.length) {
+        nexmap.display.generateTable("landmarkTable", findMarks, str);
+      }
+      return;
+    }
+  
+    if (areas.length === 1) {
+      areaWalk(areas[0].id);
+      return;
+    }
+  
+    let findAreaNode = function (areaID) {
+      let aStar = cy.elements().aStar({
+        root: `#${nexmap.currentRoom}`,
+        goal: cy.$(`[area = ${areaID}]`),
+        weight: (edge) => {
+          return edge.data("weight");
+        },
+        directed: true,
+      });
+      return {
+        distance: aStar?.path
+          ?.nodes()
+          ?.findIndex((e) => e.data("area") === areaID),
+        id: areaID,
+      };
+    };
+  
+    let closestArea = { id: 0, distance: 999999 };
+    areas.forEach((a) => {
+      let ar = findAreaNode(a.id);
+      if (ar.distance < closestArea.distance) {
+        closestArea = ar;
+      }
+    });
+    console.log(`closestArea: ${closestArea}`);
+  
+    areaWalk(closestArea.id);
+  },
+}
+
 let universeTarget = false;
 let clientEcho = window.nexusclient.settings().echo_input;
-
-export const speedWalk = async (s, t) => {
-  if (nexmap.logging) {
-    console.log("nexMap: speedwalk()");
-  }
-
-  pathingStartTime = Date.now();
-  clientEcho = window.nexusclient.settings().echo_input;
-  window.nexusclient.settings().echo_input = false;
-  await determinePath(s, t);
-  step();
-};
 
 //speedWalk(nexmap.currentRoom, cy.$(`[area = ${id}]`))
 // The aStar pathing to a collection of Nodes in an area does not seem to always path to the closest Node in the collection.
@@ -52,104 +133,38 @@ export const areaWalk = async (areaID) => {
     .find((n) => n.data("area") === areaID)
     .data("id");
 
-  speedWalk(nexmap.currentRoom, target);
-};
-
-export const goto = (str) => {
-  if (typeof str === "number") {
-    str = str.toString();
-  } else if (typeof str !== "string") {
-    return;
-  }
-  console.log(`str: ${str}`);
-  let findMark = userPreferences.landmarks.find(
-    (e) => e.name.toLowerCase() === str.toLowerCase()
-  );
-  if (findMark) {
-    speedWalk(nexmap.currentRoom, findMark.roomID);
-    return;
-  }
-  console.log(`findMark: ${findMark}`);
-  let areas = nexmap.findArea(str);
-  console.log(`areas: ${areas}`);
-  if (areas.length === 0) {
-    let findAreas = nexmap.findAreas(str);
-    console.log(findAreas);
-    let findMarks = userPreferences.landmarks.filter((e) =>
-      e.name.toLowerCase().includes(str.toLowerCase())
-    );
-    if (findAreas.length) {
-      nexmap.display.generateTable("areaTable", findAreas, str);
-    }
-    if (findMarks.length) {
-      nexmap.display.generateTable("landmarkTable", findMarks, str);
-    }
-    return;
-  }
-
-  if (areas.length === 1) {
-    areaWalk(areas[0].id);
-    return;
-  }
-
-  let findAreaNode = function (areaID) {
-    let aStar = cy.elements().aStar({
-      root: `#${nexmap.currentRoom}`,
-      goal: cy.$(`[area = ${areaID}]`),
-      weight: (edge) => {
-        return edge.data("weight");
-      },
-      directed: true,
-    });
-    return {
-      distance: aStar?.path
-        ?.nodes()
-        ?.findIndex((e) => e.data("area") === areaID),
-      id: areaID,
-    };
-  };
-
-  let closestArea = { id: 0, distance: 999999 };
-  areas.forEach((a) => {
-    let ar = findAreaNode(a.id);
-    if (ar.distance < closestArea.distance) {
-      closestArea = ar;
-    }
-  });
-  console.log(`closestArea: ${closestArea}`);
-
-  areaWalk(closestArea.id);
+  walker.speedWalk(nexmap.currentRoom, target);
 };
 
 export const step = () => {
   if (nexmap.logging) console.log("nexMap: step()");
 
-  if (pathCommands.length === 0) {
+  if (walker.pathCommands.length === 0) {
     if (nexmap.logging) {
       console.log("nexMap: step RETURN");
     }
     return;
   }
 
-  let index = pathRooms.indexOf(GMCP.Room.Info.num.toString());
+  let index = walker.pathRooms.indexOf(GMCP.Room.Info.num.toString());
 
-  if (GMCP.Room.Info.num === destination) {
-    pathing = false;
+  if (GMCP.Room.Info.num === walker.destination) {
+    walker.pathing = false;
     reset();
-    nexmap.display.notice(
-      `Pathing complete. ${(Date.now() - pathingStartTime) / 1000}s`
+    notice(
+      `Pathing complete. ${(Date.now() - walker.pathingStartTime) / 1000}s`
     );
     return;
   }
 
   if (index >= 0) {
-    pathing = true;
-    stepCommand = pathCommands[index];
+    walker.pathing = true;
+    walker.stepCommand = walker.pathCommands[index];
   }
   if (nexmap.logging) {
-    console.log(stepCommand);
+    console.log(walker.stepCommand);
   }
-  window.nexusclient.send_commands(`${stepCommand}`);
+  window.nexusclient.send_commands(`${walker.stepCommand}`);
 };
 
 export const determinePath = async (src, tar) => {
@@ -157,19 +172,19 @@ export const determinePath = async (src, tar) => {
     console.log(`nexMap: determinePath(${src}, ${tar})`);
   }
 
-  pathCommands = [];
-  pathRooms = [];
+  walker.pathCommands = [];
+  walker.pathRooms = [];
   let source = src || GMCP.Room.Info.num;
   let target = tar || cy.$(":selected").data("id");
 
   if (source === target) {
-    pathing = false;
+    walker.pathing = false;
     reset();
-    nexmap.display.notice(`Pathing complete. You're already there!`);
+    notice(`Pathing complete. You're already there!`);
     return;
   }
 
-  destination = target;
+  walker.destination = parseInt(target);
 
   let baseStar = await aStar(source, target);
   baseStar.type = "base";
@@ -444,13 +459,13 @@ const hybridPath = async (optimalStar) => {
     console.log(hybRm);
   }
 
-  pathCommands = [...hybCmds];
-  pathRooms = [...hybRm];
+  walker.pathCommands = [...hybCmds];
+  walker.pathRooms = [...hybRm];
 
   if (nexmap.logging) {
     console.log("FINAL hybridPath() thispc, thispr");
-    console.log(pathCommands);
-    console.log(pathRooms);
+    console.log(walker.pathCommands);
+    console.log(walker.pathRooms);
   }
 
   return true;
@@ -604,23 +619,12 @@ const reset = () => {
   if (nexmap.logging) console.log("nexMap: reset()");
 
   universeTarget = false;
-  pathing = false;
+  walker.pathing = false;
   cy.$(":selected").unselect();
-  pathCommands = [];
-  pathRooms = [];
-  destination = 0;
-  stepCommand = "";
-  delay = false;
+  walker.pathCommands = [];
+  walker.pathRooms = [];
+  walker.destination = 0;
+  walker.stepCommand = "";
+  walker.delay = false;
   window.nexusclient.settings().echo_input = clientEcho;
-};
-
-export const stop = () => {
-  if (nexmap.logging) console.log("nexMap: stop()");
-
-  if (pathing === true) {
-    nexmap.display.notice("Pathing canceled");
-    window.nexusclient.send_commands("path stop");
-  }
-
-  reset();
 };

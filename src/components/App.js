@@ -29,6 +29,7 @@ function App() {
         'marginBottom': '22px'
       }}></div>
       <div id="currentExitsLabel" style={{position: 'absolute', bottom: '0px'}}></div>
+      <div id="htmlTest"></div>
     </div>
   );
 }

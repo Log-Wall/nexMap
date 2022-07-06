@@ -9,6 +9,7 @@ let displayEntries = {};
 
 export const printHTML = (html) => {
   window.nexusclient.add_html_line(html)
+  document.getElementById('htmlTest').innerHTML += html;
 };
 
 export const notice = (txt, html = false) => {
@@ -16,7 +17,7 @@ export const notice = (txt, html = false) => {
   msg.setAttribute('class', 'mono');
   msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '[-'}));
   msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:OrangeRed', innerHTML: 'nexMap'}));
-  msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-]'}));
+  msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-] '}));
 
 
   if (html) {
@@ -53,19 +54,17 @@ export const versionNotice = (ver) => {
 
 export const generateTable = (table, entries = false, caption = false) => {
   pageIndex = 0;
-  /*if (table == 'displayTable') {
+  if (table === 'displayTable') {
         console.log('works');
+        console.log(entries);
         displayEntries = entries;
         displayCap = caption;
         displayTable();
-    } else {
+  } else {
         console.log(table);
         console.log(entries);
         nexmap.display[`${table}`](entries, caption)
-    }*/
-  displayEntries = entries;
-  displayCap = caption;
-  nexmap.display[`${table}`](entries, caption);
+  }
 };
 
 export const click = {
@@ -107,6 +106,8 @@ export const click = {
 
 export const displayTable = () => {
   let entries = displayEntries;
+  window.tester = entries;
+  console.log(entries);
 
   let table = Object.assign(document.createElement('table'), {
     class: 'mono',
@@ -122,13 +123,15 @@ export const displayTable = () => {
     caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
     caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
     table.createCaption(caption.innerHTML);
+    table.caption.appendChild(caption);
 
     let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:"Num"}))
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Name"}))
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Area"}))
+    table.createTHead();
+    table.tHead.appendChild(header);
 
-    table.insertRow(header);
   } else {
     let caption = document.createElement('span');
     caption.setAttribute('class', 'mono');
@@ -138,16 +141,18 @@ export const displayTable = () => {
     caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
     caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
     table.createCaption(caption.innerHTML);
+    table.caption.appendChild(caption);
 
     let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:""}))
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:""}))
     header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:""}))
-
-    table.insertRow(header);
+    table.createTHead();
+    table.tHead.appendChild(header);
   }
 
   let startIndex = pageIndex > 0 ? pageIndex * pageBreak : 0;
+  table.createTBody();
   for (
     let i = startIndex;
     i < entries.length && i < startIndex + pageBreak;
@@ -166,8 +171,8 @@ export const displayTable = () => {
       style: "color:grey",
       onclick: `click.room(${JSON.stringify(entries[i].data("id"))});`,
       innerHTML: entries[i].data("areaName")}))
-
-    table.insertRow(row);
+    table.tBodies[0].appendChild(row);
+    console.log(table);
   }
 
   printHTML(table.outerHTML);
@@ -195,7 +200,7 @@ export const displayTable = () => {
     });
   }
 
-  printHTML(pagination[0].outerHTML);
+  printHTML(pagination.outerHTML);
 };
 
 // export const landmarkTable = (marks = false, caption = false) => {
