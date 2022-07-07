@@ -1,6 +1,7 @@
 /* global cy */
 import { nexmap } from "./nexmap.js";
 import { areaWalk } from './walker.js';
+import { areaContinents } from "./helpertables.js";
 
 export const display = {
 
@@ -103,14 +104,42 @@ export const click = {
   },
 };
 
-export const displayTable = () => {
-  let entries = displayEntries;
+const getPagination = (startIndex) => {
+  let pagination;
+  if (Math.ceil(displayEntries.length / pageBreak) > pageIndex + 1) {
+    pagination = Object.assign(document.createElement('span'), {
+      style: "color:Goldenrod",
+      innerHTML: `Displaying ${startIndex + pageBreak} of ${displayEntries.length}.`
+    });
+    pageIndex++;
+    pagination.appendChild(Object.assign(document.createElement('span'), {
+      style: "color:Goldenrod", 
+      innerHTML: " Click for "
+    }));
+    pagination.appendChild(Object.assign(document.createElement('a'), {
+      style: "cursor:pointer;color:Ivory;text-decoration:underline;", 
+      innerHTML: "MORE",
+      id: "nexmap-pagination"
+    }));
+  } else {
+    pagination = Object.assign(document.createElement('span'), {
+      style: "color:Goldenrod", 
+      innerHTML: `Displaying ${displayEntries.length} of ${displayEntries.length}.`
+    });
+  }
+  
+  return pagination;
+}
 
+const getTable = (id, columns = [1,2,3,4]) => {
   let table = Object.assign(document.createElement('table'), {
-    id: 'nexmap-displaytable',
+    id: id,
     class: 'mono',
     style: "width:95%;max-width:100%;border:1px solid GoldenRod;border-spacing:0px",
   });
+  table.createCaption();
+  table.createTHead();
+  table.createTBody();
 
   let caption = document.createElement('span');
   caption.setAttribute('class', 'mono');
@@ -118,25 +147,24 @@ export const displayTable = () => {
   caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:OrangeRed', innerHTML: 'nexMap'}));
   caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-]'}));
   caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
-  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
-  table.createCaption(caption.innerHTML);
+  table.caption.firstChild.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: 'RAWR'}));
   table.caption.appendChild(caption);
 
   let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
-  header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:"Num"}))
-  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Name"}))
-  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Area"}))
-  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Continent"}))
-  table.createTHead();
+  for(let i = 0; i < columns.length; i++) {
+    header.appendChild(Object.assign(document.createElement('th'), {style: `width:${i===0?'5em':'auto'}`, innerHTML: columns[i]}))
+  }
   table.tHead.appendChild(header);
 
+  return table;
+}
+
+export const displayTable = () => {
+  let entries = displayEntries;
+  let table = getTable('nexmap-displayTable', ['Num', 'Name', 'Area', 'Continent']);
+
   let startIndex = pageIndex > 0 ? pageIndex * pageBreak : 0;
-  table.createTBody();
-  for (
-    let i = startIndex;
-    i < entries.length && i < startIndex + pageBreak;
-    i++
-  ) {
+  for (let i = startIndex; i < entries.length && i < startIndex + pageBreak; i++) {
     let row  = Object.assign(document.createElement('tr'), {style: "cursor:pointer;color:dimgrey;"});
     row.appendChild(Object.assign(document.createElement('td'), {
       style: "color:grey",
@@ -167,32 +195,98 @@ export const displayTable = () => {
     tableHTML.rows[i].onclick = function() {nexmap.aliases.goto(this.cells[0].innerHTML)};
   }
 
-  let pagination;
-  if (Math.ceil(displayEntries.length / pageBreak) > pageIndex + 1) {
-    pagination = Object.assign(document.createElement('span'), {
-      style: "color:Goldenrod",
-      innerHTML: `Displaying ${startIndex + pageBreak} of ${displayEntries.length}.`
-    });
-    pageIndex++;
-    pagination.appendChild(Object.assign(document.createElement('span'), {
-      style: "color:Goldenrod", 
-      innerHTML: " Click for "
-    }));
-    pagination.appendChild(Object.assign(document.createElement('a'), {
-      style: "cursor:pointer;color:Ivory;text-decoration:underline;", 
-      innerHTML: "MORE",
-      id: "nexmap-pagination"
-    }));
-  } else {
-    pagination = Object.assign(document.createElement('span'), {
-      style: "color:Goldenrod", 
-      innerHTML: `Displaying ${displayEntries.length} of ${displayEntries.length}.`
-    });
-  }
-  
-  //document.getElementById('nexmap-pagination').onclick = displayTable();
+  printHTML(getPagination(startIndex).outerHTML);
+  document.getElementById('nexmap-pagination').onclick = displayTable;
+};
 
-  printHTML(pagination.outerHTML);
+export const npcTable = () => {
+  let entries = displayEntries;
+  let table = getTable('nexmap-npcTable', ['ID', 'Name', 'Room', 'Area', 'Continent']);
+
+  let startIndex = pageIndex > 0 ? pageIndex * pageBreak : 0;
+  for (let i = startIndex; i < entries.length && i < startIndex + pageBreak; i++) {
+    let row  = Object.assign(document.createElement('tr'), {style: "cursor:pointer;color:dimgrey;"});
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${entries[i].id}`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:gainsboro;text-decoration:underline",
+      innerHTML: `${entries[i].name}`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${entries[i].room}`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${entries[i].area.name}`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${Object.keys(areaContinents).find(e => 
+        areaContinents[e].includes(nexmap.mudmap.areas.find(e => 
+          e.name===entries[i].area.name).id))}`
+    }));
+    table.tBodies[0].appendChild(row);
+  }
+
+  printHTML(table.outerHTML);
+
+  // Here we add the events to the table after the table has been added to the DOM
+  // Events are not included in outerHTML.
+  let tableHTML = document.getElementById('nexmap-npcTable');
+  console.log(tableHTML);
+  for(let i = 0;i < tableHTML.rows.length; i++) {
+    tableHTML.rows[i].onclick = function() {nexmap.aliases.goto(this.cells[2].innerHTML)};
+  }
+
+  printHTML(getPagination(startIndex).outerHTML);
+  document.getElementById('nexmap-pagination').onclick = npcTable;
+};
+
+export const marksTable = () => {
+  let entries = nexmap.settings.userPreferences.landmarks;
+  let table = getTable('nexmap-marksTable', ['Num', 'Name', 'Room', 'Area', 'Continent']);
+
+  let startIndex = pageIndex > 0 ? pageIndex * pageBreak : 0;
+  for (let i = startIndex; i < entries.length && i < startIndex + pageBreak; i++) {
+    let node = cy.$id(entries[i].roomID);
+    let row  = Object.assign(document.createElement('tr'), {style: "cursor:pointer;color:dimgrey;"});
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: entries[i].roomID
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:gainsboro;text-decoration:underline",
+      innerHTML: entries[i].name
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${node.data("name")}`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: `${node.data("userData")["Game Area"]}(${node.data("area")})`
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: node.data("continent")
+    }));
+    table.tBodies[0].appendChild(row);
+  }
+
+  printHTML(table.outerHTML);
+
+  // Here we add the events to the table after the table has been added to the DOM
+  // Events are not included in outerHTML.
+  let tableHTML = document.getElementById('nexmap-displaytable');
+  console.log(tableHTML);
+  for(let i = 0;i < tableHTML.rows.length; i++) {
+    tableHTML.rows[i].onclick = function() {nexmap.aliases.goto(this.cells[0].innerHTML)};
+  }
+
+  printHTML(getPagination(startIndex).outerHTML);
   document.getElementById('nexmap-pagination').onclick = displayTable;
 };
 
