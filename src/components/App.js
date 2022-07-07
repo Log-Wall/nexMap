@@ -8,7 +8,7 @@ function App() {
   useEffect(() => {
       const initialize = async () => {
         console.log('initialize')
-        await window.cy.mount(document.getElementById('cy'));
+        //await window.cy.mount(document.getElementById('cy'));
         nexmap.styles.style();
         nexmap.changeRoom(27412);
       }
@@ -26,7 +26,8 @@ function App() {
         top: '0px',
         left: '0px',
         'marginTop': '22px',
-        'marginBottom': '22px'
+        'marginBottom': '22px',
+        hidden: true,
       }}></div>
       <div id="currentExitsLabel" style={{position: 'absolute', bottom: '0px'}}></div>
       <div id="htmlTest"></div>

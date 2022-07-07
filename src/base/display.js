@@ -2,6 +2,10 @@
 import { nexmap } from "./nexmap.js";
 import { areaWalk } from './walker.js';
 
+export const display = {
+
+}
+
 let pageBreak = 20;
 let pageIndex = 0;
 let displayCap = {};
@@ -9,7 +13,6 @@ let displayEntries = {};
 
 export const printHTML = (html) => {
   window.nexusclient.add_html_line(html)
-  document.getElementById('htmlTest').innerHTML += html;
 };
 
 export const notice = (txt, html = false) => {
@@ -55,14 +58,10 @@ export const versionNotice = (ver) => {
 export const generateTable = (table, entries = false, caption = false) => {
   pageIndex = 0;
   if (table === 'displayTable') {
-        console.log('works');
-        console.log(entries);
         displayEntries = entries;
         displayCap = caption;
         displayTable();
   } else {
-        console.log(table);
-        console.log(entries);
         nexmap.display[`${table}`](entries, caption)
   }
 };
@@ -106,50 +105,30 @@ export const click = {
 
 export const displayTable = () => {
   let entries = displayEntries;
-  window.tester = entries;
-  console.log(entries);
 
   let table = Object.assign(document.createElement('table'), {
+    id: 'nexmap-displaytable',
     class: 'mono',
-    style: "max-width:100%;border:1px solid GoldenRod;border-spacing:0px",
+    style: "width:95%;max-width:100%;border:1px solid GoldenRod;border-spacing:0px",
   });
-  
-  if (pageIndex === 0) {
-    let caption = document.createElement('span');
-    caption.setAttribute('class', 'mono');
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '[-'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:OrangeRed', innerHTML: 'nexMap'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-]'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
-    table.createCaption(caption.innerHTML);
-    table.caption.appendChild(caption);
 
-    let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:"Num"}))
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Name"}))
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Area"}))
-    table.createTHead();
-    table.tHead.appendChild(header);
+  let caption = document.createElement('span');
+  caption.setAttribute('class', 'mono');
+  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '[-'}));
+  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:OrangeRed', innerHTML: 'nexMap'}));
+  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-]'}));
+  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
+  caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
+  table.createCaption(caption.innerHTML);
+  table.caption.appendChild(caption);
 
-  } else {
-    let caption = document.createElement('span');
-    caption.setAttribute('class', 'mono');
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '[-'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:OrangeRed', innerHTML: 'nexMap'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:DodgerBlue', innerHTML: '-]'}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Displaying matches for '}));
-    caption.appendChild(Object.assign(document.createElement('span'), {style: 'color:LawnGreen', innerHTML: displayCap}));
-    table.createCaption(caption.innerHTML);
-    table.caption.appendChild(caption);
-
-    let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:""}))
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:""}))
-    header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:""}))
-    table.createTHead();
-    table.tHead.appendChild(header);
-  }
+  let header  = Object.assign(document.createElement('tr'), {style: "text-align:left;color:Ivory"});
+  header.appendChild(Object.assign(document.createElement('th'), {style: "width:5em", innerHTML:"Num"}))
+  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Name"}))
+  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Area"}))
+  header.appendChild(Object.assign(document.createElement('th'), {style: "width:auto", innerHTML:"Continent"}))
+  table.createTHead();
+  table.tHead.appendChild(header);
 
   let startIndex = pageIndex > 0 ? pageIndex * pageBreak : 0;
   table.createTBody();
@@ -161,26 +140,37 @@ export const displayTable = () => {
     let row  = Object.assign(document.createElement('tr'), {style: "cursor:pointer;color:dimgrey;"});
     row.appendChild(Object.assign(document.createElement('td'), {
       style: "color:grey",
-      onclick: `click.room(${JSON.stringify(entries[i].data("id"))});`,
-      innerHTML: entries[i].data("id")}))
+      innerHTML: entries[i].data("id")
+    }));
     row.appendChild(Object.assign(document.createElement('td'), {
       style: "color:gainsboro;text-decoration:underline",
-      onclick: `click.room(${JSON.stringify(entries[i].data("id"))});`,
-      innerHTML: entries[i].data("name")}))
+      innerHTML: entries[i].data("name")
+    }));
     row.appendChild(Object.assign(document.createElement('td'), {
       style: "color:grey",
-      onclick: `click.room(${JSON.stringify(entries[i].data("id"))});`,
-      innerHTML: entries[i].data("areaName")}))
+      innerHTML: entries[i].data("areaName")
+    }));
+    row.appendChild(Object.assign(document.createElement('td'), {
+      style: "color:grey",
+      innerHTML: entries[i].data("continent")
+    }));
     table.tBodies[0].appendChild(row);
-    console.log(table);
   }
 
   printHTML(table.outerHTML);
 
+  // Here we add the events to the table after the table has been added to the DOM
+  // Events are not included in outerHTML.
+  let tableHTML = document.getElementById('nexmap-displaytable');
+  console.log(tableHTML);
+  for(let i = 0;i < tableHTML.rows.length; i++) {
+    tableHTML.rows[i].onclick = function() {nexmap.aliases.goto(this.cells[0].innerHTML)};
+  }
+
   let pagination;
   if (Math.ceil(displayEntries.length / pageBreak) > pageIndex + 1) {
     pagination = Object.assign(document.createElement('span'), {
-      style: "color:Goldenrod", 
+      style: "color:Goldenrod",
       innerHTML: `Displaying ${startIndex + pageBreak} of ${displayEntries.length}.`
     });
     pageIndex++;
@@ -190,8 +180,8 @@ export const displayTable = () => {
     }));
     pagination.appendChild(Object.assign(document.createElement('a'), {
       style: "cursor:pointer;color:Ivory;text-decoration:underline;", 
-      onclick: "displayTable()",
-      innerHTML: "MORE"
+      innerHTML: "MORE",
+      id: "nexmap-pagination"
     }));
   } else {
     pagination = Object.assign(document.createElement('span'), {
@@ -199,8 +189,11 @@ export const displayTable = () => {
       innerHTML: `Displaying ${displayEntries.length} of ${displayEntries.length}.`
     });
   }
+  
+  //document.getElementById('nexmap-pagination').onclick = displayTable();
 
   printHTML(pagination.outerHTML);
+  document.getElementById('nexmap-pagination').onclick = displayTable;
 };
 
 // export const landmarkTable = (marks = false, caption = false) => {
