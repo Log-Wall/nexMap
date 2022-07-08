@@ -17,6 +17,7 @@ if (typeof nexusclient === 'undefined') {
     },
     add_html_line(args) {
       console.log(`add_html_line(): ${args}`)
+      document.getElementById('htmlTest').innerHTML += args;
     },
     send_commands(args) {
       console.log(`send_commands(): ${args}`)

@@ -100,7 +100,7 @@ export const aliases = {
         { $match: { name: re } },
         { $sort: { name: 1, area: 1 } },
       ]);
-      generateTable("denizenTable", results, qry);
+      generateTable('npcTable', results, qry);
     };
     table(qry);
   },

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { nexmap } from "../base/nexmap";
+import NexDialog from "./NexDialog";
 
 function App() {
 
@@ -16,7 +17,8 @@ function App() {
   }, [])
 
   return (
-    <div className="App">
+    <div className="App" id="development">
+      <div id="htmlTest"></div>
       <div id="currentRoomLabel"></div>
       <div id="cy" style={{
         width: '100%',
@@ -27,10 +29,9 @@ function App() {
         left: '0px',
         'marginTop': '22px',
         'marginBottom': '22px',
-        hidden: true,
+        visibility: 'hidden',
       }}></div>
       <div id="currentExitsLabel" style={{position: 'absolute', bottom: '0px'}}></div>
-      <div id="htmlTest"></div>
     </div>
   );
 }
