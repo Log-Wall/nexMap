@@ -5,7 +5,9 @@ import App from './components/App';
 import { nexmap } from './base/nexmap';
 import reportWebVitals from './reportWebVitals';
 import * as data from './map_mini.json';
-import NexDialog from './components/NexDialog'
+//import NexDialog from './components/NexDialog'
+import Sandbox from './components/Sandbox'
+
 
 window.GMCP = {
   show: false,
@@ -14,16 +16,18 @@ window.GMCP = {
 window.tester = (tf) => {return window.GMCP.show}
 //import "https://cdn.jsdelivr.net/npm/cytoscape@3.21.0/dist/cytoscape.min.js";
 
+window.evt = new EventTarget();
+window.name = 'Bob';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <NexDialog controller={(tf) => {return window.GMCP.show}}/>
-    <App />
+    <Sandbox evt={window.evt} GMCP={window.name}/>
   </React.StrictMode>
 );
+window.evt.dispatchEvent(new CustomEvent('changeGMCP', { detail: 123 }))
 
-nexmap.generateGraph(data);
-nexmap.mongo.initialize();
+//nexmap.generateGraph(data);
+//nexmap.mongo.initialize();
 
 /*fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json")
 fetch('./map_mini.json')
