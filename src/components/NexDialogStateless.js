@@ -6,36 +6,24 @@ import { Switch, DialogContent, DialogTitle, FormControlLabel, FormGroup, TextFi
 
 
 const NexDialog = ({evt, settings}) => {
-  console.log('NexDialog: evt');
-  console.log(evt);
-  console.log('NexDialog: settings');
-  console.log(settings);
-  const [open, setOpen] = React.useState(false);
-  console.log('NexDialog: open')
-  console.log(open)
-  const [tempSettings, setTempSettings] = React.useState(settings);
-
-  evt.addEventListener('nexmap-config-dialog', ({detail}) => {setOpen(detail)})
+  let open = true;
+  evt.addEventListener('nexmap-config-dialog', ({detail}) => {(open = detail))
 
   const handleClickClose = () => {
-    setOpen(false);
+    //setOpen(false);
   }
 
   const handleClickSave =  () => {
-    window.nexmap.settings.userPreferences = {...tempSettings};
-    window.nexmap.settings.save();
-    setOpen(false);
+    //setOpen(false);
   }
   
   const handleCheck = (e) => {
     let name = e.target.id;
-    setTempSettings({...tempSettings, [name]: !tempSettings[name]});
   }
 
   const handleText = (e) => {
     let val = e.target.value;
     let name = e.target.id;
-    setTempSettings({...tempSettings, [name]: val});
   }
 
   return (

@@ -16,7 +16,7 @@ export const aliases = {
     aliases[alias](args);
   },
   config: function () {
-    //configDialog();
+    nexmap.evt.dispatchEvent(new CustomEvent('nexmap-config-dialog', { detail: true }))
   },
   save: function () {
     save();

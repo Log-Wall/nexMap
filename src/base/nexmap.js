@@ -7,15 +7,20 @@
     $
 */
 
-
 import { aliases } from "./aliases";
 import { generateGraph } from "./graph";
 import { mongo } from "./mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./navigation";
 import { styles } from "./styles";
 import { walker } from "./walker";
+import { userPreferences, save } from "./settings";
+import Nexmap from "../components/Nexmap";
 
 export const nexmap = {
+  evt: new EventTarget(),
+  components: {
+    Nexmap: Nexmap,
+  },
   version: '3.0.7',
   nxsVersion: '3.0.7',
   logging: false,
@@ -35,12 +40,16 @@ export const nexmap = {
   changeRoom: changeRoom,
   onGMCP: onGMCP,
   
+  settings: {
+    userPreferences: userPreferences,
+    save: save,
+  },
   styles: styles,
   aliases: aliases,
   mongo: mongo,
   walker: walker,
 
-  
+
 
   startup() {
     document.getElementById('cy')?.remove();

@@ -1,4 +1,4 @@
-/* global addEventListener */
+/* global */
 import * as React from 'react'
 
 const Sandbox = ({evt, GMCP}) => {

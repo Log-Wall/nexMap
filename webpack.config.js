@@ -2,6 +2,8 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
+  mode: 'production',
+  //entry: path.join(__dirname, 'src/base/nexmap.js'),
   entry: path.join(__dirname, 'src/base/nexmap.js'),
   output: {
     path: path.join(__dirname, 'dist'),
@@ -16,6 +18,7 @@ module.exports = {
           cacheDirectory: true,
           presets: [
             '@babel/preset-env',
+            "@babel/preset-react"
           ],
         },
         loader: 'babel-loader',
