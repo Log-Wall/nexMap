@@ -5,7 +5,7 @@
     set_variable > nexusclient.variables().set()
     run_function > nexusclient.reflexes().run_function()
     send_direct > nexusclient.send_commands()
-    $
+    $ > all jQuery references
 */
 
 import { aliases } from "./aliases";
