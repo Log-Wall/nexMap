@@ -4,6 +4,7 @@
     get_variable > nexusclient.variables().get()
     set_variable > nexusclient.variables().set()
     run_function > nexusclient.reflexes().run_function()
+    send_direct > nexusclient.send_commands()
     $
 */
 
