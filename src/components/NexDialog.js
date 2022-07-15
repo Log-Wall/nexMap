@@ -1,9 +1,10 @@
-import * as React from 'react';
+/* global nexusclient */
+
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import { Switch, DialogContent, DialogTitle, FormControlLabel, FormGroup, TextField } from '@mui/material';
-
+const React = nexusclient.platform().React;
 
 const NexDialog = ({evt, settings}) => {
   console.log('NexDialog: evt');
