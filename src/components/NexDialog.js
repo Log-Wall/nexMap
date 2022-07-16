@@ -1,19 +1,18 @@
-/* global nexusclient */
-
+import * as React from 'react';
+import { DialogContent, DialogTitle, FormControlLabel, FormGroup, Switch, TextField } from '@mui/material';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import { Switch, DialogContent, DialogTitle, FormControlLabel, FormGroup, TextField } from '@mui/material';
-const React = nexusclient.platform().React;
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 
 const NexDialog = ({evt, settings}) => {
-  console.log('NexDialog: evt');
-  console.log(evt);
-  console.log('NexDialog: settings');
-  console.log(settings);
-  const [open, setOpen] = React.useState(false);
-  console.log('NexDialog: open')
-  console.log(open)
+  const [open, setOpen] = React.useState(true);
   const [tempSettings, setTempSettings] = React.useState(settings);
 
   evt.addEventListener('nexmap-config-dialog', ({detail}) => {setOpen(detail)})
@@ -40,6 +39,7 @@ const NexDialog = ({evt, settings}) => {
   }
 
   return (
+    <ThemeProvider theme={darkTheme}>
     <div>
     <Dialog open={open} onClose={handleClickClose}>
       <DialogTitle>
@@ -53,9 +53,9 @@ const NexDialog = ({evt, settings}) => {
           <FormControlLabel control={<Switch id="vibratingStick" onChange={handleCheck} defaultChecked={settings.vibratingStick}/>} label="Vibrating Stick" labelPlacement="end"/>
           <FormControlLabel control={<Switch id="useDuanathar" onChange={handleCheck} defaultChecked={settings.useDuanathar}/>} label="Eagle Wings" labelPlacement="end"/>
           <FormControlLabel control={<Switch id="useDuanatharan" onChange={handleCheck} defaultChecked={settings.useDuanatharan}/>} label="Atavian Wings" labelPlacement="end"/>
-          <FormControlLabel control={<TextField id="commandSeparator" onChange={handleText} defaultValue={settings.commandSeparator} size="small" style={{width: '10em'}} />} label="Command Separator" labelPlacement="start"/>
-          <FormControlLabel control={<TextField id="duanatharCommand" onChange={handleText} defaultValue={settings.duanatharCommand} size="small" style={{width: '10em'}}/>} label="Eagle Wings Command(s) " labelPlacement="start"/>
-          <FormControlLabel control={<TextField id="duanatharanCommand" onChange={handleText} defaultValue={settings.duanatharanCommand} size="small" style={{width: '10em'}}/>} label="Atavian Wing Command(s) " labelPlacement="start"/>
+          <FormControlLabel control={<TextField id="commandSeparator" onChange={handleText} defaultValue={settings.commandSeparator} size="small" style={{width: '10em'}} />} label="Command Separator" labelPlacement="end"/>
+          <FormControlLabel control={<TextField id="duanatharCommand" onChange={handleText} defaultValue={settings.duanatharCommand} size="small" style={{width: '10em'}}/>} label="Eagle Wings Command(s) " labelPlacement="end"/>
+          <FormControlLabel control={<TextField id="duanatharanCommand" onChange={handleText} defaultValue={settings.duanatharanCommand} size="small" style={{width: '10em'}}/>} label="Atavian Wing Command(s) " labelPlacement="end"/>
         </FormGroup>
       </DialogContent>
       <DialogActions>
@@ -64,6 +64,7 @@ const NexDialog = ({evt, settings}) => {
       </DialogActions>
     </Dialog>
     </div>
+    </ThemeProvider>
   )
 }
 

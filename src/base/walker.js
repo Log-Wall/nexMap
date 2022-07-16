@@ -1,5 +1,5 @@
 /* global cy, GMCP */
-import { nexmap } from "./nexmap.js";
+import { nexmap } from "../nexmap.js";
 import { userPreferences } from "./settings.js";
 import { shortDirs, areaContinents, universeRooms } from "./helpertables.js";
 import { notice } from "./display.js";

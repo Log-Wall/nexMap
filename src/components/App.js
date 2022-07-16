@@ -1,6 +1,6 @@
 //import '../styles/App.css';
 
-import { nexmap } from "../base/nexmap";
+import { nexmap } from "../nexmap";
 import Nexmap from "./Nexmap";
 
 function App() {

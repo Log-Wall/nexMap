@@ -31,6 +31,27 @@ if (typeof nexusclient.ui().layout().get_tab_object_original === 'undefined') {
 nexusclient.ui().layout().get_tab_object_original = nexusclient.ui().layout().get_tab_object;
 }
 
+function startup2() {
+  document.getElementById('cy')?.remove();
+  const nexmapTab = document.getElementById('tbl_nexmap_map')
+
+  nexmapTab.appendChild(Object.assign(document.createElement('div'), {id: 'currentRoomLabel'}));
+  nexmapTab.appendChild(Object.assign(document.createElement('div'), {id: 'cy'}));
+  nexmapTab.appendChild(Object.assign(document.createElement('div'), {id: 'currentExitsLabel', style: 'position:absolute;bottom:0px'}));
+  styles.style();
+
+  fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json")
+    .then(response => response.json())
+    .then(async data => {
+      let graph = await generateGraph(data);
+      window.cy.add(graph)
+    })
+    .then(() => {
+      window.cy.mount(document.getElementById('cy'))
+      nexmap.changeRoom(6534)
+    })
+}
+
 let startUp = () => {
 window.khaseem = {
     components: {

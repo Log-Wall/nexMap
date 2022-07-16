@@ -2,7 +2,7 @@
 import { walker } from './walker.js';
 import { notice } from './display.js';
 import { changeRoom, changeArea } from './navigation';
-import { nexmap } from './nexmap.js';
+import { nexmap } from '../nexmap.js';
 
 
 export const styles = {

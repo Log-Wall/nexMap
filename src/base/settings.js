@@ -1,5 +1,5 @@
 /* global cy, nexusclient */
-import { nexmap } from './nexmap.js';
+import { nexmap } from '../nexmap.js';
 import { notice, generateTable } from './display.js';
 
 if (typeof nexusclient === 'undefined') {
@@ -49,7 +49,7 @@ export const userPreferences = {
 
 export const save = () => {
   userPreferences.initialConfiguration = nexmap.version;
-  nexusclient.variables().set('nexMapConfigs', userPreferences);
+  nexusclient.variables().set('nexMapConfigs', nexmap.settings.userPreferences);
 }
 
 export const toggleWormholes= () => {

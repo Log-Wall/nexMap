@@ -4,7 +4,7 @@ import { step, determinePath } from "./walker.js";
 import { styles } from "./styles.js";
 import { notice, generateTable, printHTML } from "./display.js";
 import { generateExits } from "./graph.js";
-import { nexmap } from "./nexmap.js";
+import { nexmap } from "../nexmap.js";
 import { mongo } from './mongo.js';
 import { walker } from './walker.js'
 

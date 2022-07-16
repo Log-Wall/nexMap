@@ -2,7 +2,7 @@ import { longDirs, areaContinents } from "./helpertables";
 import { styles } from "./styles";
 import cytoscape from 'cytoscape';
 import { userPreferences } from './settings';
-import { nexmap } from './nexmap';
+import { nexmap } from '../nexmap';
 
 /* global cy */
 window.cy = cytoscape({

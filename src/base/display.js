@@ -1,5 +1,5 @@
 /* global cy */
-import { nexmap } from "./nexmap.js";
+import { nexmap } from "../nexmap.js";
 import { areaWalk } from './walker.js';
 import { areaContinents } from "./helpertables.js";
 

@@ -3,8 +3,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   mode: 'production',
-  entry: path.join(__dirname, 'src/base/nexmap.js'),
-  //entry: path.join(__dirname, 'src/components/Nexmap.js'),
+  entry: path.join(__dirname, 'src/nexmap.js'),
+  //entry: path.join(__dirname, 'src/sandbox.js'),
   output: {
     path: path.join(__dirname, 'dist'),
     filename: `bundle.min.js`,
@@ -38,4 +38,8 @@ module.exports = {
       }),
     ],
   },
+  externals: {
+    'react': 'react', // Case matters here 
+    //'react-dom' : 'reactDOM' // Case matters here 
+   }
 };

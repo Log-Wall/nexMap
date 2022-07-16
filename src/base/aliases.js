@@ -4,7 +4,7 @@ import { findRooms, findAreas } from "./navigation";
 import { walker } from "./walker";
 import { toggle, save, addMark } from "./settings";
 import { styles } from "./styles";
-import { nexmap } from "./nexmap";
+import { nexmap } from "../nexmap";
 
 export const aliases = {
   call: function (alias, args = false) {
