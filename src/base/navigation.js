@@ -16,16 +16,16 @@ export const onGMCP = async (method, args) => {
       // If we are in the wilderness or sailing. Hide the tab and display the default
       // Nexus map window for map display.
       // nexMap_tab is from the custom tab package.
-      if (args.ohmap) {
+      if (args.ohmap && !nexusclient.ui().layout().flexLayout.model.getNodeById('map')._visible) {
         nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "map"}, type: "FlexLayout_SelectTab"})
         return;
-      } else {
+      } else if (!nexusclient.ui().layout().flexLayout.model.getNodeById('nexmap')._visible) {
         nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "nexmap"}, type: "FlexLayout_SelectTab"})
         styles.refresh();
         cy.center(`#${GMCP.Room.Info.num}`);
       }
 
-      await changeRoom(GMCP.Room.Info.num);
+      changeRoom(GMCP.Room.Info.num);
 
       if (
         mongo.denizenEntries.length > 0 &&
@@ -33,8 +33,8 @@ export const onGMCP = async (method, args) => {
         GMCP.Char.Items.List.location === "room" &&
         GMCP.Char.Items.List.items.length > 0
       ) {
-        await mongo.collectDenizens();
-        await mongo.collectShrines();
+        mongo.collectDenizens();
+        mongo.collectShrines();
       }
 
       if (walker.pathing) step();
@@ -51,6 +51,75 @@ export const onGMCP = async (method, args) => {
     default:
       break;
   }
+};
+
+export const changeRoom = async (id) => {
+  if (nexmap.logging) console.log(` changeRoom(${id})`);
+
+  if (id === nexmap.currentRoom) { return; }
+
+  if (cy.$id(id).hasClass("currentRoom") || !cy.$id(id).length) return;
+
+  let room = cy.$id(id);
+
+  cy.startBatch();
+  cy.$(".currentRoom").removeClass("currentRoom"); //remove the class from the previous room.
+  room.addClass("currentRoom");
+
+  await changeArea(cy.$id(id).data("area"), cy.$id(id).position().z);
+  cy.center(`#${id}`);
+  cy.endBatch();
+
+  document.getElementById("currentRoomLabel").innerHTML = `${room.data(
+    "areaName"
+  )}: ${room.data("name")} (${id})`;
+  document.getElementById("currentExitsLabel").innerHTML = `Exits: ${room
+    .data("exits")
+    .join(", ")}`;
+  /*
+  $('.clickableExitSpace').remove();
+  $('.clickableExit').remove();
+  cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
+      $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
+          .text(`${e}`)
+          .on('click', function() {nexusclient.send_commands(this.innerText)})
+          .appendTo('#currentExitsLabel');
+      $('<span></span>', {class: 'clickableExitSpace'})
+          .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
+          .appendTo('#currentExitsLabel');
+  });
+*/
+  nexmap.currentRoom = id;
+};
+
+export const changeArea = async (area, z, override = false) => {
+  if (nexmap.logging) console.log(` changeArea(${area} ${z})`);
+
+  if (area === nexmap.currentArea && z === nexmap.currentZ && !override) {
+    if (nexmap.logging) {
+      console.log(` changeArea() returned`);
+    }
+    return;
+  }
+
+  nexmap.currentArea = area;
+  nexmap.currentZ = z;
+
+  cy.startBatch();
+  cy.$(".areaDisplay").removeClass("areaDisplay");
+  cy.$(".pseudo").remove();
+  let x = cy
+    .nodes()
+    .filter(
+      (e) =>
+        e.data("area") === nexmap.currentArea && e.data("z") === nexmap.currentZ
+    );
+  x.addClass("areaDisplay");
+  generateExits(nexmap.currentArea, nexmap.currentZ);
+  cy.center(`#${GMCP?.Room?.Info?.num || 436}`);
+  cy.endBatch();
+
+  return true;
 };
 
 export const farseeLocal = async (target, room) => {
@@ -204,70 +273,4 @@ export const findAreas = async (search) => {
   }
 
   return areas;
-};
-
-export const changeArea = async (area, z, override = false) => {
-  if (nexmap.logging) console.log(` changeArea(${area} ${z})`);
-
-  if (area === nexmap.currentArea && z === nexmap.currentZ && !override) {
-    if (nexmap.logging) {
-      console.log(` changeArea() returned`);
-    }
-    return;
-  }
-
-  nexmap.currentArea = area;
-  nexmap.currentZ = z;
-
-  cy.$(".areaDisplay").removeClass("areaDisplay");
-  cy.$(".pseudo").remove();
-  let x = cy
-    .nodes()
-    .filter(
-      (e) =>
-        e.data("area") === nexmap.currentArea && e.data("z") === nexmap.currentZ
-    );
-  x.addClass("areaDisplay");
-  generateExits(nexmap.currentArea, nexmap.currentZ);
-  cy.center(`#${GMCP?.Room?.Info?.num || 436}`);
-  return true;
-};
-
-export const changeRoom = async (id) => {
-  if (nexmap.logging) console.log(` changeRoom(${id})`);
-
-  if (id === nexmap.currentRoom) return;
-
-  if (cy.$id(id).hasClass("currentRoom") || !cy.$id(id).length) return;
-
-  let room = cy.$id(id);
-
-  cy.startBatch();
-  cy.$(".currentRoom").removeClass("currentRoom"); //remove the class from the previous room.
-  room.addClass("currentRoom");
-
-  await changeArea(cy.$id(id).data("area"), cy.$id(id).position().z);
-  cy.endBatch();
-
-  cy.center(`#${id}`);
-  document.getElementById("currentRoomLabel").innerHTML = `${room.data(
-    "areaName"
-  )}: ${room.data("name")} (${id})`;
-  document.getElementById("currentExitsLabel").innerHTML = `Exits: ${room
-    .data("exits")
-    .join(", ")}`;
-  /*
-  $('.clickableExitSpace').remove();
-  $('.clickableExit').remove();
-  cy.$id(GMCP.Room.Info.num).data('exits').forEach((e, i) => {
-      $('<span></span>', {class: 'clickableExit', style: 'text-decoration:underline;cursor:pointer'})
-          .text(`${e}`)
-          .on('click', function() {nexusclient.send_commands(this.innerText)})
-          .appendTo('#currentExitsLabel');
-      $('<span></span>', {class: 'clickableExitSpace'})
-          .text(`${i == cy.$id(GMCP.Room.Info.num).data('exits').length - 1 ? '' : ', '}`)
-          .appendTo('#currentExitsLabel');
-  });
-*/
-  nexmap.currentRoom = id;
 };

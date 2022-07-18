@@ -1,4 +1,4 @@
-/* global GMCP, cy */
+/* global GMCP, cy, nexusclient */
 import { notice, generateTable, printHTML } from "./display";
 import { findRooms, findAreas } from "./navigation";
 import { walker } from "./walker";
@@ -7,6 +7,22 @@ import { styles } from "./styles";
 import { nexmap } from "../nexmap";
 
 export const aliases = {
+  load: function() {
+    fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json", {cache: "no-store"})
+    .then(response => response.json())
+    .then(async data => {
+      await nexmap.generateGraph(data);
+      console.log('mudmap loaded');
+    })
+    .then(async () => {
+      window.cy.mount(document.getElementById('cy'))
+      await nexmap.changeRoom(GMCP.Room.Info.num)
+      nexmap.styles.style();
+      cy.center(`#${GMCP.Room.Info.num}`);
+      nexusclient.reflexes().enable_reflex(nexusclient.reflexes().find_by_name("group", "Aliases", false, false, "nexmap3"));
+      nexusclient.reflexes().enable_reflex(nexusclient.reflexes().find_by_name("group", "Triggers", false, false, "nexmap3"));  
+    })
+  },
   call: function (alias, args = false) {
     if (!Object.keys(aliases).includes(alias)) {
       notice(`"nm  ${alias}" is not a valid command.`);

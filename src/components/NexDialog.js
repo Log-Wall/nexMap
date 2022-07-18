@@ -12,7 +12,7 @@ const darkTheme = createTheme({
 });
 
 const NexDialog = ({evt, settings}) => {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   const [tempSettings, setTempSettings] = React.useState(settings);
 
   evt.addEventListener('nexmap-config-dialog', ({detail}) => {setOpen(detail)})
