@@ -28,8 +28,6 @@ export const nexmap = {
   nxsVersion: '1.0.7',
   logging: false,
   loggingTime: '',
-  cytoscapeLoaded: false,
-  mudletMapLoaded: false,
   currentRoom: -99,
   currentArea: -99,
   currentZ: -99,
@@ -53,58 +51,30 @@ export const nexmap = {
   walker: walker,
 }
 
-// Object.setAtString = function (obj, dotarr, val) {
-//   let a = dotarr.shift()
-//   if (dotarr.length === 0) {
-//       // if at last element in chain, set value
-//       if (obj[a] === undefined) {
-//           obj[a] = {}
-//       }
-//       if (Array.isArray(val)) {
-//           obj[a] = val
-//       } else if (typeof val === 'object') {
-//           Object.assign(obj[a], val)
-//           /*
-//         for(key in val) {
-//             obj[a][key] = val[key];
-//         }
-//         */
-//       } else {
-//           obj[a] = val
-//       }
-//       return
-//   } else {
-//       if (obj[a] === undefined) {
-//           obj[a] = {}
-//       }
-//       Object.setAtString(obj[a], dotarr, val)
-//   }
-// }
+if (typeof nexusclient.ui().layout().get_tab_object_original === 'undefined') {
+  nexusclient.ui().layout().get_tab_object_original = nexusclient.ui().layout().get_tab_object;
+}
+nexusclient.ui().layout().get_tab_object = function(name, gmcp) {
+  if (name === 'nexmap') {
+    return React.createElement(nexmap.components.Nexmap, {
+      evt: nexmap.evt,
+      settings: nexmap.settings.userPreferences
+    });
+  }
 
-// window.GMCP = nexusclient.datahandler().GMCP;
-// window.GMCP.Room = {};
-// window.GMCP.Char = {
-//   Items: {}
-// };
+  return nexusclient._ui._layout.get_tab_object_original(name, gmcp)
+};
 
-// if (typeof nexusclient.ui().layout().get_tab_object_original === 'undefined') {
-//   nexusclient.ui().layout().get_tab_object_original = nexusclient.ui().layout().get_tab_object;
-// }
-
-// if (typeof nexusclient.ui().layout().flexLayout.model.getNodeById('nexmap') === 'undefined') {
-//   let tt = {
-//     component: "nexmap",
-//     helpText: "nexmap",
-//     icon: "feather-pointed",
-//     id: "nexmap",
-//     name: "nexmap",
-//     type: "tab"
-//   };
-//   nexusclient.ui().layout().flexLayout.addTab(tt, nexusclient.ui().layout().flexLayout.model.getNodeById('map').getParent().getId());
-// }
-
-// nexusclient.reflexes().disable_reflex(nexusclient.reflexes().find_by_name("group", "Aliases", false, false, "nexmap3"));
-// nexusclient.reflexes().disable_reflex(nexusclient.reflexes().find_by_name("group", "Triggers", false, false, "nexmap3"));
-// }
+if (typeof nexusclient.ui().layout().flexLayout.model.getNodeById('nexmap') === 'undefined') {
+  let tt = {
+    component: "nexmap",
+    helpText: "nexmap",
+    icon: "feather-pointed",
+    id: "nexmap",
+    name: "nexmap",
+    type: "tab"
+  };
+  nexusclient.ui().layout().flexLayout.addTab(tt, nexusclient.ui().layout().flexLayout.model.getNodeById('map').getParent().getId());
+}
 
 window.nexmap = nexmap;
