@@ -199,7 +199,7 @@ export const displayTable = () => {
   // Events are not included in outerHTML.
   let tableHTML = document.getElementsByClassName('nexmap-displayTable');
   for(let i = 1;i < tableHTML[tableHTML.length-1].rows.length; i++) {
-    tableHTML[tableHTML.length-1].rows[i].onclick = (e)=>{nexmap.aliases.goto(e.target.parentElement.cells[0].innerHTML)};
+    tableHTML[tableHTML.length-1].rows[i].onclick = (e)=>{console.log(`onclick: ${e.target.parentElement.cells[0].innerHTML}`);nexmap.aliases.goto(e.target.parentElement.cells[0].innerHTML)};
   }
 
   

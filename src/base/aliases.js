@@ -1,4 +1,4 @@
-/* global GMCP, cy, nexusclient */
+/* global GMCP, cy, nexusclient, React */
 import { notice, generateTable, printHTML } from "./display";
 import { findRooms, findAreas } from "./navigation";
 import { walker } from "./walker";
@@ -7,21 +7,51 @@ import { styles } from "./styles";
 import { nexmap } from "../nexmap";
 
 export const aliases = {
-  load: function() {
-    fetch("https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json", {cache: "no-store"})
-    .then(response => response.json())
-    .then(async data => {
-      await nexmap.generateGraph(data);
-      console.log('mudmap loaded');
-    })
-    .then(async () => {
-      window.cy.mount(document.getElementById('cy'))
-      await nexmap.changeRoom(GMCP.Room.Info.num)
-      nexmap.styles.style();
-      cy.center(`#${GMCP.Room.Info.num}`);
-      nexusclient.reflexes().enable_reflex(nexusclient.reflexes().find_by_name("group", "Aliases", false, false, "nexmap3"));
-      nexusclient.reflexes().enable_reflex(nexusclient.reflexes().find_by_name("group", "Triggers", false, false, "nexmap3"));  
-    })
+  load: function () {
+    nexusclient.ui().layout().get_tab_object = function(name, gmcp) {
+      switch (name) {
+        case 'nexmap':
+          return React.createElement(nexmap.components.Nexmap, {
+            evt: nexmap.evt,
+            settings: nexmap.settings.userPreferences
+          });
+          break;
+  
+        default:
+          return nexusclient._ui._layout.get_tab_object_original(name, gmcp)
+          break;
+      }
+    };
+
+    fetch(
+      "https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json",
+      { cache: "no-store" }
+    )
+      .then((response) => response.json())
+      .then(async (data) => {
+        await nexmap.generateGraph(data);
+        console.log("mudmap loaded");
+      })
+      .then(async () => {
+        window.cy.mount(document.getElementById("cy"));
+        await nexmap.changeRoom(GMCP.Room.Info.num);
+        nexmap.styles.style();
+        cy.center(`#${GMCP.Room.Info.num}`);
+        nexusclient
+          .reflexes()
+          .enable_reflex(
+            nexusclient
+              .reflexes()
+              .find_by_name("group", "Aliases", false, false, "nexmap3")
+          );
+        nexusclient
+          .reflexes()
+          .enable_reflex(
+            nexusclient
+              .reflexes()
+              .find_by_name("group", "Triggers", false, false, "nexmap3")
+          );
+      });
   },
   call: function (alias, args = false) {
     if (!Object.keys(aliases).includes(alias)) {
@@ -32,7 +62,9 @@ export const aliases = {
     aliases[alias](args);
   },
   config: function () {
-    nexmap.evt.dispatchEvent(new CustomEvent('nexmap-config-dialog', { detail: true }))
+    nexmap.evt.dispatchEvent(
+      new CustomEvent("nexmap-config-dialog", { detail: true })
+    );
   },
   save: function () {
     save();
@@ -42,11 +74,7 @@ export const aliases = {
       return;
     }
 
-    generateTable(
-      "displayTable",
-      await findRooms(args),
-      args.toLowerCase()
-    );
+    generateTable("displayTable", await findRooms(args), args.toLowerCase());
   },
   area: function (args) {
     if (!/^[a-zA-z'-\s]+$/g.test(args)) {
@@ -80,7 +108,7 @@ export const aliases = {
     addMark(args);
   },
   marks: function () {
-    generateTable("landmarkTable");
+    generateTable("marksTable");
   },
   stop: function () {
     walker.stop();
@@ -116,7 +144,7 @@ export const aliases = {
         { $match: { name: re } },
         { $sort: { name: 1, area: 1 } },
       ]);
-      generateTable('npcTable', results, qry);
+      generateTable("npcTable", results, qry);
     };
     table(qry);
   },

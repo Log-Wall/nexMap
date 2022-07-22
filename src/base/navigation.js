@@ -5,8 +5,8 @@ import { styles } from "./styles.js";
 import { notice, generateTable, printHTML } from "./display.js";
 import { generateExits } from "./graph.js";
 import { nexmap } from "../nexmap.js";
-import { mongo } from './mongo.js';
-import { walker } from './walker.js'
+import { mongo } from "./mongo.js";
+import { walker } from "./walker.js";
 
 export const onGMCP = async (method, args) => {
   switch (method) {
@@ -16,11 +16,29 @@ export const onGMCP = async (method, args) => {
       // If we are in the wilderness or sailing. Hide the tab and display the default
       // Nexus map window for map display.
       // nexMap_tab is from the custom tab package.
-      if (args.ohmap && !nexusclient.ui().layout().flexLayout.model.getNodeById('map')._visible) {
-        nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "map"}, type: "FlexLayout_SelectTab"})
+      if (
+        args.ohmap &&
+        !nexusclient.ui().layout().flexLayout.model.getNodeById("map")._visible
+      ) {
+        nexusclient
+          .ui()
+          .layout()
+          .flexLayout.model.doAction({
+            data: { tabNode: "map" },
+            type: "FlexLayout_SelectTab",
+          });
         return;
-      } else if (!nexusclient.ui().layout().flexLayout.model.getNodeById('nexmap')._visible) {
-        nexusclient.ui().layout().flexLayout.model.doAction({data: {tabNode: "nexmap"}, type: "FlexLayout_SelectTab"})
+      } else if (
+        !nexusclient.ui().layout().flexLayout.model.getNodeById("nexmap")
+          ._visible
+      ) {
+        nexusclient
+          .ui()
+          .layout()
+          .flexLayout.model.doAction({
+            data: { tabNode: "nexmap" },
+            type: "FlexLayout_SelectTab",
+          });
         styles.refresh();
         cy.center(`#${GMCP.Room.Info.num}`);
       }
@@ -29,7 +47,7 @@ export const onGMCP = async (method, args) => {
 
       if (
         mongo.denizenEntries.length > 0 &&
-        typeof Realm != "undefined" &&
+        typeof Realm !== "undefined" &&
         GMCP.Char.Items.List.location === "room" &&
         GMCP.Char.Items.List.items.length > 0
       ) {
@@ -45,7 +63,10 @@ export const onGMCP = async (method, args) => {
       break;
 
     case "Char.Status":
-      if ((args.class === "Serpent" || userPreferences.vibratingStick) && !userPreferences.useWormhole)
+      if (
+        (args.class === "Serpent" || userPreferences.vibratingStick) &&
+        !userPreferences.useWormhole
+      )
         toggle("useWormholes");
       break;
     default:
@@ -56,7 +77,9 @@ export const onGMCP = async (method, args) => {
 export const changeRoom = async (id) => {
   if (nexmap.logging) console.log(` changeRoom(${id})`);
 
-  if (id === nexmap.currentRoom) { return; }
+  if (id === nexmap.currentRoom) {
+    return;
+  }
 
   if (cy.$id(id).hasClass("currentRoom") || !cy.$id(id).length) return;
 
@@ -128,23 +151,38 @@ export const farseeLocal = async (target, room) => {
     .find((n) => n.data("name") === room)
     .data("id");
   //let path = determinePath(nexmap.currentRoom, tar);
-  let msg = document.createElement('span');
-  msg.setAttribute('id', 'farsee');
+  let msg = document.createElement("span");
+  msg.setAttribute("id", "farsee");
 
-  msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: 'You see that '}));
-  msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:goldenrod', innerHTML: target}));
-  msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: ' is at '}));
-  msg.appendChild(Object.assign(document.createElement('span'), {
-    id: 'farsee',
-    style: "color:White;text-decoration:underline;cursor:pointer",
-    onclick: `walker.speedWalk(${nexmap.currentRoom}, ${tar})`,
-    innerHTML: `"${room}"`
-}));
+  msg.appendChild(
+    Object.assign(document.createElement("span"), {
+      innerHTML: "You see that ",
+    })
+  );
+  msg.appendChild(
+    Object.assign(document.createElement("span"), {
+      style: "color:goldenrod",
+      innerHTML: target,
+    })
+  );
+  msg.appendChild(
+    Object.assign(document.createElement("span"), { innerHTML: " is at " })
+  );
+  msg.appendChild(
+    Object.assign(document.createElement("span"), {
+      id: "farsee",
+      style: "color:White;text-decoration:underline;cursor:pointer",
+      onclick: `walker.speedWalk(${nexmap.currentRoom}, ${tar})`,
+      innerHTML: `"${room}"`,
+    })
+  );
   printHTML(msg[0].outerHTML);
-  
+
   printHTML(
-    Object.assign(document.createElement('span'), {
-        innerHTML: `[${determinePath(nexmap.currentRoom, tar).rawPath.join(", ")}]`
+    Object.assign(document.createElement("span"), {
+      innerHTML: `[${determinePath(nexmap.currentRoom, tar).rawPath.join(
+        ", "
+      )}]`,
     })
   );
 
@@ -159,29 +197,45 @@ export const farseeArea = async (target, area) => {
     return false;
   }
 
-  let msg = document.createElement('span');
-  msg.setAttribute('id', 'farsee');
+  let msg = document.createElement("span");
+  msg.setAttribute("id", "farsee");
 
-  msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: 'Though too far away to accurately perceive details, you see that '}));
-  msg.appendChild(Object.assign(document.createElement('span'), {style: 'color:goldenrod', innerHTML: target}));
-  msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: ' is in '}));
-  
-  let link = Object.assign(document.createElement('span'), {
-    id: 'farsee',
+  msg.appendChild(
+    Object.assign(document.createElement("span"), {
+      innerHTML:
+        "Though too far away to accurately perceive details, you see that ",
+    })
+  );
+  msg.appendChild(
+    Object.assign(document.createElement("span"), {
+      style: "color:goldenrod",
+      innerHTML: target,
+    })
+  );
+  msg.appendChild(
+    Object.assign(document.createElement("span"), { innerHTML: " is in " })
+  );
+
+  let link = Object.assign(document.createElement("span"), {
+    id: "farsee",
     style: "color:White;text-decoration:underline;cursor:pointer",
     onclick: `display.click.area(${JSON.stringify(areas[0].id)});`,
-    innerHTML: `"${area}"`
-});
+    innerHTML: `"${area}"`,
+  });
 
   if (areas.length > 1) {
-    msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: area}));
+    msg.appendChild(
+      Object.assign(document.createElement("span"), { innerHTML: area })
+    );
     printHTML(msg[0].outerHTML);
     generateTable("areaTable", areas, area);
   } else if (areas.length === 1) {
     msg.appendChild(link);
     printHTML(msg[0].outerHTML);
   } else {
-    msg.appendChild(Object.assign(document.createElement('span'), {innerHTML: area}));
+    msg.appendChild(
+      Object.assign(document.createElement("span"), { innerHTML: area })
+    );
     printHTML(msg[0].outerHTML);
     notice("nothing found");
   }
@@ -200,7 +254,9 @@ export const stopWatch = () => {
 export const findRoom = async (roomNum) => {
   if (nexmap.logging) console.log(` findRoom(${nexmap.roomNum})`);
 
-  let area = nexmap.mudmap.areas.find((e) => e.rooms.find((e2) => e2.id === roomNum));
+  let area = nexmap.mudmap.areas.find((e) =>
+    e.rooms.find((e2) => e2.id === roomNum)
+  );
 
   if (typeof area === "undefined") {
     console.log(`Area ${roomNum} not mapped`);
