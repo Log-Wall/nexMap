@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { DialogContent, DialogTitle, FormControlLabel, FormGroup, Switch, TextField } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import * as React from 'react';
 
 const darkTheme = createTheme({
   palette: {

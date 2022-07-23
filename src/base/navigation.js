@@ -1,12 +1,11 @@
 /* global GMCP, cy, nexusclient */
-import { toggle, userPreferences } from "./settings.js";
-import { step, determinePath } from "./walker.js";
-import { styles } from "./styles.js";
-import { notice, generateTable, printHTML } from "./display.js";
-import { generateExits } from "./graph.js";
 import { nexmap } from "../nexmap.js";
+import { generateTable, notice, printHTML } from "./display.js";
+import { generateExits } from "./graph.js";
 import { mongo } from "./mongo.js";
-import { walker } from "./walker.js";
+import { toggle, userPreferences } from "./settings.js";
+import { styles } from "./styles.js";
+import { determinePath, step, walker } from "./walker.js";
 
 export const onGMCP = async (method, args) => {
   switch (method) {

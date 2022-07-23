@@ -1,8 +1,8 @@
 /* global cy */
-import { walker } from './walker.js';
-import { notice } from './display.js';
-import { changeRoom, changeArea } from './navigation';
 import { nexmap } from '../nexmap.js';
+import { notice } from './display.js';
+import { changeArea, changeRoom } from './navigation';
+import { walker } from './walker.js';
 
 
 export const styles = {

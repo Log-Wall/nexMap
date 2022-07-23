@@ -1,27 +1,16 @@
-/* global GMCP, cy, nexusclient, React */
-import { notice, generateTable, printHTML } from "./display";
-import { findRooms, findAreas } from "./navigation";
-import { walker } from "./walker";
-import { toggle, save, addMark } from "./settings";
-import { styles } from "./styles";
+/* global GMCP, cy, nexusclient */
 import { nexmap } from "../nexmap";
+import { generateTable, notice, printHTML } from "./display";
+import { findAreas, findRooms, stopWatch } from "./navigation";
+import { addMark, save, toggle } from "./settings";
+import { styles } from "./styles";
+import { walker } from "./walker";
 
 export const aliases = {
   load: function () {
-    nexusclient.ui().layout().get_tab_object = function(name, gmcp) {
-      switch (name) {
-        case 'nexmap':
-          return React.createElement(nexmap.components.Nexmap, {
-            evt: nexmap.evt,
-            settings: nexmap.settings.userPreferences
-          });
-          break;
-  
-        default:
-          return nexusclient._ui._layout.get_tab_object_original(name, gmcp)
-          break;
-      }
-    };
+    nexmap.loggingTime = Date.now();
+    printHTML(`<img src='https://tenor.com/view/daddys-home2-daddys-home2gifs-jon-lithgow-reunion-waiting-gif-9683398.gif' style='width: 35%;'/><img>`);
+    notice(`Loading nexmap version ${nexmap.version}. May take up to 10 seconds.`);
 
     fetch(
       "https://ire-mudlet-mapping.github.io/AchaeaCrowdmap/Map/map_mini.json",
@@ -51,6 +40,9 @@ export const aliases = {
               .reflexes()
               .find_by_name("group", "Triggers", false, false, "nexmap3")
           );
+
+          notice(`Nexmap loaded and ready for use. ${stopWatch()}s`);
+          notice(`Use "nm" for summary of user commands`);
       });
   },
   call: function (alias, args = false) {

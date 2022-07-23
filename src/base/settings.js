@@ -1,6 +1,6 @@
 /* global cy, nexusclient */
 import { nexmap } from '../nexmap.js';
-import { notice, generateTable } from './display.js';
+import { generateTable, notice } from './display.js';
 
 if (typeof nexusclient === 'undefined') {
   window.nexusclient = {

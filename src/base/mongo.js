@@ -1,6 +1,6 @@
 /* global GMCP */
-import { notice } from "./display.js";
 import * as Realm from "realm-web";
+import { notice } from "./display.js";
 
 export const mongo = {
     denizenEntries: [],

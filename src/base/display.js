@@ -1,6 +1,5 @@
 /* global cy */
 import { nexmap } from "../nexmap.js";
-import { areaWalk } from './walker.js';
 import { areaContinents } from "./helpertables.js";
 
 export const display = {
@@ -33,29 +32,6 @@ export const notice = (txt, html = false) => {
   printHTML(msg.outerHTML);
 };
 
-export const versionNotice = (ver) => {
-  if (nexmap.nxsVersion === ver) {
-    notice("You are running the latest .nxs package for nexmap.");
-    return;
-  }
-
-  let msg = Object.assign(document.createElement('span'), {style: 'color:GoldenRod', innerHTML: 'Click '})
-  msg.appendChild(Object.assign(document.createElement('span'), {
-    id: 'nexMapUpdate',
-    onclick: `nexmap.aliases.update();`,
-    style: "color:white;text-decoration:underline;cursor:pointer",
-    innerHTML: 'HERE'
-  }));
-  msg.appendChild(Object.assign(document.createElement('span'), {
-    style: 'color:OrangeRed', 
-    innerHTML: ' for the latest features/fixes.'
-  }));
-
-  notice(`You are running .nxs package version ${nexmap.nxsVersion}.`);
-  notice(`There is an update available to your nexMap .nxs package.`);
-  notice(msg, true);
-};
-
 export const generateTable = (table, entries = false, caption = false) => {
   pageIndex = 0;
   displayEntries = entries;
@@ -73,43 +49,6 @@ export const generateTable = (table, entries = false, caption = false) => {
     default:
       break;
   }
-};
-
-export const click = {
-  room(id) {
-    if (typeof parseInt(id) !== "number") {
-      console.log(id);
-      return;
-    }
-
-    cy.$(":selected").unselect();
-    cy.$(`#${id}`).select();
-  },
-  area(id) {
-    if (typeof id !== "number") {
-      console.log(id);
-      return;
-    }
-
-    areaWalk(id);
-  },
-  denizen(id) {
-    let den = displayEntries.find((e) => e.id === id);
-    console.log(den);
-    let rm = den.room;
-    let idx = rm.indexOf(nexmap.currentRoom);
-    cy.$(":selected").unselect();
-    if (idx === -1) {
-      cy.$(`#${rm[0]}`).select();
-    } else {
-      cy.$(`#${rm[idx + 1]}`).select();
-    }
-  },
-  denizenRemove(id) {
-    let msg = displayEntries.find((e) => e.id === id);
-    console.log(`Denizen Remove table click: ${msg}`);
-    return msg;
-  },
 };
 
 const getPagination = (startIndex) => {
@@ -165,7 +104,7 @@ const getTable = (id, columns = [1,2,3,4]) => {
   return table;
 }
 
-export const displayTable = () => {
+const displayTable = () => {
   let entries = displayEntries;
   let table = getTable('nexmap-displayTable', ['Num', 'Name', 'Area', 'Continent']);
 
@@ -209,7 +148,7 @@ export const displayTable = () => {
   }
 };
 
-export const npcTable = () => {
+const npcTable = () => {
   let entries = displayEntries;
   let table = getTable('nexmap-npcTable', ['ID', 'Name', 'Room', 'Area', 'Continent']);
 
@@ -259,7 +198,7 @@ export const npcTable = () => {
   }
 };
 
-export const marksTable = () => {
+const marksTable = () => {
   let entries = nexmap.settings.userPreferences.landmarks;
   let table = getTable('nexmap-marksTable', ['Num', 'Name', 'Room', 'Area', 'Continent']);
 

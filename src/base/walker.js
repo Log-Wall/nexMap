@@ -1,8 +1,8 @@
 /* global cy, GMCP */
 import { nexmap } from "../nexmap.js";
-import { userPreferences } from "./settings.js";
-import { shortDirs, areaContinents, universeRooms } from "./helpertables.js";
 import { notice } from "./display.js";
+import { areaContinents, shortDirs, universeRooms } from "./helpertables.js";
+import { userPreferences } from "./settings.js";
 
 export const walker = {
   pathing: false,

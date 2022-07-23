@@ -14,9 +14,9 @@ import { aliases } from "./base/aliases";
 import { generateGraph } from "./base/graph";
 import { mongo } from "./base/mongo";
 import { changeRoom, farseeArea, farseeLocal, onGMCP } from "./base/navigation";
+import { save, userPreferences } from "./base/settings";
 import { styles } from "./base/styles";
 import { walker } from "./base/walker";
-import { userPreferences, save } from "./base/settings";
 import Nexmap from "./components/Nexmap";
 
 export const nexmap = {
